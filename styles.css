@@ -10,7 +10,7 @@
   --font-family-nunito: Nunito, Inter, Arial, sans-serif;
 
   --font-h1: 800 clamp(38px, 6vw, 84px) / 0.95 var(--font-family-nunito);
-  --font-h2: 800 clamp(34px, 4vw, 56px) / 1.1 var(--font-family-nunito);
+  --font-h2: 800 clamp(34px, 4vw, 40px) / 1.1 var(--font-family-nunito);
   --font-h3: 800 22px / 1.2 var(--font-family-nunito);
   --font-body: 400 18px / 1.5 var(--font-family-inter);
   --font-body-small: 400 14px / 1.4 var(--font-family-inter);
@@ -113,7 +113,7 @@ h3 { font: var(--font-h3); }
   color: var(--color-white);
   border-bottom-left-radius: 64px;
   border-bottom-right-radius: 64px;
-  padding: 18px 0 80px;
+  padding: 120px 0 80px;
 }
 
 .hero::before {
@@ -133,7 +133,7 @@ h3 { font: var(--font-h3); }
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(1200px, calc(100% - 40px));
+  width: min(1100px, calc(100% - 40px));
   z-index: 40;
   background: var(--color-white);
   color: var(--color-orange);
@@ -141,7 +141,7 @@ h3 { font: var(--font-h3); }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 18px;
+  padding: 8px 8px 8px 16px;
   gap: 20px;
 }
 
@@ -162,16 +162,17 @@ h3 { font: var(--font-h3); }
   font-weight: 700;
 }
 
-.menu li {
+.menu li a {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  text-decoration: none;
+  color: var(--color-orange);
 }
 
 .menu .icon,
 .btn-contact .icon,
-.btn-card .icon,
-.hero-down img {
+.btn-card .icon {
   filter: brightness(0) saturate(100%) invert(44%) sepia(99%) saturate(2886%) hue-rotate(3deg) brightness(104%) contrast(105%);
 }
 
@@ -257,6 +258,10 @@ h3 { font: var(--font-h3); }
   color: var(--color-white);
 }
 
+.highlights h2 {
+  margin-bottom: 40px;
+}
+
 .feature-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -303,6 +308,12 @@ h3 { font: var(--font-h3); }
   margin: 0 auto;
 }
 
+.footer-cta h2 {
+  margin: auto;
+  text-align: center;
+  width: 800px;
+}
+
 .footer-meta {
   margin-top: 68px;
   border-top: 2px solid var(--color-orange-dark);
@@ -322,6 +333,7 @@ h3 { font: var(--font-h3); }
 .footer-logo {
   display: flex;
   justify-content: center;
+  filter: brightness(1000%) saturate(0%) invert(0%) sepia(0%) saturate(10000%) hue-rotate(3deg) brightness(100%) contrast(100%);
 }
 
 .footer-meta > :last-child p {
