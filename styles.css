@@ -27,6 +27,7 @@ body {
   background: var(--color-white);
   color: var(--color-black);
   font: var(--font-body);
+  scroll-behavior: smooth;
 }
 
 .container {
@@ -58,6 +59,7 @@ h3 { font: var(--font-h3); }
   text-transform: uppercase;
   text-decoration: none;
   font: var(--font-button-nunito);
+  transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease, color 220ms ease;
 }
 
 .icon {
@@ -82,6 +84,7 @@ h3 { font: var(--font-h3); }
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 360ms ease;
 }
 
 .grid-4 {
@@ -143,6 +146,12 @@ h3 { font: var(--font-h3); }
   justify-content: space-between;
   padding: 8px 8px 8px 16px;
   gap: 20px;
+  transition: box-shadow 240ms ease, background-color 240ms ease;
+}
+
+.top-nav.is-scrolled {
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.12);
+  background-color: rgba(255, 255, 255, 0.97);
 }
 
 .logo img,
@@ -168,6 +177,7 @@ h3 { font: var(--font-h3); }
   gap: 6px;
   text-decoration: none;
   color: var(--color-orange);
+  transition: opacity 180ms ease;
 }
 
 .menu .icon,
@@ -218,6 +228,7 @@ h3 { font: var(--font-h3); }
   display: block;
   width: max-content;
   margin: 70px auto 0;
+  animation: gentle-bounce 2.6s ease-in-out infinite;
 }
 
 .card,
@@ -225,6 +236,7 @@ h3 { font: var(--font-h3); }
   color: var(--color-white);
   border-radius: 16px;
   padding: 12px;
+  transition: transform 260ms ease, box-shadow 260ms ease;
 }
 
 .card {
@@ -279,6 +291,7 @@ h3 { font: var(--font-h3); }
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
 .feature .icon {
@@ -338,6 +351,65 @@ h3 { font: var(--font-h3); }
 
 .footer-meta > :last-child p {
   text-align: right;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 620ms ease, transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.14);
+}
+
+.menu li a:hover {
+  opacity: 0.68;
+}
+
+.card:hover,
+.portfolio-card:hover,
+.feature:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
+}
+
+.card:hover .media img,
+.portfolio-card:hover .media img {
+  transform: scale(1.03);
+}
+
+@keyframes gentle-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (max-width: 1024px) {
