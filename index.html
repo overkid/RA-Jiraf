@@ -21,10 +21,10 @@
             <li><a href="#"><img class="icon" src="media/icons/Home.svg" alt="" />Главная</a></li>
             <li><a href="#"><img class="icon" src="media/icons/Catalog.svg" alt="" />Услуги</a></li>
           </ul>
-          <a class="btn btn-nav" href="#contact">
+          <button class="btn btn-nav" type="button" data-open-manager-modal>
             <img class="icon" src="media/icons/Message.svg" alt="" />
             Написать нам
-          </a>
+          </button>
         </nav>
 
         <div class="hero-content">
@@ -32,7 +32,9 @@
           <p class="hero-text">
             Мы предлагаем свои производственные и рекламные услуги на территории всей Владимирской области
           </p>
-          <a class="btn btn-contact" href="#contact"><img class="icon" src="media/icons/Message.svg" alt="" />Связаться с нами</a>
+          <button class="btn btn-contact" type="button" data-open-manager-modal>
+            <img class="icon" src="media/icons/Message.svg" alt="" />Связаться с нами
+          </button>
         </div>
         <a href="#services" class="hero-down"><img src="media/icons/Down.svg" alt="Вниз" /></a>
       </div>
@@ -116,7 +118,9 @@
           Вам не обязательно ехать в офис рекламного агентства — можно оформить заказ дистанционно по удобному
           каналу связи
         </p>
-        <a href="#" class="btn btn-contact"><img class="icon" src="media/icons/Message.svg" alt="" />Связаться с нами</a>
+        <button type="button" class="btn btn-contact" data-open-manager-modal>
+          <img class="icon" src="media/icons/Message.svg" alt="" />Связаться с нами
+        </button>
 
         <div class="footer-meta">
           <div>
@@ -133,5 +137,70 @@
         </div>
       </div>
     </footer>
+
+    <div class="modal-overlay" data-manager-modal aria-hidden="true">
+      <section class="manager-modal" role="dialog" aria-modal="true" aria-labelledby="manager-modal-title">
+        <button class="modal-close" type="button" data-close-manager-modal aria-label="Закрыть форму">
+          <span aria-hidden="true">×</span>
+        </button>
+        <h2 id="manager-modal-title">Заявка менеджеру</h2>
+        <p class="manager-modal-subtitle">Мы свяжемся с вами для уточнения заказа и ответим на все ваши вопросы</p>
+        <form class="manager-form">
+          <label for="manager-name">Представьтесь, пожалуйста</label>
+          <input id="manager-name" type="text" name="name" placeholder="Ваше имя" autocomplete="name" required />
+
+          <label for="manager-phone">Ваш номер телефона</label>
+          <input id="manager-phone" type="tel" name="phone" placeholder="+7 900 000 00 00" autocomplete="tel" required />
+
+          <label for="manager-comment">Комментарий к заявке или вопрос</label>
+          <textarea id="manager-comment" name="comment" rows="3"></textarea>
+
+          <button class="btn manager-submit" type="submit">
+            <img class="icon" src="media/icons/Message.svg" alt="" />Отправить
+          </button>
+        </form>
+      </section>
+    </div>
+
+    <script>
+      const modalOverlay = document.querySelector("[data-manager-modal]");
+      const openModalButtons = document.querySelectorAll("[data-open-manager-modal]");
+      const closeModalButton = document.querySelector("[data-close-manager-modal]");
+
+      const openModal = () => {
+        modalOverlay.classList.add("is-open");
+        document.body.classList.add("modal-open");
+        modalOverlay.setAttribute("aria-hidden", "false");
+      };
+
+      const closeModal = () => {
+        modalOverlay.classList.remove("is-open");
+        document.body.classList.remove("modal-open");
+        modalOverlay.setAttribute("aria-hidden", "true");
+      };
+
+      openModalButtons.forEach((button) => {
+        button.addEventListener("click", openModal);
+      });
+
+      closeModalButton.addEventListener("click", closeModal);
+
+      modalOverlay.addEventListener("click", (event) => {
+        if (event.target === modalOverlay) {
+          closeModal();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modalOverlay.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      document.querySelector(".manager-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        closeModal();
+      });
+    </script>
   </body>
 </html>
