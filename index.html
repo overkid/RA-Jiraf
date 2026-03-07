@@ -141,7 +141,7 @@
     <div class="modal-overlay" data-manager-modal aria-hidden="true">
       <section class="manager-modal" role="dialog" aria-modal="true" aria-labelledby="manager-modal-title">
         <button class="modal-close" type="button" data-close-manager-modal aria-label="Закрыть форму">
-          <span aria-hidden="true">×</span>
+          <span aria-hidden="true">✕</span>
         </button>
         <h2>Заявка менеджеру</h2>
         <p>Мы свяжемся с вами для уточнения заказа и ответим на все ваши вопросы</p>
@@ -150,7 +150,20 @@
           <input id="manager-name" type="text" name="name" placeholder="Ваше имя" autocomplete="name" required />
 
           <label for="manager-phone">Ваш номер телефона</label>
-          <input id="manager-phone" type="tel" name="phone" placeholder="+7 900 000 00 00" autocomplete="tel" required />
+          <div class="manager-field" data-phone-field>
+            <input
+              id="manager-phone"
+              type="tel"
+              name="phone"
+              placeholder="+7 900 000 00 00"
+              autocomplete="tel"
+              inputmode="tel"
+              required
+              aria-describedby="manager-phone-error"
+            />
+            <img class="manager-field-error-icon" src="media/icons/Error.svg" alt="" aria-hidden="true" />
+          </div>
+          <p class="manager-field-error" id="manager-phone-error">Неверный формат номера</p>
 
           <label for="manager-comment">Комментарий к заявке или вопрос</label>
           <textarea id="manager-comment" name="comment" rows="3"></textarea>
@@ -166,6 +179,69 @@
       const modalOverlay = document.querySelector("[data-manager-modal]");
       const openModalButtons = document.querySelectorAll("[data-open-manager-modal]");
       const closeModalButton = document.querySelector("[data-close-manager-modal]");
+      const managerForm = document.querySelector(".manager-form");
+      const phoneInput = document.querySelector("#manager-phone");
+      const phoneField = document.querySelector("[data-phone-field]");
+      const phoneDigitsCount = 10;
+      const phonePrefix = "+7";
+
+      const formatPhoneValue = (rawValue) => {
+        const digitsOnly = rawValue.replace(/\D/g, "");
+        const localNumber = digitsOnly.replace(/^7|^8/, "").slice(0, phoneDigitsCount);
+
+        let formattedValue = phonePrefix;
+
+        if (localNumber.length > 0) {
+          formattedValue += ` ${localNumber.slice(0, 3)}`;
+        }
+
+        if (localNumber.length > 3) {
+          formattedValue += ` ${localNumber.slice(3, 6)}`;
+        }
+
+        if (localNumber.length > 6) {
+          formattedValue += ` ${localNumber.slice(6, 8)}`;
+        }
+
+        if (localNumber.length > 8) {
+          formattedValue += ` ${localNumber.slice(8, 10)}`;
+        }
+
+        return { formattedValue, localDigitsLength: localNumber.length };
+      };
+
+      const setPhoneErrorState = (hasError) => {
+        phoneField.classList.toggle("is-error", hasError);
+        phoneInput.setAttribute("aria-invalid", String(hasError));
+      };
+
+      const validatePhone = () => {
+        const { localDigitsLength } = formatPhoneValue(phoneInput.value);
+        const isValid = localDigitsLength === phoneDigitsCount;
+
+        setPhoneErrorState(!isValid);
+        return isValid;
+      };
+
+      const normalizePhoneInput = (value) => {
+        const { formattedValue } = formatPhoneValue(value);
+        phoneInput.value = formattedValue;
+      };
+
+      normalizePhoneInput(phoneInput.value);
+
+      phoneInput.addEventListener("focus", () => {
+        normalizePhoneInput(phoneInput.value);
+      });
+
+      phoneInput.addEventListener("input", (event) => {
+        normalizePhoneInput(event.target.value);
+        setPhoneErrorState(false);
+      });
+
+      phoneInput.addEventListener("blur", () => {
+        validatePhone();
+      });
 
       const openModal = () => {
         modalOverlay.classList.add("is-open");
@@ -197,8 +273,14 @@
         }
       });
 
-      document.querySelector(".manager-form").addEventListener("submit", (event) => {
+      managerForm.addEventListener("submit", (event) => {
         event.preventDefault();
+
+        if (!validatePhone()) {
+          phoneInput.focus();
+          return;
+        }
+
         closeModal();
       });
     </script>
