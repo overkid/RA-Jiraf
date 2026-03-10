@@ -24,6 +24,7 @@
 
 html {
   overflow-y: scroll;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -209,7 +210,7 @@ h3 { font: var(--font-h3); }
 }
 
 .btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .hero-content {
@@ -329,7 +330,7 @@ h3 { font: var(--font-h3); }
 }
 
 .footer-meta {
-  margin-top: 68px;
+  margin-top: 40px;
   border-top: 2px solid var(--color-orange-dark);
   padding-top: 26px;
   display: grid;
@@ -661,7 +662,8 @@ p.manager-field-error {
 
 .catalog-help {
   text-align: center;
-  padding-top: 58px;
+  padding-top: 40px;
+  padding-bottom: 40px;
 }
 
 .catalog-help .btn-contact {
