@@ -122,6 +122,7 @@ h3 { font: var(--font-h3); }
   overflow: hidden;
   background: var(--color-orange);
   color: var(--color-white);
+  min-height: 80vh;
   border-bottom-left-radius: 64px;
   border-bottom-right-radius: 64px;
   padding: 120px 0 80px;
