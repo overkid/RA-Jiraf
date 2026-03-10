@@ -755,7 +755,6 @@ body.is-page-transition {
   opacity: 0;
 }
 
-.menu a,
 .hero-down,
 a.btn,
 button.btn,
@@ -765,7 +764,6 @@ button.btn,
   will-change: transform;
 }
 
-.menu a:hover,
 .hero-down:hover,
 a.btn:hover,
 button.btn:hover,
@@ -774,7 +772,6 @@ button.btn:hover,
   transform: translateY(-2px);
 }
 
-.menu a:active,
 .hero-down:active,
 a.btn:active,
 button.btn:active,

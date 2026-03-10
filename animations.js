@@ -48,7 +48,7 @@
 
   const setupRevealAnimations = () => {
     const revealElements = document.querySelectorAll(
-      ".section, .hero-content, .cards > article, .feature, .catalog-tab, .service-tile, .footer-cta"
+      ".section, .hero-content, .cards > article, .feature, .catalog-tab, .service-tile, .portfolio-card, .footer-cta"
     );
 
     revealElements.forEach((element) => {
@@ -56,19 +56,26 @@
     });
 
     const horizontalElements = document.querySelectorAll(
-      ".feature, .catalog-tab, .service-tile"
+      ".feature, .catalog-tab, .service-tile, .portfolio-card"
     );
 
     horizontalElements.forEach((element) => {
       element.classList.add("reveal-horizontal");
     });
 
+    const catalogTiles = document.querySelectorAll(".service-tile");
+    catalogTiles.forEach((tile) => {
+      tile.setAttribute("data-reveal-manual", "");
+    });
+
     setRevealDelays(".cards > article", 0.08, 0.34);
     setRevealDelays(".feature", 0.09, 0.35);
     setRevealDelays(".catalog-tab", 0.08, 0.26);
     setRevealDelays(".service-tile", 0.07, 0.28);
+    setRevealDelays(".portfolio-card", 0.09, 0.36);
 
-    const targets = document.querySelectorAll("[data-reveal]");
+    const targets = Array.from(document.querySelectorAll("[data-reveal]"))
+      .filter((element) => !element.hasAttribute("data-reveal-manual"));
 
     if (prefersReducedMotion || !("IntersectionObserver" in window)) {
       targets.forEach((element) => {
@@ -99,7 +106,54 @@
     });
   };
 
+
+  const setupCatalogConsistency = () => {
+    const categoryTabs = document.querySelectorAll("[data-category-tab]");
+    const categoryGroups = document.querySelectorAll("[data-category]");
+
+    if (!categoryTabs.length || !categoryGroups.length) {
+      return;
+    }
+
+    const animateGroupTiles = (group) => {
+      const tiles = group.querySelectorAll(".service-tile");
+
+      tiles.forEach((tile, index) => {
+        tile.style.setProperty("--reveal-delay", `${Math.min(index * 0.08, 0.32)}s`);
+        tile.classList.remove("is-visible");
+      });
+
+      if (prefersReducedMotion) {
+        tiles.forEach((tile) => tile.classList.add("is-visible"));
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          tiles.forEach((tile) => tile.classList.add("is-visible"));
+        });
+      });
+    };
+
+    categoryTabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const selectedCategory = tab.dataset.categoryTab;
+        const activeGroup = Array.from(categoryGroups).find((group) => group.dataset.category === selectedCategory && !group.hidden);
+
+        if (activeGroup) {
+          animateGroupTiles(activeGroup);
+        }
+      });
+    });
+
+    const initialGroup = Array.from(categoryGroups).find((group) => !group.hidden);
+    if (initialGroup) {
+      animateGroupTiles(initialGroup);
+    }
+  };
+
   preparePageFadeIn();
   setupPageTransitions();
   setupRevealAnimations();
+  setupCatalogConsistency();
 })();
