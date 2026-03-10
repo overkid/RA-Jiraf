@@ -82,17 +82,20 @@
     const heroBlocks = document.querySelectorAll(".hero-content, .catalog-hero");
 
     heroBlocks.forEach((block) => {
+      const title = block.querySelector("h1");
       const subtitle = block.querySelector("p");
       const button = block.querySelector(".btn");
+      const wordCount = title ? title.querySelectorAll(".hero-word").length : 0;
+      const lastWordDelay = wordCount > 0 ? 0.08 + Math.min((wordCount - 1) * 0.06, 0.42) : 0.08;
+      const titleRevealDuration = 0.55;
+      const titleFinishMs = (lastWordDelay + titleRevealDuration) * 1000;
 
       if (subtitle) {
         subtitle.setAttribute("data-hero-reveal", "");
-        subtitle.style.setProperty("--hero-delay", "0.56s");
       }
 
       if (button) {
         button.setAttribute("data-hero-reveal", "");
-        button.style.setProperty("--hero-delay", "0.72s");
       }
 
       if (prefersReducedMotion) {
@@ -101,12 +104,16 @@
         return;
       }
 
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          if (subtitle) subtitle.classList.add("is-visible");
-          if (button) button.classList.add("is-visible");
-        });
-      });
+      const subtitleDelayMs = Math.max(120, titleFinishMs - 220);
+      const buttonDelayMs = Math.max(220, titleFinishMs - 80);
+
+      window.setTimeout(() => {
+        if (subtitle) subtitle.classList.add("is-visible");
+      }, subtitleDelayMs);
+
+      window.setTimeout(() => {
+        if (button) button.classList.add("is-visible");
+      }, buttonDelayMs);
     });
   };
 
@@ -236,10 +243,10 @@
     }
   };
 
-  preparePageFadeIn();
-  setupPageTransitions();
   setupHeroWordReveal();
   setupHeroContentReveal();
+  preparePageFadeIn();
+  setupPageTransitions();
   setupRevealAnimations();
   setupCatalogConsistency();
 })();
