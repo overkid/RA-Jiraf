@@ -847,10 +847,6 @@ button.btn:active,
   transform: translate3d(0, 0, 0);
 }
 
-.hero-text[data-hero-reveal],
-.hero-text[data-hero-reveal].is-visible {
-  transform: none;
-}
 
 [data-reveal] {
   opacity: 0;

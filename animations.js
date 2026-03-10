@@ -104,13 +104,16 @@
         return;
       }
 
+      const subtitleDelayMs = Math.max(120, titleFinishMs - 220);
+      const buttonDelayMs = Math.max(220, titleFinishMs - 80);
+
       window.setTimeout(() => {
         if (subtitle) subtitle.classList.add("is-visible");
-      }, titleFinishMs + 80);
+      }, subtitleDelayMs);
 
       window.setTimeout(() => {
         if (button) button.classList.add("is-visible");
-      }, titleFinishMs + 240);
+      }, buttonDelayMs);
     });
   };
 
@@ -240,10 +243,10 @@
     }
   };
 
-  preparePageFadeIn();
-  setupPageTransitions();
   setupHeroWordReveal();
   setupHeroContentReveal();
+  preparePageFadeIn();
+  setupPageTransitions();
   setupRevealAnimations();
   setupCatalogConsistency();
 })();
