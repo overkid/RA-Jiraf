@@ -187,7 +187,6 @@ h3 { font: var(--font-h3); }
 .btn-contact .icon,
 .btn-card .icon {
   filter: brightness(0) saturate(100%) invert(44%) sepia(99%) saturate(2886%) hue-rotate(3deg) brightness(104%) contrast(105%);
-  transition: filter 0.22s ease;
 }
 
 .btn-nav {
