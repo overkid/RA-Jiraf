@@ -37,6 +37,46 @@
     });
   };
 
+  const setupHeroWordReveal = () => {
+    const heroTitles = document.querySelectorAll(".hero-content h1, .catalog-hero h1");
+
+    heroTitles.forEach((title) => {
+      if (title.dataset.wordsReady === "true") {
+        return;
+      }
+
+      const words = title.textContent.trim().split(/\s+/);
+      title.textContent = "";
+      title.classList.add("hero-title-words");
+
+      words.forEach((word, index) => {
+        const wordSpan = document.createElement("span");
+        wordSpan.className = "hero-word";
+        wordSpan.style.setProperty("--word-delay", `${0.08 + Math.min(index * 0.06, 0.42)}s`);
+        wordSpan.textContent = word;
+        title.appendChild(wordSpan);
+
+        if (index < words.length - 1) {
+          const spacer = document.createElement("span");
+          spacer.className = "hero-word-space";
+          spacer.textContent = "\u00A0";
+          title.appendChild(spacer);
+        }
+      });
+
+      title.dataset.wordsReady = "true";
+
+      if (prefersReducedMotion) {
+        title.classList.add("is-visible");
+        return;
+      }
+
+      window.setTimeout(() => {
+        title.classList.add("is-visible");
+      }, 70);
+    });
+  };
+
   const setRevealDelays = (selector, baseDelay = 0.06, maxDelay = 0.3) => {
     const elements = document.querySelectorAll(selector);
 
@@ -48,7 +88,7 @@
 
   const setupRevealAnimations = () => {
     const revealElements = document.querySelectorAll(
-      ".section, .hero-content, .cards > article, .feature, .catalog-tab, .service-tile, .portfolio-card, .footer-cta"
+      ".section, .hero-content .hero-text, .hero-content .btn, .catalog-hero .section-subtitle, .cards > article, .feature, .catalog-tab, .service-tile, .portfolio-card, .footer-cta"
     );
 
     revealElements.forEach((element) => {
@@ -73,6 +113,7 @@
     setRevealDelays(".catalog-tab", 0.08, 0.26);
     setRevealDelays(".service-tile", 0.07, 0.28);
     setRevealDelays(".portfolio-card", 0.09, 0.36);
+    setRevealDelays(".hero-content .hero-text, .hero-content .btn, .catalog-hero .section-subtitle", 0.12, 0.2);
 
     const targets = Array.from(document.querySelectorAll("[data-reveal]"))
       .filter((element) => !element.hasAttribute("data-reveal-manual"));
@@ -91,21 +132,31 @@
             return;
           }
 
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
+          const element = entry.target;
+          const revealDelaySeconds = Number.parseFloat(element.style.getPropertyValue("--reveal-delay")) || 0;
+          const revealDelayMs = Math.max(40, revealDelaySeconds * 1000);
+
+          window.setTimeout(() => {
+            element.classList.add("is-visible");
+          }, revealDelayMs);
+
+          observer.unobserve(element);
         });
       },
       {
-        threshold: 0.12,
-        rootMargin: "0px 0px -8% 0px"
+        threshold: 0.08,
+        rootMargin: "0px 0px -6% 0px"
       }
     );
 
-    targets.forEach((element) => {
-      revealObserver.observe(element);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        targets.forEach((element) => {
+          revealObserver.observe(element);
+        });
+      });
     });
   };
-
 
   const setupCatalogConsistency = () => {
     const categoryTabs = document.querySelectorAll("[data-category-tab]");
@@ -154,6 +205,7 @@
 
   preparePageFadeIn();
   setupPageTransitions();
+  setupHeroWordReveal();
   setupRevealAnimations();
   setupCatalogConsistency();
 })();
