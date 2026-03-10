@@ -77,6 +77,39 @@
     });
   };
 
+
+  const setupHeroContentReveal = () => {
+    const heroBlocks = document.querySelectorAll(".hero-content, .catalog-hero");
+
+    heroBlocks.forEach((block) => {
+      const subtitle = block.querySelector("p");
+      const button = block.querySelector(".btn");
+
+      if (subtitle) {
+        subtitle.setAttribute("data-hero-reveal", "");
+        subtitle.style.setProperty("--hero-delay", "0.56s");
+      }
+
+      if (button) {
+        button.setAttribute("data-hero-reveal", "");
+        button.style.setProperty("--hero-delay", "0.72s");
+      }
+
+      if (prefersReducedMotion) {
+        if (subtitle) subtitle.classList.add("is-visible");
+        if (button) button.classList.add("is-visible");
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          if (subtitle) subtitle.classList.add("is-visible");
+          if (button) button.classList.add("is-visible");
+        });
+      });
+    });
+  };
+
   const setRevealDelays = (selector, baseDelay = 0.06, maxDelay = 0.3) => {
     const elements = document.querySelectorAll(selector);
 
@@ -88,7 +121,7 @@
 
   const setupRevealAnimations = () => {
     const revealElements = document.querySelectorAll(
-      ".section, .hero-content .hero-text, .hero-content .btn, .catalog-hero .section-subtitle, .cards > article, .feature, .catalog-tab, .service-tile, .portfolio-card, .footer-cta"
+      ".section, .cards > article, .feature, .catalog-tab, .service-tile, .portfolio-card, .footer-cta"
     );
 
     revealElements.forEach((element) => {
@@ -96,7 +129,7 @@
     });
 
     const horizontalElements = document.querySelectorAll(
-      ".feature, .catalog-tab, .service-tile, .portfolio-card"
+      ".feature, .catalog-tab, .service-tile, .portfolio-card, .card"
     );
 
     horizontalElements.forEach((element) => {
@@ -113,7 +146,7 @@
     setRevealDelays(".catalog-tab", 0.08, 0.26);
     setRevealDelays(".service-tile", 0.07, 0.28);
     setRevealDelays(".portfolio-card", 0.09, 0.36);
-    setRevealDelays(".hero-content .hero-text, .hero-content .btn, .catalog-hero .section-subtitle", 0.12, 0.2);
+    setRevealDelays(".card", 0.08, 0.32);
 
     const targets = Array.from(document.querySelectorAll("[data-reveal]"))
       .filter((element) => !element.hasAttribute("data-reveal-manual"));
@@ -206,6 +239,7 @@
   preparePageFadeIn();
   setupPageTransitions();
   setupHeroWordReveal();
+  setupHeroContentReveal();
   setupRevealAnimations();
   setupCatalogConsistency();
 })();
