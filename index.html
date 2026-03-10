@@ -177,6 +177,22 @@
     </div>
 
     <script>
+      const nav = document.querySelector(".top-nav");
+      const heroSection = document.querySelector(".hero");
+
+      const syncNavContrast = () => {
+        if (!nav || !heroSection) {
+          return;
+        }
+
+        const heroBottom = heroSection.getBoundingClientRect().bottom;
+        nav.classList.toggle("is-contrast", heroBottom <= 120);
+      };
+
+      syncNavContrast();
+      window.addEventListener("scroll", syncNavContrast, { passive: true });
+      window.addEventListener("resize", syncNavContrast);
+
       const modalOverlay = document.querySelector("[data-manager-modal]");
       const openModalButtons = document.querySelectorAll("[data-open-manager-modal]");
       const closeModalButton = document.querySelector("[data-close-manager-modal]");
