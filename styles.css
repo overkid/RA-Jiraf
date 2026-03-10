@@ -43,6 +43,14 @@ button {
   margin-inline: auto;
 }
 
+.hero .container {
+  min-height: calc(95vh - 200px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
 h1,
 h2,
 h3 {
@@ -244,7 +252,7 @@ h3 { font: var(--font-h3); }
 .hero-content {
   text-align: center;
   max-width: 1200px;
-  margin: 120px auto 20px;
+  margin: 0 auto;
 }
 
 .hero h1 {
@@ -582,7 +590,7 @@ p.manager-field-error {
     justify-content: center;
   }
 
-  .hero-content { margin-top: 72px; }
+  .hero-content { margin-top: 0; }
   .grid-4 { grid-template-columns: 1fr; }
 
   .hero::before {
@@ -837,6 +845,11 @@ button.btn:active,
 [data-hero-reveal].is-visible {
   opacity: 1;
   transform: translate3d(0, 0, 0);
+}
+
+.hero-text[data-hero-reveal],
+.hero-text[data-hero-reveal].is-visible {
+  transform: none;
 }
 
 [data-reveal] {
