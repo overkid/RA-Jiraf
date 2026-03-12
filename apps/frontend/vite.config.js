@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,7 +18,7 @@ export default defineConfig({
   },
   server: {
     fs: {
-      allow: [mediaDir]
+      allow: [searchForWorkspaceRoot(process.cwd()), mediaDir]
     }
   }
 });
