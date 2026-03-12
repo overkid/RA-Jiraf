@@ -59,3 +59,30 @@ npm run dev
 ```bash
 PORT=3001 JWT_SECRET=supersecret ADMIN_LOGIN=myadmin ADMIN_PASSWORD=mypassword npm run dev -w @ra-jiraf/backend
 ```
+
+
+## Требования к Node.js
+
+- Рекомендуется **Node.js 20 LTS** или **22 LTS**.
+- Node 25 (current) может ломать установку нативных пакетов на Windows.
+
+## Частые проблемы на Windows
+
+1. `concurrently не является ... командой`
+   - Это значит, что `npm install` завершился с ошибкой и зависимости не поставились.
+   - В этом репозитории `npm run dev` теперь запускается через встроенный `node scripts/dev.mjs`, без зависимости `concurrently`.
+
+2. Ошибка сборки `better-sqlite3` / `node-gyp` / Visual Studio
+   - Раньше проект использовал нативный пакет `better-sqlite3`, который требует C++ toolchain на Windows.
+   - Теперь бэкенд использует `sql.js` (SQLite на WebAssembly), поэтому Visual Studio Build Tools не нужны.
+
+3. EPERM при очистке `node_modules`
+   - Закройте все терминалы/процессы Node, которые могут держать файлы.
+   - Затем выполните:
+
+```powershell
+rd /s /q node_modules
+del package-lock.json
+npm cache verify
+npm install
+```

@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
-import db from './db.js';
+import { dbApi } from './db.js';
 
 const app = Fastify({ logger: true });
 const PORT = Number(process.env.PORT || 3001);
@@ -22,19 +22,9 @@ app.decorate('verifyAdmin', async function verifyAdmin(request, reply) {
 
 app.get('/health', async () => ({ ok: true }));
 
-app.get('/api/catalog', async () => {
-  const categories = db.prepare('SELECT id, slug, title, sort_order FROM service_categories ORDER BY sort_order').all();
-  const services = db
-    .prepare('SELECT id, category_id, title, description, sort_order FROM services WHERE is_active = 1 ORDER BY sort_order')
-    .all();
+app.get('/api/catalog', async () => dbApi.getCatalog(true));
 
-  return categories.map((category) => ({
-    ...category,
-    services: services.filter((service) => service.category_id === category.id)
-  }));
-});
-
-app.get('/api/contacts', async () => db.prepare('SELECT * FROM contacts WHERE id = 1').get());
+app.get('/api/contacts', async () => dbApi.getContacts());
 
 app.post('/api/admin/login', async (request, reply) => {
   const { login, password } = request.body ?? {};
@@ -47,31 +37,21 @@ app.post('/api/admin/login', async (request, reply) => {
   return { token };
 });
 
-app.get('/api/admin/catalog', { preHandler: [app.verifyAdmin] }, async () => {
-  const categories = db.prepare('SELECT id, slug, title, sort_order FROM service_categories ORDER BY sort_order').all();
-  const services = db
-    .prepare('SELECT id, category_id, title, description, is_active, sort_order FROM services ORDER BY sort_order')
-    .all();
-
-  return categories.map((category) => ({
-    ...category,
-    services: services.filter((service) => service.category_id === category.id)
-  }));
-});
+app.get('/api/admin/catalog', { preHandler: [app.verifyAdmin] }, async () => dbApi.getCatalog(false));
 
 app.put('/api/admin/services/:id', { preHandler: [app.verifyAdmin] }, async (request, reply) => {
   const { id } = request.params;
   const { title, description, categoryId, isActive } = request.body ?? {};
 
-  const update = db.prepare(
-    `UPDATE services
-     SET title = ?, description = ?, category_id = ?, is_active = ?
-     WHERE id = ?`
-  );
+  const updated = dbApi.updateService({
+    id: Number(id),
+    title,
+    description,
+    categoryId,
+    isActive
+  });
 
-  const result = update.run(title, description ?? '', categoryId, isActive ? 1 : 0, id);
-
-  if (!result.changes) {
+  if (!updated) {
     return reply.code(404).send({ message: 'Услуга не найдена' });
   }
 
@@ -81,12 +61,7 @@ app.put('/api/admin/services/:id', { preHandler: [app.verifyAdmin] }, async (req
 app.put('/api/admin/contacts', { preHandler: [app.verifyAdmin] }, async (request) => {
   const { email, phoneMain, phoneAlt, addressLine1, addressLine2, addressLine3 } = request.body ?? {};
 
-  db.prepare(
-    `UPDATE contacts
-     SET email = ?, phone_main = ?, phone_alt = ?, address_line1 = ?, address_line2 = ?, address_line3 = ?
-     WHERE id = 1`
-  ).run(email, phoneMain, phoneAlt, addressLine1, addressLine2, addressLine3);
-
+  dbApi.updateContacts({ email, phoneMain, phoneAlt, addressLine1, addressLine2, addressLine3 });
   return { ok: true };
 });
 

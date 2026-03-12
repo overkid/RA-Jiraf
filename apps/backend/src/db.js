@@ -1,14 +1,41 @@
-import Database from 'better-sqlite3';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import initSqlJs from 'sql.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dbPath = path.join(__dirname, '..', 'data.sqlite');
-const db = new Database(dbPath);
 
-db.pragma('journal_mode = WAL');
+const SQL = await initSqlJs({
+  locateFile: (file) => path.join(__dirname, '..', '..', '..', 'node_modules', 'sql.js', 'dist', file)
+});
 
-db.exec(`
+const dbBuffer = fs.existsSync(dbPath) ? fs.readFileSync(dbPath) : null;
+const db = dbBuffer ? new SQL.Database(dbBuffer) : new SQL.Database();
+
+const persist = () => {
+  const data = db.export();
+  fs.writeFileSync(dbPath, Buffer.from(data));
+};
+
+const run = (sql, params = []) => {
+  db.run(sql, params);
+};
+
+const all = (sql, params = []) => {
+  const stmt = db.prepare(sql);
+  stmt.bind(params);
+  const rows = [];
+  while (stmt.step()) {
+    rows.push(stmt.getAsObject());
+  }
+  stmt.free();
+  return rows;
+};
+
+const get = (sql, params = []) => all(sql, params)[0];
+
+run(`
   CREATE TABLE IF NOT EXISTS service_categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     slug TEXT NOT NULL UNIQUE,
@@ -37,23 +64,22 @@ db.exec(`
   );
 `);
 
-const categoryCount = db.prepare('SELECT COUNT(*) AS count FROM service_categories').get().count;
+const categoryCount = get('SELECT COUNT(*) AS count FROM service_categories')?.count ?? 0;
 if (!categoryCount) {
-  const insertCategory = db.prepare('INSERT INTO service_categories (slug, title, sort_order) VALUES (?, ?, ?)');
   const categories = [
     ['print', 'Типография и полиграфия', 1],
     ['souvenir', 'Сувенирная продукция', 2],
     ['wide', 'Широкоформатная печать', 3],
     ['outdoor', 'Наружная реклама', 4]
   ];
-  categories.forEach((category) => insertCategory.run(...category));
 
-  const categoryIds = db.prepare('SELECT id, slug FROM service_categories').all();
+  categories.forEach(([slug, title, sortOrder]) => {
+    run('INSERT INTO service_categories (slug, title, sort_order) VALUES (?, ?, ?)', [slug, title, sortOrder]);
+  });
+
+  const categoryIds = all('SELECT id, slug FROM service_categories');
   const ids = Object.fromEntries(categoryIds.map((item) => [item.slug, item.id]));
 
-  const insertService = db.prepare(
-    'INSERT INTO services (category_id, title, description, sort_order) VALUES (?, ?, ?, ?)'
-  );
   const services = [
     [ids.print, 'Изготовление визиток', 'Дизайн и печать визиток на плотной бумаге.', 1],
     [ids.print, 'Печать буклетов и листовок', 'Цветная печать рекламных материалов.', 2],
@@ -72,22 +98,74 @@ if (!categoryCount) {
     [ids.outdoor, 'Оформление входных групп', 'Комплексное оформление входов в бизнес.', 3],
     [ids.outdoor, 'Брендирование фасадов и витрин', 'Плоттерная резка и оклейка.', 4]
   ];
-  services.forEach((service) => insertService.run(...service));
+
+  services.forEach(([categoryId, title, description, sortOrder]) => {
+    run('INSERT INTO services (category_id, title, description, sort_order) VALUES (?, ?, ?, ?)', [
+      categoryId,
+      title,
+      description,
+      sortOrder
+    ]);
+  });
 }
 
-const contactExists = db.prepare('SELECT id FROM contacts WHERE id = 1').get();
+const contactExists = get('SELECT id FROM contacts WHERE id = 1');
 if (!contactExists) {
-  db.prepare(
+  run(
     `INSERT INTO contacts (id, email, phone_main, phone_alt, address_line1, address_line2, address_line3)
-     VALUES (1, ?, ?, ?, ?, ?, ?)`
-  ).run(
-    'giraf33@mail.ru',
-    '8 (4922) 46-64-84',
-    '8 (958) 510-64-84',
-    'Офис находится по адресу:',
-    'г. Владимир, ул. Ставровская, д. 4',
-    'ост. 1001 мелочь, парковка рядом с домом'
+     VALUES (1, ?, ?, ?, ?, ?, ?)`,
+    [
+      'giraf33@mail.ru',
+      '8 (4922) 46-64-84',
+      '8 (958) 510-64-84',
+      'Офис находится по адресу:',
+      'г. Владимир, ул. Ставровская, д. 4',
+      'ост. 1001 мелочь, парковка рядом с домом'
+    ]
   );
 }
 
-export default db;
+persist();
+
+export const dbApi = {
+  getCatalog(activeOnly = true) {
+    const categories = all('SELECT id, slug, title, sort_order FROM service_categories ORDER BY sort_order');
+    const servicesQuery = activeOnly
+      ? 'SELECT id, category_id, title, description, sort_order, is_active FROM services WHERE is_active = 1 ORDER BY sort_order'
+      : 'SELECT id, category_id, title, description, sort_order, is_active FROM services ORDER BY sort_order';
+    const services = all(servicesQuery);
+
+    return categories.map((category) => ({
+      ...category,
+      services: services.filter((service) => service.category_id === category.id)
+    }));
+  },
+
+  getContacts() {
+    return get('SELECT * FROM contacts WHERE id = 1');
+  },
+
+  updateService({ id, title, description, categoryId, isActive }) {
+    const existing = get('SELECT id FROM services WHERE id = ?', [id]);
+    if (!existing) return false;
+
+    run(
+      `UPDATE services
+       SET title = ?, description = ?, category_id = ?, is_active = ?
+       WHERE id = ?`,
+      [title, description ?? '', categoryId, isActive ? 1 : 0, id]
+    );
+    persist();
+    return true;
+  },
+
+  updateContacts({ email, phoneMain, phoneAlt, addressLine1, addressLine2, addressLine3 }) {
+    run(
+      `UPDATE contacts
+       SET email = ?, phone_main = ?, phone_alt = ?, address_line1 = ?, address_line2 = ?, address_line3 = ?
+       WHERE id = 1`,
+      [email, phoneMain, phoneAlt, addressLine1, addressLine2, addressLine3]
+    );
+    persist();
+  }
+};
