@@ -22,10 +22,10 @@ onMounted(async () => {
   <header class="hero">
     <div class="container">
       <nav class="top-nav">
-        <router-link class="logo" to="/"><img src="/media/logo/Logo-Full.svg" alt="РА Жираф" /></router-link>
+        <router-link class="logo" to="/"><img :src="'/media/logo/Logo-Full.svg'" alt="РА Жираф" /></router-link>
         <ul class="menu">
-          <li><router-link to="/"><img class="icon" src="/media/icons/Home.svg" alt="" />Главная</router-link></li>
-          <li><router-link to="/services"><img class="icon" src="/media/icons/Catalog.svg" alt="" />Услуги</router-link></li>
+          <li><router-link to="/"><img class="icon" :src="'/media/icons/Home.svg'" alt="" />Главная</router-link></li>
+          <li><router-link to="/services"><img class="icon" :src="'/media/icons/Catalog.svg'" alt="" />Услуги</router-link></li>
         </ul>
       </nav>
       <div class="hero-content">
@@ -44,7 +44,7 @@ onMounted(async () => {
           <article class="card" v-for="item in catalog.flatMap((c) => c.services).slice(0,4)" :key="item.id">
             <div class="media"><img :src="serviceImages[item.title] || '/media/img/Visitka.png'" :alt="item.title" /></div>
             <h3>{{ item.title }}</h3>
-            <router-link to="/services" class="btn btn-card"><img class="icon" src="/media/icons/Catalog.svg" alt="" />Подробнее</router-link>
+            <router-link to="/services" class="btn btn-card"><img class="icon" :src="'/media/icons/Catalog.svg'" alt="" />Подробнее</router-link>
           </article>
         </div>
       </div>
@@ -60,7 +60,7 @@ onMounted(async () => {
           <p>{{ contacts.phone_main }}</p>
           <p>{{ contacts.phone_alt }}</p>
         </div>
-        <div class="footer-logo"><img src="/media/logo/Logo-Full.svg" alt="РА Жираф" /></div>
+        <div class="footer-logo"><img :src="'/media/logo/Logo-Full.svg'" alt="РА Жираф" /></div>
         <div>
           <p>{{ contacts.address_line1 }}</p>
           <p>{{ contacts.address_line2 }}</p>

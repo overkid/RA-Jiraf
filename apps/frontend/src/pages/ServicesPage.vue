@@ -21,10 +21,10 @@ onUnmounted(() => {
   <header class="catalog-header section">
     <div class="container">
       <nav class="top-nav top-nav-catalog">
-        <router-link class="logo" to="/"><img src="/media/logo/Logo-Full.svg" alt="РА Жираф" /></router-link>
+        <router-link class="logo" to="/"><img :src="'/media/logo/Logo-Full.svg'" alt="РА Жираф" /></router-link>
         <ul class="menu">
-          <li><router-link to="/"><img class="icon" src="/media/icons/Home.svg" alt="" />Главная</router-link></li>
-          <li><router-link to="/services"><img class="icon" src="/media/icons/Catalog.svg" alt="" />Услуги</router-link></li>
+          <li><router-link to="/"><img class="icon" :src="'/media/icons/Home.svg'" alt="" />Главная</router-link></li>
+          <li><router-link to="/services"><img class="icon" :src="'/media/icons/Catalog.svg'" alt="" />Услуги</router-link></li>
         </ul>
       </nav>
       <div class="catalog-hero">
@@ -68,7 +68,7 @@ onUnmounted(() => {
         <p>{{ contacts.phone_main }}</p>
         <p>{{ contacts.phone_alt }}</p>
       </div>
-      <div class="footer-logo"><img src="/media/logo/Logo-Full.svg" alt="РА Жираф" /></div>
+      <div class="footer-logo"><img :src="'/media/logo/Logo-Full.svg'" alt="РА Жираф" /></div>
       <div>
         <p>{{ contacts.address_line1 }}</p>
         <p>{{ contacts.address_line2 }}</p>
