@@ -35,37 +35,47 @@ const all = (sql, params = []) => {
 
 const get = (sql, params = []) => all(sql, params)[0];
 
-run(`
-  CREATE TABLE IF NOT EXISTS service_categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    slug TEXT NOT NULL UNIQUE,
-    title TEXT NOT NULL,
-    sort_order INTEGER DEFAULT 0
-  );
+const ensureSchema = () => {
+  run(`
+    CREATE TABLE IF NOT EXISTS service_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      sort_order INTEGER DEFAULT 0
+    )
+  `);
 
-  CREATE TABLE IF NOT EXISTS services (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    category_id INTEGER NOT NULL,
-    title TEXT NOT NULL,
-    description TEXT DEFAULT '',
-    is_active INTEGER DEFAULT 1,
-    sort_order INTEGER DEFAULT 0,
-    FOREIGN KEY(category_id) REFERENCES service_categories(id)
-  );
+  run(`
+    CREATE TABLE IF NOT EXISTS services (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      is_active INTEGER DEFAULT 1,
+      sort_order INTEGER DEFAULT 0,
+      FOREIGN KEY(category_id) REFERENCES service_categories(id)
+    )
+  `);
 
-  CREATE TABLE IF NOT EXISTS contacts (
-    id INTEGER PRIMARY KEY CHECK (id = 1),
-    email TEXT NOT NULL,
-    phone_main TEXT NOT NULL,
-    phone_alt TEXT NOT NULL,
-    address_line1 TEXT NOT NULL,
-    address_line2 TEXT NOT NULL,
-    address_line3 TEXT NOT NULL
-  );
-`);
+  run(`
+    CREATE TABLE IF NOT EXISTS contacts (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      email TEXT NOT NULL,
+      phone_main TEXT NOT NULL,
+      phone_alt TEXT NOT NULL,
+      address_line1 TEXT NOT NULL,
+      address_line2 TEXT NOT NULL,
+      address_line3 TEXT NOT NULL
+    )
+  `);
+};
 
-const categoryCount = get('SELECT COUNT(*) AS count FROM service_categories')?.count ?? 0;
-if (!categoryCount) {
+const seedCategories = () => {
+  const categoryCount = get('SELECT COUNT(*) AS count FROM service_categories')?.count ?? 0;
+  if (categoryCount) {
+    return;
+  }
+
   const categories = [
     ['print', 'Типография и полиграфия', 1],
     ['souvenir', 'Сувенирная продукция', 2],
@@ -76,9 +86,20 @@ if (!categoryCount) {
   categories.forEach(([slug, title, sortOrder]) => {
     run('INSERT INTO service_categories (slug, title, sort_order) VALUES (?, ?, ?)', [slug, title, sortOrder]);
   });
+};
+
+const seedServices = () => {
+  const serviceCount = get('SELECT COUNT(*) AS count FROM services')?.count ?? 0;
+  if (serviceCount) {
+    return;
+  }
 
   const categoryIds = all('SELECT id, slug FROM service_categories');
   const ids = Object.fromEntries(categoryIds.map((item) => [item.slug, item.id]));
+
+  if (!ids.print || !ids.souvenir || !ids.wide || !ids.outdoor) {
+    throw new Error('Категории услуг не инициализированы корректно');
+  }
 
   const services = [
     [ids.print, 'Изготовление визиток', 'Дизайн и печать визиток на плотной бумаге.', 1],
@@ -107,10 +128,14 @@ if (!categoryCount) {
       sortOrder
     ]);
   });
-}
+};
 
-const contactExists = get('SELECT id FROM contacts WHERE id = 1');
-if (!contactExists) {
+const seedContacts = () => {
+  const contactExists = get('SELECT id FROM contacts WHERE id = 1');
+  if (contactExists) {
+    return;
+  }
+
   run(
     `INSERT INTO contacts (id, email, phone_main, phone_alt, address_line1, address_line2, address_line3)
      VALUES (1, ?, ?, ?, ?, ?, ?)`,
@@ -123,8 +148,12 @@ if (!contactExists) {
       'ост. 1001 мелочь, парковка рядом с домом'
     ]
   );
-}
+};
 
+ensureSchema();
+seedCategories();
+seedServices();
+seedContacts();
 persist();
 
 export const dbApi = {

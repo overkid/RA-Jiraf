@@ -86,3 +86,13 @@ del package-lock.json
 npm cache verify
 npm install
 ```
+
+
+4. `Error: no such table: services`
+   - Это означает, что локальный `apps/backend/data.sqlite` был создан в частично-инициализированном состоянии.
+   - Удалите файл БД и перезапустите backend, таблицы будут созданы заново с сид-данными:
+
+```powershell
+del apps\backend\data.sqlite
+npm run dev
+```
