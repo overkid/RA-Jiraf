@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const mediaDir = path.resolve(__dirname, '..', '..', 'media');
+const normalizedMediaDir = mediaDir.replaceAll('\\', '/');
 
 export default defineConfig({
   plugins: [vue()],
@@ -12,7 +13,7 @@ export default defineConfig({
     alias: [
       {
         find: /^\/media\//,
-        replacement: `${mediaDir.replaceAll('\\', '/')}/`
+        replacement: `/@fs/${normalizedMediaDir}/`
       }
     ]
   },
