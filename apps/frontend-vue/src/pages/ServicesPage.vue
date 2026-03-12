@@ -4,8 +4,30 @@ import { api } from '../api'
 
 const categories = ref([])
 
+const fallbackCategories = [
+  {
+    id: 1,
+    name: 'Полиграфия',
+    services: [
+      { id: 1, title: 'Визитки', short_description: 'Печать визиток с вашим дизайном', price_from: 500 },
+      { id: 2, title: 'Широкоформатная печать', short_description: 'Баннеры, постеры, плакаты', price_from: 1500 }
+    ]
+  },
+  {
+    id: 2,
+    name: 'Сувенирная продукция',
+    services: [
+      { id: 3, title: 'Печать на кружках', short_description: 'Именные кружки для бизнеса и подарков', price_from: 700 }
+    ]
+  }
+]
+
 onMounted(async () => {
-  categories.value = await api('/api/public/services')
+  try {
+    categories.value = await api('/api/public/services')
+  } catch {
+    categories.value = fallbackCategories
+  }
 })
 </script>
 

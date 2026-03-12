@@ -1,83 +1,67 @@
-# RA-Jiraf — перенос на фреймворки (рабочая версия)
+# RA-Jiraf
 
-Проект переведен на фреймворки в формате монорепозитория:
-- **База (SQL):** PostgreSQL (или SQLite для быстрого локального старта)
-- **Backend:** FastAPI + SQLAlchemy
-- **Frontend:** Vue 3 + Vite
+Ок, максимально просто.
 
-## Структура
+## Хочу просто увидеть сайт ПРЯМО СЕЙЧАС (без установок)
 
-```text
-apps/
-  backend-fastapi/
-  frontend-vue/
-legacy (старые статические файлы) лежат в корне пока как резерв.
+Открой файл:
+
+- `index.html`
+
+Это legacy-версия, она работает без npm/python.
+
+---
+
+## Запуск новой версии (Windows PowerShell, без Linux-команд)
+
+> Ниже команды именно для **PowerShell**, поэтому `source` использовать не нужно.
+
+### 1) Backend (терминал №1)
+
+```powershell
+cd D:\github\tasks\RA-Jiraf\apps\backend-fastapi
+py -m venv .venv
+.\.venv\Scripts\python -m pip install -r requirements.txt
+.\.venv\Scripts\python -m uvicorn app.main:app --reload --port 8000
 ```
 
-## Быстрый запуск (локально)
+Если `py` не найден — установи Python с галкой **Add python to PATH**.
 
-### 1) Backend (FastAPI)
+### 2) Frontend (терминал №2)
 
-```bash
-cd apps/backend-fastapi
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
-
-Backend поднимется на `http://localhost:8000`.
-
-Проверка:
-- `http://localhost:8000/api/health`
-- `http://localhost:8000/docs`
-
-### 2) Frontend (Vue)
-
-Открыть второй терминал:
-
-```bash
-cd apps/frontend-vue
+```powershell
+cd D:\github\tasks\RA-Jiraf\apps\frontend-vue
 npm install
 npm run dev
 ```
 
-Frontend поднимется на `http://localhost:5173`.
+Открыть:
+- `http://localhost:5173`
 
-## Админка
+Админка:
+- `http://localhost:5173/admin`
+- логин: `admin`
+- пароль: `admin123`
 
-- Страница: `http://localhost:5173/admin`
-- Логин: `admin`
-- Пароль: `admin123`
+---
 
-(можно переопределить переменными окружения `ADMIN_LOGIN`, `ADMIN_PASSWORD` в backend)
+## Почему у тебя были ошибки
 
-## Что уже работает
+1. `source .venv/bin/activate` — это команда из Linux/macOS, в PowerShell она не работает.
+2. `pip`/`uvicorn` “не найдено” — потому что ты не вызывал их из `.venv` через `\.venv\Scripts\python -m ...`.
+3. `npm ENOENT ... RA-Jiraf\package.json` — ты запускал `npm install` не в `apps/frontend-vue`.
+4. `uvicorn ... 8000cd apps/frontend-vue` — две команды слиплись в одну строку.
 
-- Публичная часть:
-  - Главная страница (`/`)
-  - Каталог услуг (`/services`)
-  - Отправка заявки
-- Админка (`/admin`):
-  - Логин по паролю
-  - Редактирование контактной информации
-  - Просмотр каталога услуг
-  - Просмотр заявок и смена их статуса
+---
 
-## Переменные окружения backend
+## Самая короткая проверка (без backend)
 
-- `DATABASE_URL` (по умолчанию: `sqlite:///./app.db`)
-- `JWT_SECRET`
-- `ADMIN_LOGIN`
-- `ADMIN_PASSWORD`
-- `JWT_EXP_HOURS`
+Если хочешь просто посмотреть новый фронт даже без API:
 
-Пример для PostgreSQL:
-
-```bash
-export DATABASE_URL='postgresql+psycopg://user:password@localhost:5432/rajiraf'
+```powershell
+cd D:\github\tasks\RA-Jiraf\apps\frontend-vue
+npm install
+npm run dev
 ```
 
-## Важно для GitHub/Codex
-
-Чтобы не падало обновление ветки с ошибкой `Бинарные файлы не поддерживаются`, бинарные ассеты (`.png`, `.ico`) удалены из репозитория. В legacy-страницах вместо них используются SVG-ресурсы.
+Главная и каталог откроются с локальными данными-заглушками, даже если backend не запущен.

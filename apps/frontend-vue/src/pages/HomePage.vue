@@ -6,16 +6,32 @@ const contact = ref(null)
 const form = ref({ name: '', phone: '', email: '', message: '' })
 const message = ref('')
 
+const fallbackContact = {
+  company_name: 'RA Jiraf',
+  phone: '+7 (900) 000-00-00',
+  email: 'info@rajiraf.ru',
+  address: 'г. Омск, ул. Примерная, 1',
+  work_hours: 'Пн-Пт 09:00-18:00'
+}
+
 onMounted(async () => {
-  contact.value = await api('/api/public/contacts')
+  try {
+    contact.value = await api('/api/public/contacts')
+  } catch {
+    contact.value = fallbackContact
+  }
 })
 
 async function sendRequest() {
-  await api('/api/public/requests', {
-    method: 'POST',
-    body: JSON.stringify(form.value)
-  })
-  message.value = 'Заявка отправлена!'
+  try {
+    await api('/api/public/requests', {
+      method: 'POST',
+      body: JSON.stringify(form.value)
+    })
+    message.value = 'Заявка отправлена!'
+  } catch {
+    message.value = 'Backend не запущен: форма работает в демо-режиме.'
+  }
   form.value = { name: '', phone: '', email: '', message: '' }
 }
 </script>
