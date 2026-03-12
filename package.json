@@ -1,0 +1,14 @@
+{
+  "name": "ra-jiraf-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w @ra-jiraf/backend\" \"npm run dev -w @ra-jiraf/frontend\"",
+    "build": "npm run build -w @ra-jiraf/backend && npm run build -w @ra-jiraf/frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
