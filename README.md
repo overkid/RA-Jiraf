@@ -1,3 +1,63 @@
-# RA-Jiraf
+# RA-Jiraf (Vue + PHP + MySQL)
 
-<img width="800" height="100" alt="12" src="https://github.com/user-attachments/assets/984252d4-25a4-46c2-81d2-f2fd9a15820c" />
+Сайт переведён на связку:
+- **Vue 3** (frontend, через CDN)
+- **PHP** (backend API)
+- **MySQL** (данные услуг и заявок)
+
+## Что изменилось
+- Главная страница теперь: `index.php`
+- Услуги читаются из MySQL через API: `api/services.php`
+- Форма «Заявка менеджеру» сохраняет данные в MySQL через API: `api/requests.php`
+
+---
+
+## Запуск в XAMPP (пошагово, для новичка)
+
+### 1) Скопировать проект в папку XAMPP
+1. Открой папку XAMPP: обычно `C:\xampp\htdocs`
+2. Скопируй сюда проект целиком и назови, например, `RA-Jiraf`
+
+Должно получиться: `C:\xampp\htdocs\RA-Jiraf`
+
+### 2) Запустить Apache и MySQL
+1. Открой **XAMPP Control Panel**
+2. Нажми **Start** у:
+   - Apache
+   - MySQL
+
+### 3) Создать БД и таблицы
+1. Открой в браузере: `http://localhost/phpmyadmin`
+2. Нажми вкладку **SQL**
+3. Открой файл `db/schema.sql` из проекта
+4. Скопируй SQL из файла и выполни (кнопка **Go/Вперёд**)
+
+После этого создастся база `ra_jiraf`, таблицы и стартовые услуги.
+
+### 4) Настроить подключение к базе
+1. В проекте открой файл `config/database.php.example`
+2. Сделай копию и назови копию: `config/database.php`
+3. Проверь логин/пароль:
+   - для обычного XAMPP чаще всего `root` и пустой пароль
+
+### 5) Открыть сайт
+Открой в браузере:
+
+`http://localhost/RA-Jiraf/`
+
+Если всё ок — увидишь сайт, вкладки услуг и рабочую форму заявки.
+
+---
+
+## Проверка API вручную
+
+- Список услуг: `http://localhost/RA-Jiraf/api/services.php`
+- Отправка заявки: POST на `http://localhost/RA-Jiraf/api/requests.php`
+
+---
+
+## Если не работает
+- Ошибка подключения к БД → проверь `config/database.php`
+- Пустые услуги → заново выполни `db/schema.sql`
+- 404 на страницу → проверь, что проект в `htdocs`
+- Apache/MySQL не стартуют в XAMPP → часто порт занят (80/3306)
