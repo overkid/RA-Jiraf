@@ -1,19 +1,30 @@
 import { spawn } from 'node:child_process';
 
 const isWin = process.platform === 'win32';
-const npmCmd = isWin ? 'npm.cmd' : 'npm';
 
-const backend = spawn(npmCmd, ['run', 'dev', '-w', '@ra-jiraf/backend'], {
-  stdio: 'inherit',
-  shell: false
-});
+const runScript = (script) => {
+  if (isWin) {
+    const comspec = process.env.ComSpec || 'cmd.exe';
+    return spawn(comspec, ['/d', '/s', '/c', script], {
+      stdio: 'inherit',
+      windowsHide: true
+    });
+  }
 
-const frontend = spawn(npmCmd, ['run', 'dev', '-w', '@ra-jiraf/frontend'], {
-  stdio: 'inherit',
-  shell: false
-});
+  return spawn('sh', ['-lc', script], {
+    stdio: 'inherit'
+  });
+};
+
+const backend = runScript('npm run dev -w @ra-jiraf/backend');
+const frontend = runScript('npm run dev -w @ra-jiraf/frontend');
+
+let shuttingDown = false;
 
 const shutdown = (code = 0) => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
   backend.kill('SIGTERM');
   frontend.kill('SIGTERM');
   process.exit(code);
