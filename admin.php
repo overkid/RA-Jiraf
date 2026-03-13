@@ -6,13 +6,13 @@ session_start();
 
 require_once __DIR__ . '/api/db.php';
 
-const CONTENT_KEYS = [
-    'hero_title',
-    'hero_subtitle',
-    'services_title',
-    'services_subtitle',
-    'footer_title',
-    'footer_text',
+const CONTENT_FIELDS = [
+    'hero_title' => 'Заголовок первого экрана',
+    'hero_subtitle' => 'Подзаголовок первого экрана',
+    'services_title' => 'Заголовок блока услуг',
+    'services_subtitle' => 'Подзаголовок блока услуг',
+    'footer_title' => 'Заголовок нижнего блока',
+    'footer_text' => 'Текст нижнего блока',
 ];
 
 $defaults = [
@@ -40,7 +40,6 @@ function loadAdminCredentials(): array
     }
 
     $config = require $configPath;
-
     if (!isset($config['username'], $config['password'])) {
         throw new RuntimeException('В config/admin.php должны быть username и password');
     }
@@ -68,7 +67,7 @@ try {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    $action = (string) ($_POST['action'] ?? '');
 
     if ($action === 'login') {
         try {
@@ -98,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'save_home_content') {
             $stmt = $pdo->prepare('INSERT INTO site_content (content_key, content_value) VALUES (:key, :value) ON DUPLICATE KEY UPDATE content_value = VALUES(content_value)');
 
-            foreach (CONTENT_KEYS as $key) {
+            foreach (array_keys(CONTENT_FIELDS) as $key) {
                 $value = trim((string) ($_POST[$key] ?? ''));
                 if ($value === '') {
                     $errors[] = 'Все поля главной страницы обязательны.';
@@ -177,12 +176,24 @@ if (isAdminLoggedIn() && $pdo instanceof PDO) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Админка — РА «Жираф»</title>
+    <link rel="icon" href="media/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="admin-page">
-    <main class="admin-layout">
-      <h1>Админ-панель</h1>
+    <header class="admin-header">
+      <div class="container admin-header-inner">
+        <a class="logo" href="index.php"><img src="media/logo/Logo-Full.svg" alt="РА Жираф" /></a>
+        <h1>Админ-панель</h1>
+        <?php if (isAdminLoggedIn()): ?>
+          <form method="post" class="admin-logout">
+            <input type="hidden" name="action" value="logout" />
+            <button type="submit" class="btn">Выйти</button>
+          </form>
+        <?php endif; ?>
+      </div>
+    </header>
 
+    <main class="admin-layout">
       <?php if ($errors): ?>
         <div class="admin-alert admin-alert-error"><?= htmlspecialchars(implode(' ', $errors), ENT_QUOTES, 'UTF-8') ?></div>
       <?php endif; ?>
@@ -192,35 +203,25 @@ if (isAdminLoggedIn() && $pdo instanceof PDO) {
       <?php endif; ?>
 
       <?php if (!isAdminLoggedIn()): ?>
-        <section class="admin-card">
+        <section class="admin-card admin-login-card">
           <h2>Вход в админку</h2>
+          <p class="admin-muted">Введите логин и пароль из файла <code>config/admin.php</code>.</p>
           <form method="post" class="admin-form-stack">
             <input type="hidden" name="action" value="login" />
-            <label>
-              Логин
-              <input type="text" name="username" required />
-            </label>
-            <label>
-              Пароль
-              <input type="password" name="password" required />
-            </label>
+            <label>Логин<input type="text" name="username" required /></label>
+            <label>Пароль<input type="password" name="password" required /></label>
             <button type="submit" class="btn btn-nav">Войти</button>
           </form>
         </section>
       <?php else: ?>
-        <form method="post" class="admin-logout">
-          <input type="hidden" name="action" value="logout" />
-          <button type="submit" class="btn">Выйти</button>
-        </form>
-
         <section class="admin-card">
           <h2>Тексты главной страницы</h2>
           <form method="post" class="admin-form-grid">
             <input type="hidden" name="action" value="save_home_content" />
-            <?php foreach (CONTENT_KEYS as $key): ?>
+            <?php foreach (CONTENT_FIELDS as $key => $label): ?>
               <label>
-                <?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>
-                <?php if (str_contains($key, 'title')): ?>
+                <?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>
+                <?php if (strpos($key, 'title') !== false): ?>
                   <input type="text" name="<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>" value="<?= htmlspecialchars($content[$key] ?? '', ENT_QUOTES, 'UTF-8') ?>" required />
                 <?php else: ?>
                   <textarea name="<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>" rows="3" required><?= htmlspecialchars($content[$key] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
@@ -235,7 +236,7 @@ if (isAdminLoggedIn() && $pdo instanceof PDO) {
           <h2>Каталог услуг</h2>
 
           <h3>Добавить услугу</h3>
-          <form method="post" class="admin-form-grid">
+          <form method="post" class="admin-form-grid admin-add-service">
             <input type="hidden" name="action" value="add_service" />
             <label>Категория<input type="text" name="category" required /></label>
             <label>Название<input type="text" name="title" required /></label>
@@ -247,7 +248,7 @@ if (isAdminLoggedIn() && $pdo instanceof PDO) {
             <?php foreach ($services as $service): ?>
               <form method="post" class="admin-service-item">
                 <input type="hidden" name="id" value="<?= (int) $service['id'] ?>" />
-                <label>ID #<?= (int) $service['id'] ?></label>
+                <strong>ID #<?= (int) $service['id'] ?></strong>
                 <label>Категория<input type="text" name="category" value="<?= htmlspecialchars($service['category'], ENT_QUOTES, 'UTF-8') ?>" required /></label>
                 <label>Название<input type="text" name="title" value="<?= htmlspecialchars($service['title'], ENT_QUOTES, 'UTF-8') ?>" required /></label>
                 <label>Описание<textarea name="description" rows="2" required><?= htmlspecialchars($service['description'], ENT_QUOTES, 'UTF-8') ?></textarea></label>
@@ -265,13 +266,7 @@ if (isAdminLoggedIn() && $pdo instanceof PDO) {
           <div class="admin-requests-table-wrap">
             <table class="admin-requests-table">
               <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Дата</th>
-                  <th>Имя</th>
-                  <th>Телефон</th>
-                  <th>Комментарий</th>
-                </tr>
+                <tr><th>ID</th><th>Дата</th><th>Имя</th><th>Телефон</th><th>Комментарий</th></tr>
               </thead>
               <tbody>
                 <?php foreach ($requests as $request): ?>
