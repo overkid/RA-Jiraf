@@ -16,6 +16,12 @@ CREATE TABLE IF NOT EXISTS client_requests (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS site_content (
+  content_key VARCHAR(120) PRIMARY KEY,
+  content_value TEXT NOT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 INSERT INTO services (category, title, description) VALUES
 ('Типография и полиграфия', 'Изготовление визиток', 'Плотная бумага, аккуратная резка, фирменный стиль.'),
 ('Типография и полиграфия', 'Печать буклетов и листовок', 'Яркая печать для рекламных акций и презентаций.'),

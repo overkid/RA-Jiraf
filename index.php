@@ -1,3 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+require __DIR__ . '/api/content.php';
+
+$homeContent = default_home_content();
+
+try {
+    require __DIR__ . '/api/db.php';
+    $homeContent = get_home_content(db());
+} catch (Throwable $exception) {
+    $homeContent = default_home_content();
+}
+?>
 <!doctype html>
 <html lang="ru">
   <head>
@@ -30,9 +45,9 @@
         </nav>
 
         <div class="hero-content">
-          <h1>Рекламное агентство полного цикла</h1>
+          <h1><?= htmlspecialchars($homeContent['hero_title'], ENT_QUOTES, 'UTF-8') ?></h1>
           <p class="hero-text">
-            Мы предлагаем свои производственные и рекламные услуги на территории всей Владимирской области
+            <?= nl2br(htmlspecialchars($homeContent['hero_text'], ENT_QUOTES, 'UTF-8')) ?>
           </p>
           <button class="btn btn-contact" type="button" data-open-manager-modal>
             <img class="icon" src="media/icons/Message.svg" alt="" />Связаться с нами
@@ -45,8 +60,8 @@
     <main>
       <section id="services" class="section services">
         <div class="container">
-          <h2>Полный спектр услуг</h2>
-          <p class="section-subtitle">Услуги рекламного агентства покрывают почти все возможные потребности</p>
+          <h2><?= htmlspecialchars($homeContent['services_title'], ENT_QUOTES, 'UTF-8') ?></h2>
+          <p class="section-subtitle"><?= nl2br(htmlspecialchars($homeContent['services_subtitle'], ENT_QUOTES, 'UTF-8')) ?></p>
           <div class="cards grid-4">
             <article class="card">
               <div class="media"><img src="media/img/Visitka.png" alt="Изготовление визиток" /></div>
@@ -74,19 +89,19 @@
 
       <section class="section highlights">
         <div class="container">
-          <h2>Действуем в интересах клиента</h2>
+          <h2><?= htmlspecialchars($homeContent['highlights_title'], ENT_QUOTES, 'UTF-8') ?></h2>
           <div class="feature-row">
-            <div class="feature">ВСЕГДА НАЦЕЛЕНЫ НА&nbsp;КАЧЕСТВО <img class="icon" src="media/icons/Like.svg" alt="" /></div>
-            <div class="feature">ОПЕРАТИВНОЕ ИЗГОТОВЛЕНИЕ <img class="icon" src="media/icons/Speed.svg" alt="" /></div>
-            <div class="feature">НАХОДИМСЯ ПРЯМО В&nbsp;ЦЕНТРЕ ГОРОДА <img class="icon" src="media/icons/Point.svg" alt="" /></div>
+            <div class="feature"><?= htmlspecialchars($homeContent['highlight_1'], ENT_QUOTES, 'UTF-8') ?> <img class="icon" src="media/icons/Like.svg" alt="" /></div>
+            <div class="feature"><?= htmlspecialchars($homeContent['highlight_2'], ENT_QUOTES, 'UTF-8') ?> <img class="icon" src="media/icons/Speed.svg" alt="" /></div>
+            <div class="feature"><?= htmlspecialchars($homeContent['highlight_3'], ENT_QUOTES, 'UTF-8') ?> <img class="icon" src="media/icons/Point.svg" alt="" /></div>
           </div>
         </div>
       </section>
 
       <section class="section portfolio">
         <div class="container">
-          <h2>Вот что мы сделали</h2>
-          <p class="section-subtitle">Нашим ориентиром всегда было и остаётся качество</p>
+          <h2><?= htmlspecialchars($homeContent['portfolio_title'], ENT_QUOTES, 'UTF-8') ?></h2>
+          <p class="section-subtitle"><?= nl2br(htmlspecialchars($homeContent['portfolio_subtitle'], ENT_QUOTES, 'UTF-8')) ?></p>
           <div class="cards grid-4">
             <article class="portfolio-card">
               <div class="media"><img src="media/img/Stakan.png" alt="Чашки с печатью" /></div>
@@ -115,10 +130,9 @@
 
     <footer id="contact" class="footer-cta">
       <div class="container">
-        <h2>Мы готовы решить вашу проблему</h2>
+        <h2><?= htmlspecialchars($homeContent['footer_title'], ENT_QUOTES, 'UTF-8') ?></h2>
         <p>
-          Вам не обязательно ехать в офис рекламного агентства — можно оформить заказ дистанционно по удобному
-          каналу связи
+          <?= nl2br(htmlspecialchars($homeContent['footer_text'], ENT_QUOTES, 'UTF-8')) ?>
         </p>
         <button type="button" class="btn btn-contact" data-open-manager-modal>
           <img class="icon" src="media/icons/Message.svg" alt="" />Связаться с нами
