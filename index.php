@@ -1,3 +1,23 @@
+<?php
+$homeContent = [
+    'hero_title' => 'Рекламное агентство полного цикла',
+    'hero_subtitle' => 'Мы предлагаем свои производственные и рекламные услуги на территории всей Владимирской области',
+    'services_title' => 'Полный спектр услуг',
+    'services_subtitle' => 'Услуги рекламного агентства покрывают почти все возможные потребности',
+    'footer_title' => 'Мы готовы решить вашу проблему',
+    'footer_text' => 'Вам не обязательно ехать в офис рекламного агентства — можно оформить заказ дистанционно по удобному каналу связи',
+];
+
+try {
+    require_once __DIR__ . '/api/db.php';
+    $stmt = db()->query('SELECT content_key, content_value FROM site_content');
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $homeContent[$row['content_key']] = $row['content_value'];
+    }
+} catch (Throwable $exception) {
+    // keep defaults
+}
+?>
 <!doctype html>
 <html lang="ru">
   <head>
@@ -30,9 +50,9 @@
         </nav>
 
         <div class="hero-content">
-          <h1>Рекламное агентство полного цикла</h1>
+          <h1><?= htmlspecialchars($homeContent['hero_title'], ENT_QUOTES, 'UTF-8') ?></h1>
           <p class="hero-text">
-            Мы предлагаем свои производственные и рекламные услуги на территории всей Владимирской области
+            <?= htmlspecialchars($homeContent['hero_subtitle'], ENT_QUOTES, 'UTF-8') ?>
           </p>
           <button class="btn btn-contact" type="button" data-open-manager-modal>
             <img class="icon" src="media/icons/Message.svg" alt="" />Связаться с нами
@@ -45,8 +65,8 @@
     <main>
       <section id="services" class="section services">
         <div class="container">
-          <h2>Полный спектр услуг</h2>
-          <p class="section-subtitle">Услуги рекламного агентства покрывают почти все возможные потребности</p>
+          <h2><?= htmlspecialchars($homeContent['services_title'], ENT_QUOTES, 'UTF-8') ?></h2>
+          <p class="section-subtitle"><?= htmlspecialchars($homeContent['services_subtitle'], ENT_QUOTES, 'UTF-8') ?></p>
           <div class="cards grid-4">
             <article class="card">
               <div class="media"><img src="media/img/Visitka.png" alt="Изготовление визиток" /></div>
@@ -115,10 +135,9 @@
 
     <footer id="contact" class="footer-cta">
       <div class="container">
-        <h2>Мы готовы решить вашу проблему</h2>
+        <h2><?= htmlspecialchars($homeContent['footer_title'], ENT_QUOTES, 'UTF-8') ?></h2>
         <p>
-          Вам не обязательно ехать в офис рекламного агентства — можно оформить заказ дистанционно по удобному
-          каналу связи
+          <?= htmlspecialchars($homeContent['footer_text'], ENT_QUOTES, 'UTF-8') ?>
         </p>
         <button type="button" class="btn btn-contact" data-open-manager-modal>
           <img class="icon" src="media/icons/Message.svg" alt="" />Связаться с нами

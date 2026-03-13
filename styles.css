@@ -898,3 +898,92 @@ button.btn:active,
     transform: none;
   }
 }
+
+.admin-page {
+  background: #f7f7f9;
+}
+
+.admin-layout {
+  width: min(1100px, calc(100% - 32px));
+  margin: 30px auto 60px;
+}
+
+.admin-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 18px;
+}
+
+.admin-form-stack,
+.admin-form-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-form-grid input,
+.admin-form-grid textarea,
+.admin-form-stack input {
+  width: 100%;
+  margin-top: 6px;
+  border: 1px solid #d8d8df;
+  border-radius: 8px;
+  padding: 10px;
+  font: inherit;
+}
+
+.admin-alert {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.admin-alert-error {
+  background: #ffe3e3;
+  color: #8f1f1f;
+}
+
+.admin-alert-success {
+  background: #dff9e6;
+  color: #166337;
+}
+
+.admin-logout {
+  margin-top: 10px;
+}
+
+.admin-services-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.admin-service-item {
+  border: 1px solid #e6e6ee;
+  border-radius: 10px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-requests-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-requests-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-requests-table th,
+.admin-requests-table td {
+  border-bottom: 1px solid #ececf2;
+  text-align: left;
+  padding: 8px;
+  font-size: 14px;
+}
