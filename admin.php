@@ -239,14 +239,41 @@ if ($loggedIn) {
       <div class="container">
         <nav class="top-nav top-nav-catalog">
           <a class="logo" href="index.php"><img src="media/logo/Logo-Full.svg" alt="РА Жираф" /></a>
-          <ul class="menu">
-            <li><a href="index.php"><img class="icon" src="media/icons/Home.svg" alt="" />Главная</a></li>
-            <li><a href="services.php"><img class="icon" src="media/icons/Catalog.svg" alt="" />Услуги</a></li>
-            <li><a href="admin.php"><img class="icon" src="media/icons/Case.svg" alt="" />Админка</a></li>
-          </ul>
-          <?php if ($loggedIn): ?>
-            <a class="btn btn-nav" href="admin.php?logout=1">Выйти</a>
-          <?php endif; ?>
+                    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>
+            <svg class="nav-toggle-icon nav-toggle-icon--bars" aria-hidden="true"><use href="media/icons/sprite.svg#menu-bars"></use></svg>
+            <svg class="nav-toggle-icon nav-toggle-icon--close" aria-hidden="true"><use href="media/icons/sprite.svg#menu-x"></use></svg>
+            <span class="sr-only">����</span>
+          </button>
+          <div class="nav-panel" id="primary-nav" data-nav-panel aria-hidden="true">
+            <ul class="menu">
+              <li>
+                <a href="index.php">
+                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#home"></use></svg>
+                  Главная
+                </a>
+              </li>
+              <li>
+                <a href="services.php">
+                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>
+                  Услуги
+                </a>
+              </li>
+              <li>
+                <a href="admin.php">
+                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#case"></use></svg>
+                  Админка
+                </a>
+              </li>
+            </ul>
+            <div class="nav-actions">
+              <a class="nav-vk" href="#" aria-label="ВКонтакте">
+                <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#vk"></use></svg>
+              </a>
+              <?php if ($loggedIn): ?>
+                <a class="btn btn-nav" href="admin.php?logout=1">Выйти</a>
+              <?php endif; ?>
+            </div>
+          </div>
         </nav>
 
         <div class="catalog-hero">
@@ -281,7 +308,7 @@ if ($loggedIn) {
                 <input id="admin-password" type="password" name="password" autocomplete="current-password" required />
 
                 <button class="btn btn-nav" type="submit">
-                  <img class="icon" src="media/icons/Message.svg" alt="" />Войти
+                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Войти
                 </button>
               </form>
             </div>
@@ -327,7 +354,7 @@ if ($loggedIn) {
                   <?php endforeach; ?>
                 </div>
                 <button class="btn btn-nav" type="submit">
-                  <img class="icon" src="media/icons/Message.svg" alt="" />Сохранить тексты
+                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Сохранить тексты
                 </button>
               </form>
             </div>
@@ -359,7 +386,7 @@ if ($loggedIn) {
                 <textarea id="service-description-new" name="description" rows="3"></textarea>
 
                 <button class="btn btn-nav" type="submit">
-                  <img class="icon" src="media/icons/Message.svg" alt="" />Добавить услугу
+                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Добавить услугу
                 </button>
               </form>
             </div>
@@ -415,7 +442,7 @@ if ($loggedIn) {
 
                     <div class="admin-actions">
                       <button class="btn btn-nav" type="submit">
-                        <img class="icon" src="media/icons/Message.svg" alt="" />Сохранить
+                        <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Сохранить
                       </button>
                       <button
                         class="btn btn-danger"
@@ -469,5 +496,10 @@ if ($loggedIn) {
         </section>
       </main>
     <?php endif; ?>
+
+    <script src="app.js" defer></script>
   </body>
 </html>
+
+
+

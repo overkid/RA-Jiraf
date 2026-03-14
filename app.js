@@ -16,6 +16,101 @@
     return { formattedValue, localDigitsLength: localNumber.length };
   };
 
+  const setupMobileNav = () => {
+    const nav = document.querySelector('.top-nav');
+    const toggle = document.querySelector('[data-nav-toggle]');
+    const panel = document.querySelector('[data-nav-panel]');
+
+    if (!nav || !toggle || !panel) return;
+
+    const media = window.matchMedia('(max-width: 768px)');
+
+    const setNavState = (isOpen) => {
+      nav.classList.toggle('is-open', isOpen);
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      panel.setAttribute('aria-hidden', String(!isOpen));
+    };
+
+    const closeNav = () => setNavState(false);
+
+    toggle.addEventListener('click', () => {
+      if (!media.matches) return;
+      const isOpen = nav.classList.contains('is-open');
+      setNavState(!isOpen);
+    });
+
+    panel.addEventListener('click', (event) => {
+      if (!media.matches) return;
+      const target = event.target;
+      if (!target) return;
+
+      if (target.closest('a') || target.closest('button')) {
+        closeNav();
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!media.matches) return;
+      if (!nav.classList.contains('is-open')) return;
+      if (!nav.contains(event.target)) closeNav();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (!media.matches) return;
+      if (event.key === 'Escape') closeNav();
+    });
+
+    const syncMode = () => {
+      if (media.matches) {
+        closeNav();
+        return;
+      }
+
+      nav.classList.remove('is-open');
+      toggle.setAttribute('aria-expanded', 'false');
+      panel.setAttribute('aria-hidden', 'false');
+    };
+
+    if (media.addEventListener) {
+      media.addEventListener('change', syncMode);
+    } else if (media.addListener) {
+      media.addListener(syncMode);
+    }
+
+    syncMode();
+  };
+
+  const setupNavContrast = () => {
+    const nav = document.querySelector('.top-nav');
+    if (!nav) return;
+
+    const hero = document.querySelector('.hero, .catalog-header, .admin-header');
+    if (!hero) {
+      nav.classList.add('is-contrast');
+      return;
+    }
+
+    let ticking = false;
+    const update = () => {
+      const navHeight = nav.offsetHeight || 0;
+      const heroBottom = hero.getBoundingClientRect().bottom;
+      nav.classList.toggle('is-contrast', heroBottom <= navHeight + 8);
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        update();
+        ticking = false;
+      });
+    };
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+  };
+
   const setupCatalogTabs = () => {
     const categoryTabs = document.querySelectorAll('[data-category-tab]');
     const categoryGroups = document.querySelectorAll('[data-category]');
@@ -199,6 +294,8 @@
   };
 
   document.addEventListener('DOMContentLoaded', () => {
+    setupMobileNav();
+    setupNavContrast();
     setupCatalogTabs();
     setupManagerModal();
     setupVueCatalogSync();

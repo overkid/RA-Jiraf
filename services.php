@@ -29,14 +29,36 @@ try {
       <div class="container">
         <nav class="top-nav top-nav-catalog">
           <a class="logo" href="index.php"><img src="media/logo/Logo-Full.svg" alt="РА Жираф" /></a>
-          <ul class="menu">
-            <li><a href="index.php"><img class="icon" src="media/icons/Home.svg" alt="" />Главная</a></li>
-            <li><a href="services.php"><img class="icon" src="media/icons/Catalog.svg" alt="" />Услуги</a></li>
-          </ul>
-          <button class="btn btn-nav" type="button" data-open-manager-modal>
-            <img class="icon" src="media/icons/Message.svg" alt="" />
-            Написать нам
+                    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>
+            <svg class="nav-toggle-icon nav-toggle-icon--bars" aria-hidden="true"><use href="media/icons/sprite.svg#menu-bars"></use></svg>
+            <svg class="nav-toggle-icon nav-toggle-icon--close" aria-hidden="true"><use href="media/icons/sprite.svg#menu-x"></use></svg>
+            <span class="sr-only">����</span>
           </button>
+          <div class="nav-panel" id="primary-nav" data-nav-panel aria-hidden="true">
+            <ul class="menu">
+              <li>
+                <a href="index.php">
+                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#home"></use></svg>
+                  Главная
+                </a>
+              </li>
+              <li>
+                <a href="services.php">
+                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>
+                  Услуги
+                </a>
+              </li>
+            </ul>
+            <div class="nav-actions">
+              <a class="nav-vk" href="#" aria-label="ВКонтакте">
+                <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#vk"></use></svg>
+              </a>
+              <button class="btn btn-nav" type="button" data-open-manager-modal>
+                <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>
+                Написать нам
+              </button>
+            </div>
+          </div>
         </nav>
 
         <div class="catalog-hero">
@@ -100,7 +122,7 @@ try {
           <h2>Не нашли нужную услугу?</h2>
           <p class="section-subtitle">Свяжитесь с нами для уточнения</p>
           <button type="button" class="btn btn-contact" data-open-manager-modal>
-            <img class="icon" src="media/icons/Message.svg" alt="" />Связаться с нами
+            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Связаться с нами
           </button>
         </div>
       </section>
@@ -145,7 +167,7 @@ try {
               required
               aria-describedby="manager-phone-error"
             />
-            <img class="manager-field-error-icon" src="media/icons/Error.svg" alt="" aria-hidden="true" />
+            <svg class="manager-field-error-icon" aria-hidden="true"><use href="media/icons/sprite.svg#error"></use></svg>
           </div>
           <p class="manager-field-error" id="manager-phone-error">Неверный формат номера</p>
 
@@ -153,7 +175,7 @@ try {
           <textarea id="manager-comment" name="comment" rows="3"></textarea>
 
           <button class="btn manager-submit" type="submit">
-            <img class="icon" src="media/icons/Message.svg" alt="" />Отправить
+            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Отправить
           </button>
         </form>
       </section>
@@ -164,3 +186,6 @@ try {
     <script src="app.js" defer></script>
   </body>
 </html>
+
+
+
