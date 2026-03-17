@@ -623,7 +623,7 @@ p.manager-field-error {
   min-height: 68px;
 }
 
-.manager-form-success {
+p.manager-form-success {
   margin: 8px 0 6px;
   padding: 10px 12px;
   border-radius: 10px;
