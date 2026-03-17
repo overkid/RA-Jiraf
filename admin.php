@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Сначала войдите в админку.';
     } else {
         try {
-            require __DIR__ . '/api/db.php';
+            require_once __DIR__ . '/api/db.php';
             $pdo = db();
         } catch (Throwable $exception) {
             $pdo = null;
@@ -208,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($loggedIn) {
     try {
-        require __DIR__ . '/api/db.php';
+        require_once __DIR__ . '/api/db.php';
         $pdo = db();
         $homeContent = get_home_content($pdo);
         $services = $pdo->query('SELECT id, category, title, description FROM services ORDER BY category, id')->fetchAll();
@@ -242,7 +242,7 @@ if ($loggedIn) {
                     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>
             <svg class="nav-toggle-icon nav-toggle-icon--bars" aria-hidden="true"><use href="media/icons/sprite.svg#menu-bars"></use></svg>
             <svg class="nav-toggle-icon nav-toggle-icon--close" aria-hidden="true"><use href="media/icons/sprite.svg#menu-x"></use></svg>
-            <span class="sr-only">����</span>
+            <span class="sr-only">Меню</span>
           </button>
           <div class="nav-panel" id="primary-nav" data-nav-panel aria-hidden="true">
             <ul class="menu">
@@ -317,6 +317,35 @@ if ($loggedIn) {
       </main>
     <?php else: ?>
       <main>
+
+
+        <section class="section admin-panel">
+          <div class="container">
+            <div class="admin-section-title">
+              <h2 id="requests">Заявки пользователей</h2>
+            </div>
+
+            <?php if (!$requests): ?>
+              <div class="admin-card">
+                <p class="section-subtitle">Заявок пока нет.</p>
+              </div>
+            <?php else: ?>
+              <div class="admin-list">
+                <?php foreach ($requests as $request): ?>
+                  <div class="admin-item">
+                    <h3><?= $escape($request['name'] ?? '') ?></h3>
+                    <p><span>Телефон:</span> <?= $escape($request['phone'] ?? '') ?></p>
+                    <?php if (!empty($request['comment'])): ?>
+                      <p><span>Комментарий:</span> <?= $escape($request['comment'] ?? '') ?></p>
+                    <?php endif; ?>
+                    <p><span>Дата:</span> <?= $escape($formatDateTime($request['created_at'] ?? null)) ?></p>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+          </div>
+        </section>
+
         <section class="section admin-panel">
           <div class="container">
             <?php if ($errors): ?>
@@ -334,6 +363,7 @@ if ($loggedIn) {
                 <?php endforeach; ?>
               </div>
             <?php endif; ?>
+
 
             <div class="admin-section-title">
               <h2 id="home">Тексты главной страницы</h2>
@@ -467,39 +497,16 @@ if ($loggedIn) {
             </div>
           </div>
         </section>
-
-        <section class="section admin-panel">
-          <div class="container">
-            <div class="admin-section-title">
-              <h2 id="requests">Заявки пользователей</h2>
-            </div>
-
-            <?php if (!$requests): ?>
-              <div class="admin-card">
-                <p class="section-subtitle">Заявок пока нет.</p>
-              </div>
-            <?php else: ?>
-              <div class="admin-list">
-                <?php foreach ($requests as $request): ?>
-                  <div class="admin-item">
-                    <h3><?= $escape($request['name'] ?? '') ?></h3>
-                    <p><span>Телефон:</span> <?= $escape($request['phone'] ?? '') ?></p>
-                    <?php if (!empty($request['comment'])): ?>
-                      <p><span>Комментарий:</span> <?= $escape($request['comment'] ?? '') ?></p>
-                    <?php endif; ?>
-                    <p><span>Дата:</span> <?= $escape($formatDateTime($request['created_at'] ?? null)) ?></p>
-                  </div>
-                <?php endforeach; ?>
-              </div>
-            <?php endif; ?>
-          </div>
-        </section>
       </main>
     <?php endif; ?>
 
     <script src="app.js" defer></script>
   </body>
 </html>
+
+
+
+
 
 
 

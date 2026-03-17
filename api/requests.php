@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
 
-require __DIR__ . '/db.php';
+require_once __DIR__ . '/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -39,3 +39,4 @@ try {
         'details' => $exception->getMessage(),
     ], JSON_UNESCAPED_UNICODE);
 }
+

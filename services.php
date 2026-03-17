@@ -1,4 +1,4 @@
-<?php
+ο»Ώ<?php
 $servicesData = [];
 try {
     require_once __DIR__ . '/api/db.php';
@@ -32,7 +32,7 @@ try {
                     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>
             <svg class="nav-toggle-icon nav-toggle-icon--bars" aria-hidden="true"><use href="media/icons/sprite.svg#menu-bars"></use></svg>
             <svg class="nav-toggle-icon nav-toggle-icon--close" aria-hidden="true"><use href="media/icons/sprite.svg#menu-x"></use></svg>
-            <span class="sr-only">Μενώ</span>
+            <span class="sr-only">ΠΠµΠ½Ρ</span>
           </button>
           <div class="nav-panel" id="primary-nav" data-nav-panel aria-hidden="true">
             <ul class="menu">
@@ -186,6 +186,7 @@ try {
     <script src="app.js" defer></script>
   </body>
 </html>
+
 
 
 
