@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $servicesData = [];
 try {
     require_once __DIR__ . '/api/db.php';
