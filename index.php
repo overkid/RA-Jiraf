@@ -37,7 +37,7 @@ try {
                     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>
             <svg class="nav-toggle-icon nav-toggle-icon--bars" aria-hidden="true"><use href="media/icons/sprite.svg#menu-bars"></use></svg>
             <svg class="nav-toggle-icon nav-toggle-icon--close" aria-hidden="true"><use href="media/icons/sprite.svg#menu-x"></use></svg>
-            <span class="sr-only">Меню</span>
+            <span class="sr-only">����</span>
           </button>
           <div class="nav-panel" id="primary-nav" data-nav-panel aria-hidden="true">
             <ul class="menu">
@@ -186,28 +186,33 @@ try {
         <h2>Заявка менеджеру</h2>
         <p>Мы свяжемся с вами для уточнения заказа и ответим на все ваши вопросы</p>
         <form class="manager-form">
-          <label for="manager-name">Представьтесь, пожалуйста</label>
-          <input id="manager-name" type="text" name="name" placeholder="Ваше имя" autocomplete="name" required />
+          <div class="manager-form-fields">
+            <label for="manager-name">Представьтесь, пожалуйста</label>
+            <input id="manager-name" type="text" name="name" placeholder="Ваше имя" autocomplete="name" required />
 
-          <label for="manager-phone">Ваш номер телефона</label>
-          <div class="manager-field" data-phone-field>
-            <input
-              id="manager-phone"
-              type="tel"
-              name="phone"
-              placeholder="+7 900 000 00 00"
-              autocomplete="tel"
-              inputmode="tel"
-              required
-              aria-describedby="manager-phone-error"
-            />
-            <svg class="manager-field-error-icon" aria-hidden="true"><use href="media/icons/sprite.svg#error"></use></svg>
+            <label for="manager-phone">Ваш номер телефона</label>
+            <div class="manager-field" data-phone-field>
+              <input
+                id="manager-phone"
+                type="tel"
+                name="phone"
+                placeholder="+7 900 000 00 00"
+                autocomplete="tel"
+                inputmode="tel"
+                required
+                aria-describedby="manager-phone-error"
+              />
+              <svg class="manager-field-error-icon" aria-hidden="true"><use href="media/icons/sprite.svg#error"></use></svg>
+            </div>
+            <p class="manager-field-error" id="manager-phone-error">Неверный формат номера</p>
+
+            <label for="manager-comment">Комментарий к заявке или вопрос</label>
+            <textarea id="manager-comment" name="comment" rows="3"></textarea>
           </div>
-          <p class="manager-field-error" id="manager-phone-error">Неверный формат номера</p>
 
-          <label for="manager-comment">Комментарий к заявке или вопрос</label>
-          <textarea id="manager-comment" name="comment" rows="3"></textarea>
-
+          <p class="manager-form-success" data-manager-success role="status" aria-live="polite" hidden>
+            Вы успешно отправили заявку, мы свяжемся с вами в скором времени.
+          </p>
           <button class="btn manager-submit" type="submit">
             <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Отправить
           </button>
@@ -220,7 +225,6 @@ try {
     <script src="app.js" defer></script>
   </body>
 </html>
-
 
 
 

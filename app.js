@@ -136,6 +136,11 @@
     const managerForm = document.querySelector('.manager-form');
     const phoneInput = document.querySelector('#manager-phone');
     const phoneField = document.querySelector('[data-phone-field]');
+    const formFields = managerForm ? managerForm.querySelector('.manager-form-fields') : null;
+    const successMessage = managerForm ? managerForm.querySelector('[data-manager-success]') : null;
+    const submitButton = managerForm ? managerForm.querySelector('.manager-submit') : null;
+    const submitButtonDefaultHtml = submitButton ? submitButton.innerHTML : '';
+    let pendingReset = false;
 
     if (!modalOverlay || !closeModalButton || !managerForm || !phoneInput || !phoneField) return;
 
@@ -156,7 +161,50 @@
       phoneInput.value = formattedValue;
     };
 
+    const resetSuccessState = () => {
+      managerForm.classList.remove('is-success');
+
+      if (formFields) {
+        formFields.setAttribute('aria-hidden', 'false');
+      }
+
+      if (successMessage) {
+        successMessage.hidden = true;
+        successMessage.setAttribute('aria-hidden', 'true');
+      }
+
+      if (submitButton) {
+        submitButton.type = 'submit';
+        submitButton.innerHTML = submitButtonDefaultHtml;
+      }
+    };
+
+    const showSuccessState = () => {
+      managerForm.classList.add('is-success');
+
+      if (formFields) {
+        formFields.setAttribute('aria-hidden', 'true');
+      }
+
+      if (successMessage) {
+        successMessage.hidden = false;
+        successMessage.setAttribute('aria-hidden', 'false');
+      }
+
+      if (submitButton) {
+        submitButton.type = 'button';
+        submitButton.textContent = 'Хорошо!';
+      }
+    };
+
+    const resetFormValues = () => {
+      managerForm.reset();
+      normalizePhoneInput('');
+      setPhoneErrorState(false);
+    };
+
     const openModal = () => {
+      resetSuccessState();
       modalOverlay.classList.add('is-open');
       document.body.classList.add('modal-open');
       modalOverlay.setAttribute('aria-hidden', 'false');
@@ -166,6 +214,18 @@
       modalOverlay.classList.remove('is-open');
       document.body.classList.remove('modal-open');
       modalOverlay.setAttribute('aria-hidden', 'true');
+
+      if (managerForm.classList.contains('is-success')) {
+        window.setTimeout(() => {
+          resetSuccessState();
+          if (pendingReset) {
+            resetFormValues();
+            pendingReset = false;
+          }
+        }, 350);
+      } else {
+        resetSuccessState();
+      }
     };
 
     normalizePhoneInput(phoneInput.value);
@@ -179,6 +239,14 @@
 
     openModalButtons.forEach((button) => button.addEventListener('click', openModal));
     closeModalButton.addEventListener('click', closeModal);
+
+    if (submitButton) {
+      submitButton.addEventListener('click', () => {
+        if (managerForm.classList.contains('is-success')) {
+          closeModal();
+        }
+      });
+    }
 
     modalOverlay.addEventListener('click', (event) => {
       if (event.target === modalOverlay) closeModal();
@@ -205,8 +273,7 @@
         comment: String(formData.get('comment') || '').trim()
       };
 
-      const submitButton = managerForm.querySelector('button[type="submit"]');
-      const oldButtonText = submitButton ? submitButton.textContent : '';
+      let requestSucceeded = false;
 
       if (submitButton) {
         submitButton.disabled = true;
@@ -225,16 +292,18 @@
           throw new Error(data.message || 'Не удалось отправить заявку');
         }
 
-        managerForm.reset();
-        normalizePhoneInput('');
-        setPhoneErrorState(false);
-        closeModal();
+        showSuccessState();
+        requestSucceeded = true;
+        pendingReset = true;
       } catch (error) {
         window.alert(error.message || 'Ошибка отправки заявки');
       } finally {
         if (submitButton) {
           submitButton.disabled = false;
-          submitButton.textContent = oldButtonText;
+          if (!requestSucceeded) {
+            submitButton.innerHTML = submitButtonDefaultHtml;
+            submitButton.type = 'submit';
+          }
         }
       }
     });

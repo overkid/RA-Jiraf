@@ -22,7 +22,7 @@
                     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>
             <svg class="nav-toggle-icon nav-toggle-icon--bars" aria-hidden="true"><use href="media/icons/sprite.svg#menu-bars"></use></svg>
             <svg class="nav-toggle-icon nav-toggle-icon--close" aria-hidden="true"><use href="media/icons/sprite.svg#menu-x"></use></svg>
-            <span class="sr-only">����</span>
+            <span class="sr-only">����</span>
           </button>
           <div class="nav-panel" id="primary-nav" data-nav-panel aria-hidden="true">
             <ul class="menu">
@@ -141,28 +141,33 @@
         <h2>Заявка менеджеру</h2>
         <p>Мы свяжемся с вами для уточнения заказа и ответим на все ваши вопросы</p>
         <form class="manager-form">
-          <label for="manager-name">Представьтесь, пожалуйста</label>
-          <input id="manager-name" type="text" name="name" placeholder="Ваше имя" autocomplete="name" required />
+          <div class="manager-form-fields">
+            <label for="manager-name">Представьтесь, пожалуйста</label>
+            <input id="manager-name" type="text" name="name" placeholder="Ваше имя" autocomplete="name" required />
 
-          <label for="manager-phone">Ваш номер телефона</label>
-          <div class="manager-field" data-phone-field>
-            <input
-              id="manager-phone"
-              type="tel"
-              name="phone"
-              placeholder="+7 900 000 00 00"
-              autocomplete="tel"
-              inputmode="tel"
-              required
-              aria-describedby="manager-phone-error"
-            />
-            <svg class="manager-field-error-icon" aria-hidden="true"><use href="media/icons/sprite.svg#error"></use></svg>
+            <label for="manager-phone">Ваш номер телефона</label>
+            <div class="manager-field" data-phone-field>
+              <input
+                id="manager-phone"
+                type="tel"
+                name="phone"
+                placeholder="+7 900 000 00 00"
+                autocomplete="tel"
+                inputmode="tel"
+                required
+                aria-describedby="manager-phone-error"
+              />
+              <svg class="manager-field-error-icon" aria-hidden="true"><use href="media/icons/sprite.svg#error"></use></svg>
+            </div>
+            <p class="manager-field-error" id="manager-phone-error">Неверный формат номера</p>
+
+            <label for="manager-comment">Комментарий к заявке или вопрос</label>
+            <textarea id="manager-comment" name="comment" rows="3"></textarea>
           </div>
-          <p class="manager-field-error" id="manager-phone-error">Неверный формат номера</p>
 
-          <label for="manager-comment">Комментарий к заявке или вопрос</label>
-          <textarea id="manager-comment" name="comment" rows="3"></textarea>
-
+          <p class="manager-form-success" data-manager-success role="status" aria-live="polite" hidden>
+            Вы успешно отправили заявку, мы свяжемся с вами в скором времени.
+          </p>
           <button class="btn manager-submit" type="submit">
             <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Отправить
           </button>
@@ -191,6 +196,11 @@
       const managerForm = document.querySelector(".manager-form");
       const phoneInput = document.querySelector("#manager-phone");
       const phoneField = document.querySelector("[data-phone-field]");
+      const formFields = managerForm ? managerForm.querySelector(".manager-form-fields") : null;
+      const successMessage = managerForm ? managerForm.querySelector("[data-manager-success]") : null;
+      const submitButton = managerForm ? managerForm.querySelector(".manager-submit") : null;
+      const submitButtonDefaultHtml = submitButton ? submitButton.innerHTML : "";
+      let pendingReset = false;
       const phoneDigitsCount = 10;
       const phonePrefix = "+7";
 
@@ -237,6 +247,48 @@
         phoneInput.value = formattedValue;
       };
 
+      const resetSuccessState = () => {
+        managerForm.classList.remove("is-success");
+
+        if (formFields) {
+          formFields.setAttribute("aria-hidden", "false");
+        }
+
+        if (successMessage) {
+          successMessage.hidden = true;
+          successMessage.setAttribute("aria-hidden", "true");
+        }
+
+        if (submitButton) {
+          submitButton.type = "submit";
+          submitButton.innerHTML = submitButtonDefaultHtml;
+        }
+      };
+
+      const showSuccessState = () => {
+        managerForm.classList.add("is-success");
+
+        if (formFields) {
+          formFields.setAttribute("aria-hidden", "true");
+        }
+
+        if (successMessage) {
+          successMessage.hidden = false;
+          successMessage.setAttribute("aria-hidden", "false");
+        }
+
+        if (submitButton) {
+          submitButton.type = "button";
+          submitButton.textContent = "Хорошо!";
+        }
+      };
+
+      const resetFormValues = () => {
+        managerForm.reset();
+        normalizePhoneInput("");
+        setPhoneErrorState(false);
+      };
+
       normalizePhoneInput(phoneInput.value);
 
       phoneInput.addEventListener("focus", () => {
@@ -253,6 +305,7 @@
       });
 
       const openModal = () => {
+        resetSuccessState();
         modalOverlay.classList.add("is-open");
         document.body.classList.add("modal-open");
         modalOverlay.setAttribute("aria-hidden", "false");
@@ -262,6 +315,18 @@
         modalOverlay.classList.remove("is-open");
         document.body.classList.remove("modal-open");
         modalOverlay.setAttribute("aria-hidden", "true");
+
+        if (managerForm.classList.contains("is-success")) {
+          window.setTimeout(() => {
+            resetSuccessState();
+            if (pendingReset) {
+              resetFormValues();
+              pendingReset = false;
+            }
+          }, 350);
+        } else {
+          resetSuccessState();
+        }
       };
 
       openModalButtons.forEach((button) => {
@@ -269,6 +334,14 @@
       });
 
       closeModalButton.addEventListener("click", closeModal);
+
+      if (submitButton) {
+        submitButton.addEventListener("click", () => {
+          if (managerForm.classList.contains("is-success")) {
+            closeModal();
+          }
+        });
+      }
 
       modalOverlay.addEventListener("click", (event) => {
         if (event.target === modalOverlay) {
@@ -290,7 +363,8 @@
           return;
         }
 
-        closeModal();
+        showSuccessState();
+        pendingReset = true;
       });
     </script>
   </body>

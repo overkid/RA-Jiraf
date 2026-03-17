@@ -556,6 +556,22 @@ h3 { font: var(--font-h3); }
   gap: 8px;
 }
 
+.manager-form-fields {
+  display: grid;
+  gap: 8px;
+  overflow: hidden;
+  max-height: 800px;
+  opacity: 1;
+  transition: max-height 0.35s ease, opacity 0.35s ease, margin 0.35s ease;
+}
+
+.manager-form.is-success .manager-form-fields {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
 .manager-form label {
   color: var(--color-violet);
   font: var(--font-body-small);
@@ -607,10 +623,21 @@ p.manager-field-error {
   min-height: 68px;
 }
 
+.manager-form-success {
+  margin: 8px 0 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid var(--color-orange);
+  background: rgba(255, 155, 79, 0.12);
+  color: var(--color-orange);
+  text-align: center;
+  font: var(--font-body-small);
+}
+
 .manager-form input:focus,
 .manager-form textarea:focus {
   border-color: var(--color-violet);
-  box-shadow: 0 0 0 2px var(--color-violet);
+  box-shadow: inset 0 0 0 1px var(--color-violet);
   outline: none;
 }
 
