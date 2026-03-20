@@ -1,6 +1,85 @@
 (() => {
   const phoneDigitsCount = 10;
   const phonePrefix = '+7';
+  const serviceOtherValue = 'other';
+
+  const categoryMap = {
+    print: 'Типография и полиграфия',
+    souvenir: 'Сувенирная продукция',
+    wide: 'Широкоформатная печать',
+    outdoor: 'Наружная реклама'
+  };
+
+  const fallbackServiceTitles = [
+    'Изготовление визиток',
+    'Печать буклетов и листовок',
+    'Печать фирменных бланков',
+    'Изготовление календарей',
+    'Нанесение логотипа на кружки',
+    'Печать на футболках',
+    'Сувенирные ручки с логотипом',
+    'Подарочные наборы для компаний',
+    'Изготовление рекламных баннеров',
+    'Печать наклеек для заднего и лобового стекла',
+    'Печать на холсте',
+    'Печать виниловых наклеек и стикеров',
+    'Изготовление световых коробов',
+    'Монтаж вывесок под ключ',
+    'Оформление входных групп',
+    'Брендирование фасадов и витрин'
+  ];
+
+  const safeText = (value) => String(value || '').trim();
+
+  const pickFirstSentence = (value) => {
+    const sentence = safeText(value)
+      .split(/[.!?]+/)
+      .map((part) => safeText(part))
+      .find(Boolean);
+    return sentence || '';
+  };
+
+  const toSentence = (value) => {
+    const cleaned = safeText(value).replace(/[.!?]+$/g, '');
+    return cleaned ? `${cleaned}.` : '';
+  };
+
+  const buildServiceDescription = ({ title, category, description }) => {
+    const serviceTitle = safeText(title) || 'Услуга';
+    const serviceCategory = safeText(category) || 'Рекламные услуги';
+    const fromDatabase = toSentence(pickFirstSentence(description));
+
+    const sentence1 = `Услуга «${serviceTitle}» относится к направлению «${serviceCategory}» и настраивается под конкретную задачу вашего бизнеса.`;
+    const sentence2 = fromDatabase || `Мы подбираем решение под формат размещения, фирменный стиль и целевую аудиторию, чтобы результат работал на вашу цель.`;
+    const sentence3 = 'Перед запуском согласовываем материалы, размер, тираж и сроки, чтобы вы заранее понимали итоговый вид и бюджет проекта.';
+    const sentence4 = 'Если макет еще не готов, менеджер поможет с подготовкой и предложит оптимальный вариант производства без лишних затрат.';
+
+    return [sentence1, sentence2, sentence3, sentence4].join(' ');
+  };
+
+  const escapeHtml = (value) =>
+    String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  const getUniqueServiceTitles = (services) => {
+    if (!Array.isArray(services) || !services.length) return [];
+
+    const titles = [];
+    const seen = new Set();
+
+    services.forEach((service) => {
+      const title = safeText(service?.title);
+      if (!title || seen.has(title) || title === serviceOtherValue) return;
+      seen.add(title);
+      titles.push(title);
+    });
+
+    return titles;
+  };
 
   const formatPhoneValue = (rawValue) => {
     const digitsOnly = String(rawValue || '').replace(/\D/g, '');
@@ -41,10 +120,7 @@
 
     panel.addEventListener('click', (event) => {
       if (!media.matches) return;
-      const target = event.target;
-      if (!target) return;
-
-      if (target.closest('a') || target.closest('button')) {
+      if (event.target.closest('a') || event.target.closest('button')) {
         closeNav();
       }
     });
@@ -136,13 +212,119 @@
     const managerForm = document.querySelector('.manager-form');
     const phoneInput = document.querySelector('#manager-phone');
     const phoneField = document.querySelector('[data-phone-field]');
+    const serviceSelect = document.querySelector('#manager-service');
     const formFields = managerForm ? managerForm.querySelector('.manager-form-fields') : null;
     const successMessage = managerForm ? managerForm.querySelector('[data-manager-success]') : null;
     const submitButton = managerForm ? managerForm.querySelector('.manager-submit') : null;
     const submitButtonDefaultHtml = submitButton ? submitButton.innerHTML : '';
     let pendingReset = false;
 
-    if (!modalOverlay || !closeModalButton || !managerForm || !phoneInput || !phoneField) return;
+    if (!modalOverlay || !closeModalButton || !managerForm || !phoneInput || !phoneField) return null;
+
+    const ensureServicePlaceholder = () => {
+      if (!serviceSelect) return;
+
+      let placeholder = serviceSelect.querySelector('option[value=""]');
+      if (!placeholder) {
+        placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Выберите услугу';
+        placeholder.disabled = true;
+        serviceSelect.insertBefore(placeholder, serviceSelect.firstChild);
+      }
+    };
+
+    const getServiceOptionByValue = (value) => {
+      if (!serviceSelect) return null;
+      const normalized = safeText(value);
+      if (!normalized) return serviceSelect.querySelector('option[value=""]');
+
+      return Array.from(serviceSelect.options).find((option) => option.value === normalized) || null;
+    };
+
+    const clearDynamicServiceOptions = () => {
+      if (!serviceSelect) return;
+      serviceSelect.querySelectorAll('option[data-service-option="dynamic"]').forEach((option) => option.remove());
+    };
+
+    const setServiceOptions = (titles) => {
+      if (!serviceSelect) return;
+
+      ensureServicePlaceholder();
+      const currentValue = serviceSelect.value;
+      const uniqueTitles = Array.from(new Set((titles || []).map((title) => safeText(title)).filter(Boolean)));
+      const otherOption = serviceSelect.querySelector(`option[value="${serviceOtherValue}"]`);
+
+      clearDynamicServiceOptions();
+
+      uniqueTitles.forEach((title) => {
+        if (title === serviceOtherValue) return;
+
+        const option = document.createElement('option');
+        option.value = title;
+        option.textContent = title;
+        option.setAttribute('data-service-option', 'dynamic');
+
+        if (otherOption) {
+          serviceSelect.insertBefore(option, otherOption);
+        } else {
+          serviceSelect.appendChild(option);
+        }
+      });
+
+      const hasCurrentValue = Boolean(getServiceOptionByValue(currentValue));
+      if (hasCurrentValue) {
+        serviceSelect.value = currentValue;
+      } else {
+        serviceSelect.value = '';
+      }
+    };
+
+    const setSelectedService = (serviceTitle) => {
+      if (!serviceSelect) return;
+
+      ensureServicePlaceholder();
+      const normalizedTitle = safeText(serviceTitle);
+
+      if (!normalizedTitle) {
+        serviceSelect.value = '';
+        return;
+      }
+
+      let option = getServiceOptionByValue(normalizedTitle);
+      if (!option) {
+        const otherOption = serviceSelect.querySelector(`option[value="${serviceOtherValue}"]`);
+        option = document.createElement('option');
+        option.value = normalizedTitle;
+        option.textContent = normalizedTitle;
+        option.setAttribute('data-service-option', 'dynamic');
+
+        if (otherOption) {
+          serviceSelect.insertBefore(option, otherOption);
+        } else {
+          serviceSelect.appendChild(option);
+        }
+      }
+
+      serviceSelect.value = normalizedTitle;
+    };
+
+    const getServicePayload = () => {
+      if (!serviceSelect) {
+        return { serviceTitle: '', serviceIsOther: false };
+      }
+
+      const value = safeText(serviceSelect.value);
+      if (!value) {
+        return { serviceTitle: '', serviceIsOther: false };
+      }
+
+      if (value === serviceOtherValue) {
+        return { serviceTitle: '', serviceIsOther: true };
+      }
+
+      return { serviceTitle: value, serviceIsOther: false };
+    };
 
     const setPhoneErrorState = (hasError) => {
       phoneField.classList.toggle('is-error', hasError);
@@ -201,10 +383,19 @@
       managerForm.reset();
       normalizePhoneInput('');
       setPhoneErrorState(false);
+      if (serviceSelect) {
+        serviceSelect.value = '';
+      }
     };
 
-    const openModal = () => {
+    const openModal = (options = {}) => {
       resetSuccessState();
+      if (options.serviceTitle) {
+        setSelectedService(options.serviceTitle);
+      } else if (serviceSelect) {
+        serviceSelect.value = '';
+      }
+
       modalOverlay.classList.add('is-open');
       document.body.classList.add('modal-open');
       modalOverlay.setAttribute('aria-hidden', 'false');
@@ -228,6 +419,7 @@
       }
     };
 
+    ensureServicePlaceholder();
     normalizePhoneInput(phoneInput.value);
 
     phoneInput.addEventListener('focus', () => normalizePhoneInput(phoneInput.value));
@@ -237,7 +429,12 @@
     });
     phoneInput.addEventListener('blur', validatePhone);
 
-    openModalButtons.forEach((button) => button.addEventListener('click', openModal));
+    openModalButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        openModal({ serviceTitle: safeText(button.getAttribute('data-service-title')) });
+      });
+    });
+
     closeModalButton.addEventListener('click', closeModal);
 
     if (submitButton) {
@@ -267,10 +464,13 @@
       }
 
       const formData = new FormData(managerForm);
+      const { serviceTitle, serviceIsOther } = getServicePayload();
       const payload = {
-        name: String(formData.get('name') || '').trim(),
-        phone: String(formData.get('phone') || '').trim(),
-        comment: String(formData.get('comment') || '').trim()
+        name: safeText(formData.get('name')),
+        phone: safeText(formData.get('phone')),
+        comment: safeText(formData.get('comment')),
+        service_title: serviceTitle,
+        service_is_other: serviceIsOther
       };
 
       let requestSucceeded = false;
@@ -307,6 +507,101 @@
         }
       }
     });
+
+    return {
+      openModal,
+      closeModal,
+      setServiceOptions,
+      setSelectedService
+    };
+  };
+
+  const setupServiceDetailsModal = (managerModalApi) => {
+    const modalOverlay = document.querySelector('[data-service-modal]');
+    const closeModalButton = document.querySelector('[data-close-service-modal]');
+    const contactButton = document.querySelector('[data-service-modal-contact]');
+    const titleNode = document.querySelector('#service-modal-title');
+    const categoryNode = document.querySelector('[data-service-modal-category]');
+    const descriptionNode = document.querySelector('[data-service-modal-description]');
+
+    if (!modalOverlay || !closeModalButton || !contactButton || !titleNode || !descriptionNode) return;
+
+    let activeServiceTitle = '';
+    let activeServiceCategory = '';
+
+    const renderDescriptionParagraphs = (text) => {
+      const normalizedText = safeText(text);
+      const sentences = normalizedText
+        .split(/(?<=[.!?])\s+/)
+        .map((sentence) => safeText(sentence))
+        .filter(Boolean);
+
+      const content = sentences.length ? sentences : [normalizedText];
+      descriptionNode.innerHTML = content.map((sentence) => `<p>${escapeHtml(sentence)}</p>`).join('');
+    };
+
+    const openModal = ({ title, category, description }) => {
+      activeServiceTitle = safeText(title);
+      activeServiceCategory = safeText(category);
+      titleNode.textContent = activeServiceTitle || 'Услуга';
+
+      if (categoryNode) {
+        categoryNode.textContent = activeServiceCategory ? `Категория: ${activeServiceCategory}` : '';
+        categoryNode.hidden = !activeServiceCategory;
+      }
+
+      const modalDescription = safeText(description) || buildServiceDescription({
+        title: activeServiceTitle,
+        category: activeServiceCategory,
+        description: ''
+      });
+      renderDescriptionParagraphs(modalDescription);
+
+      modalOverlay.classList.add('is-open');
+      document.body.classList.add('modal-open');
+      modalOverlay.setAttribute('aria-hidden', 'false');
+    };
+
+    const closeModal = () => {
+      modalOverlay.classList.remove('is-open');
+      modalOverlay.setAttribute('aria-hidden', 'true');
+
+      const managerOverlay = document.querySelector('[data-manager-modal]');
+      if (!managerOverlay || !managerOverlay.classList.contains('is-open')) {
+        document.body.classList.remove('modal-open');
+      }
+    };
+
+    document.addEventListener('click', (event) => {
+      const trigger = event.target.closest('[data-open-service-details]');
+      if (!trigger) return;
+
+      event.preventDefault();
+      const tile = trigger.closest('.service-tile');
+      const title = safeText(trigger.getAttribute('data-service-title')) || safeText(tile?.querySelector('h3')?.textContent);
+      const category = safeText(trigger.getAttribute('data-service-category'));
+      const description = safeText(trigger.getAttribute('data-service-description'));
+      openModal({ title, category, description });
+    });
+
+    closeModalButton.addEventListener('click', closeModal);
+
+    modalOverlay.addEventListener('click', (event) => {
+      if (event.target === modalOverlay) closeModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && modalOverlay.classList.contains('is-open')) {
+        closeModal();
+      }
+    });
+
+    contactButton.addEventListener('click', () => {
+      closeModal();
+      if (managerModalApi) {
+        managerModalApi.openModal({ serviceTitle: activeServiceTitle });
+      }
+    });
   };
 
   const setupVueCatalogSync = () => {
@@ -318,6 +613,7 @@
     const initialData = JSON.parse(container.getAttribute('data-initial-services') || '[]');
 
     const { createApp } = window.Vue;
+
     createApp({
       data() {
         return { services: initialData };
@@ -339,56 +635,121 @@
     const groups = document.querySelectorAll('[data-category] .catalog-grid');
     if (!groups.length || !Array.isArray(services) || !services.length) return;
 
-    const map = {
-      print: 'Типография и полиграфия',
-      souvenir: 'Сувенирная продукция',
-      wide: 'Широкоформатная печать',
-      outdoor: 'Наружная реклама'
-    };
-
-    Object.entries(map).forEach(([key, title]) => {
+    Object.entries(categoryMap).forEach(([key, categoryTitle]) => {
       const grid = document.querySelector(`[data-category="${key}"] .catalog-grid`);
       if (!grid) return;
 
-      const items = services.filter((service) => service.category === title);
+      const items = services.filter((service) => safeText(service?.category) === categoryTitle);
       if (!items.length) return;
 
       grid.innerHTML = items
-        .map(
-          (service) =>
-            `<article class="service-tile"><h3>${service.title}</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>`
-        )
+        .map((service) => {
+          const title = safeText(service?.title);
+          const category = safeText(service?.category) || categoryTitle;
+          const description = buildServiceDescription({
+            title,
+            category,
+            description: safeText(service?.description)
+          });
+
+          return (
+            `<article class="service-tile">` +
+            `<h3>${escapeHtml(title)}</h3>` +
+            `<button class="btn btn-disabled" type="button" data-open-service-details data-service-title="${escapeHtml(title)}" data-service-category="${escapeHtml(category)}" data-service-description="${escapeHtml(description)}">Подробнее</button>` +
+            `</article>`
+          );
+        })
         .join('');
     });
+  };
+
+  const getInitialCatalogServicesFromDataAttribute = () => {
+    const container = document.querySelector('[data-vue-catalog]');
+    if (!container) return [];
+
+    try {
+      const payload = JSON.parse(container.getAttribute('data-initial-services') || '[]');
+      if (!Array.isArray(payload)) return [];
+
+      return payload
+        .map((item) => ({
+          category: safeText(item?.category),
+          title: safeText(item?.title),
+          description: safeText(item?.description)
+        }))
+        .filter((item) => item.title && item.category);
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const collectServicesFromCatalogDom = () => {
+    const collected = [];
+
+    document.querySelectorAll('[data-category]').forEach((group) => {
+      const categoryKey = safeText(group.getAttribute('data-category'));
+      const categoryTitle = categoryMap[categoryKey] || '';
+
+      group.querySelectorAll('.service-tile').forEach((tile) => {
+        const title = safeText(tile.querySelector('h3')?.textContent);
+        const button = tile.querySelector('[data-open-service-details]');
+        const description = safeText(button?.getAttribute('data-service-description'));
+
+        if (title && categoryTitle) {
+          collected.push({ category: categoryTitle, title, description });
+        }
+      });
+    });
+
+    return collected;
+  };
+
+  const loadServicesForSelectFromApi = (managerModalApi) => {
+    if (!managerModalApi) return;
+
+    fetch('api/services.php')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        if (!payload || !Array.isArray(payload.services) || !payload.services.length) return;
+        managerModalApi.setServiceOptions(getUniqueServiceTitles(payload.services));
+      })
+      .catch(() => {});
   };
 
   document.addEventListener('DOMContentLoaded', () => {
     setupMobileNav();
     setupNavContrast();
     setupCatalogTabs();
-    setupManagerModal();
+
+    const managerModalApi = setupManagerModal();
+    setupServiceDetailsModal(managerModalApi);
     setupVueCatalogSync();
 
-    const initialServices = [];
-    const reverseMap = {
-      print: 'Типография и полиграфия',
-      souvenir: 'Сувенирная продукция',
-      wide: 'Широкоформатная печать',
-      outdoor: 'Наружная реклама'
-    };
+    const initialCatalogServices = getInitialCatalogServicesFromDataAttribute();
+    if (initialCatalogServices.length) {
+      syncCatalogDomFromServices(initialCatalogServices);
+    } else {
+      const fallbackCatalogServices = collectServicesFromCatalogDom();
+      if (fallbackCatalogServices.length) {
+        syncCatalogDomFromServices(fallbackCatalogServices);
+      }
+    }
 
-    document.querySelectorAll('[data-category]').forEach((group) => {
-      const key = group.getAttribute('data-category');
-      const category = reverseMap[key] || '';
-      group.querySelectorAll('.service-tile h3').forEach((titleNode) => {
-        initialServices.push({ category, title: titleNode.textContent?.trim() || '' });
-      });
-    });
+    if (managerModalApi) {
+      const baseServicesForSelect = initialCatalogServices.length ? initialCatalogServices : collectServicesFromCatalogDom();
+      const serviceTitles = getUniqueServiceTitles(baseServicesForSelect);
+      managerModalApi.setServiceOptions(serviceTitles.length ? serviceTitles : fallbackServiceTitles);
 
-    syncCatalogDomFromServices(initialServices);
+      loadServicesForSelectFromApi(managerModalApi);
+    }
 
     window.addEventListener('catalog:services-updated', (event) => {
-      syncCatalogDomFromServices(event.detail || []);
+      const updatedServices = Array.isArray(event.detail) ? event.detail : [];
+      syncCatalogDomFromServices(updatedServices);
+
+      if (managerModalApi) {
+        managerModalApi.setServiceOptions(getUniqueServiceTitles(updatedServices));
+      }
     });
   });
 })();

@@ -16,6 +16,8 @@ $input = json_decode(file_get_contents('php://input') ?: '{}', true);
 $name = trim((string) ($input['name'] ?? ''));
 $phone = trim((string) ($input['phone'] ?? ''));
 $comment = trim((string) ($input['comment'] ?? ''));
+$serviceTitle = trim((string) ($input['service_title'] ?? ''));
+$serviceIsOther = filter_var($input['service_is_other'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
 if ($name === '' || $phone === '') {
     http_response_code(422);
@@ -24,12 +26,41 @@ if ($name === '' || $phone === '') {
 }
 
 try {
-    $stmt = db()->prepare('INSERT INTO client_requests (name, phone, comment) VALUES (:name, :phone, :comment)');
-    $stmt->execute([
-        ':name' => $name,
-        ':phone' => $phone,
-        ':comment' => $comment,
-    ]);
+    $serviceValue = $serviceTitle !== '' ? $serviceTitle : null;
+
+    try {
+        $stmt = db()->prepare(
+            'INSERT INTO client_requests (name, phone, service_title, service_is_other, comment)
+             VALUES (:name, :phone, :service_title, :service_is_other, :comment)'
+        );
+        $stmt->execute([
+            ':name' => $name,
+            ':phone' => $phone,
+            ':service_title' => $serviceValue,
+            ':service_is_other' => $serviceIsOther ? 1 : 0,
+            ':comment' => $comment,
+        ]);
+    } catch (Throwable $exception) {
+        $isMissingColumn =
+            $exception instanceof PDOException && ($exception->getCode() === '42S22' || stripos($exception->getMessage(), 'Unknown column') !== false);
+
+        if (!$isMissingColumn) {
+            throw $exception;
+        }
+
+        $serviceLabel = $serviceIsOther ? 'Другое' : $serviceTitle;
+        $fallbackComment = $comment;
+        if ($serviceLabel !== '') {
+            $fallbackComment = trim($comment . PHP_EOL . 'Услуга: ' . $serviceLabel);
+        }
+
+        $stmt = db()->prepare('INSERT INTO client_requests (name, phone, comment) VALUES (:name, :phone, :comment)');
+        $stmt->execute([
+            ':name' => $name,
+            ':phone' => $phone,
+            ':comment' => $fallbackComment,
+        ]);
+    }
 
     echo json_encode(['message' => 'ok'], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {

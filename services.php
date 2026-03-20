@@ -2,7 +2,7 @@
 $servicesData = [];
 try {
     require_once __DIR__ . '/api/db.php';
-    $stmt = db()->query('SELECT category, title FROM services ORDER BY category, id');
+    $stmt = db()->query('SELECT id, category, title, description FROM services ORDER BY category, id');
     $servicesData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $exception) {
     $servicesData = [];
@@ -144,6 +144,23 @@ try {
       </div>
     </footer>
 
+    <div class="modal-overlay modal-overlay-service" data-service-modal aria-hidden="true">
+      <section class="manager-modal service-modal" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
+        <button class="modal-close" type="button" data-close-service-modal aria-label="Закрыть описание услуги">
+          <span aria-hidden="true">✕</span>
+        </button>
+        <h2 id="service-modal-title">Услуга</h2>
+        <p class="service-modal-category" data-service-modal-category></p>
+        <div class="service-modal-description" data-service-modal-description>
+          <p>Подробности по услуге уточняйте у менеджера.</p>
+        </div>
+        <p class="service-modal-note">Оставьте заявку, и менеджер подскажет сроки, материалы и точную стоимость под ваш тираж.</p>
+        <button class="btn manager-submit" type="button" data-service-modal-contact>
+          <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Написать нам
+        </button>
+      </section>
+    </div>
+
     <div class="modal-overlay" data-manager-modal aria-hidden="true">
       <section class="manager-modal" role="dialog" aria-modal="true" aria-labelledby="manager-modal-title">
         <button class="modal-close" type="button" data-close-manager-modal aria-label="Закрыть форму">
@@ -171,6 +188,12 @@ try {
               <svg class="manager-field-error-icon" aria-hidden="true"><use href="media/icons/sprite.svg#error"></use></svg>
             </div>
             <p class="manager-field-error" id="manager-phone-error">Неверный формат номера</p>
+
+            <label for="manager-service">Услуга</label>
+            <select id="manager-service" name="service">
+              <option value="" selected disabled>Выберите услугу</option>
+              <option value="other">Другое</option>
+            </select>
 
             <label for="manager-comment">Комментарий к заявке или вопрос</label>
             <textarea id="manager-comment" name="comment" rows="3"></textarea>

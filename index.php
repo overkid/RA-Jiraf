@@ -206,6 +206,12 @@ try {
             </div>
             <p class="manager-field-error" id="manager-phone-error">Неверный формат номера</p>
 
+            <label for="manager-service">Услуга</label>
+            <select id="manager-service" name="service">
+              <option value="" selected disabled>Выберите услугу</option>
+              <option value="other">Другое</option>
+            </select>
+
             <label for="manager-comment">Комментарий к заявке или вопрос</label>
             <textarea id="manager-comment" name="comment" rows="3"></textarea>
           </div>

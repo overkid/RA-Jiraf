@@ -127,9 +127,11 @@
   };
 
   const setupRevealAnimations = () => {
-    const revealElements = document.querySelectorAll(
-      ".section, .cards > article, .feature, .catalog-tab, .service-tile, .portfolio-card, .footer-cta"
-    );
+    const revealElements = Array.from(
+      document.querySelectorAll(
+        ".section, .cards > article, .feature, .catalog-tab, .service-tile, .portfolio-card, .footer-cta"
+      )
+    ).filter((element) => !element.classList.contains("catalog-header"));
 
     revealElements.forEach((element) => {
       element.setAttribute("data-reveal", "");

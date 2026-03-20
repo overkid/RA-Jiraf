@@ -212,7 +212,13 @@ if ($loggedIn) {
         $pdo = db();
         $homeContent = get_home_content($pdo);
         $services = $pdo->query('SELECT id, category, title, description FROM services ORDER BY category, id')->fetchAll();
-        $requests = $pdo->query('SELECT id, name, phone, comment, created_at FROM client_requests ORDER BY created_at DESC')->fetchAll();
+        try {
+            $requests = $pdo
+                ->query('SELECT id, name, phone, comment, created_at, service_title, service_is_other FROM client_requests ORDER BY created_at DESC')
+                ->fetchAll();
+        } catch (Throwable $exception) {
+            $requests = $pdo->query('SELECT id, name, phone, comment, created_at FROM client_requests ORDER BY created_at DESC')->fetchAll();
+        }
     } catch (Throwable $exception) {
         $errors[] = 'Не удалось загрузить данные: ' . $exception->getMessage();
     }
@@ -335,6 +341,14 @@ if ($loggedIn) {
                   <div class="admin-item">
                     <h3><?= $escape($request['name'] ?? '') ?></h3>
                     <p><span>Телефон:</span> <?= $escape($request['phone'] ?? '') ?></p>
+                    <?php
+                    $requestServiceTitle = trim((string) ($request['service_title'] ?? ''));
+                    $requestServiceIsOther = (bool) ($request['service_is_other'] ?? false);
+                    $requestServiceValue = $requestServiceIsOther ? 'Другое' : $requestServiceTitle;
+                    ?>
+                    <?php if ($requestServiceValue !== ''): ?>
+                      <p><span>Услуга:</span> <?= $escape($requestServiceValue) ?></p>
+                    <?php endif; ?>
                     <?php if (!empty($request['comment'])): ?>
                       <p><span>Комментарий:</span> <?= $escape($request['comment'] ?? '') ?></p>
                     <?php endif; ?>
