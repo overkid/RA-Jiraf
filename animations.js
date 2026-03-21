@@ -1,9 +1,73 @@
 (() => {
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const body = document.body;
+  const pageTransitionDurationMs = 260;
+  let isPageTransitionActive = false;
 
   const preparePageFadeIn = () => {
-    body.classList.add("is-page-ready");
+    body.classList.remove("is-page-transition");
+    body.classList.remove("is-page-ready");
+
+    if (prefersReducedMotion) {
+      body.classList.add("is-page-ready");
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        body.classList.add("is-page-ready");
+      });
+    });
+  };
+
+  const canAnimateNavigation = (link, event) => {
+    if (!link || !link.hasAttribute("href")) return false;
+    if (event.defaultPrevented || event.button !== 0) return false;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false;
+    if (link.hasAttribute("download")) return false;
+    if (link.closest("[data-no-transition]")) return false;
+
+    const targetAttr = (link.getAttribute("target") || "").toLowerCase();
+    if (targetAttr && targetAttr !== "_self") return false;
+
+    const rawHref = link.getAttribute("href") || "";
+    if (!rawHref || rawHref.startsWith("#")) return false;
+    if (/^(mailto:|tel:|javascript:)/i.test(rawHref)) return false;
+
+    let targetUrl;
+    try {
+      targetUrl = new URL(rawHref, window.location.href);
+    } catch (error) {
+      return false;
+    }
+
+    if (targetUrl.origin !== window.location.origin) return false;
+
+    const samePathAndSearch =
+      targetUrl.pathname === window.location.pathname &&
+      targetUrl.search === window.location.search;
+
+    if (samePathAndSearch && targetUrl.hash) return false;
+
+    const sameDocument =
+      targetUrl.pathname === window.location.pathname &&
+      targetUrl.search === window.location.search &&
+      targetUrl.hash === window.location.hash;
+
+    if (sameDocument) return false;
+    return true;
+  };
+
+  const navigateWithTransition = (targetUrl) => {
+    if (isPageTransitionActive) return;
+
+    isPageTransitionActive = true;
+    body.classList.add("is-page-transition");
+    body.classList.remove("is-page-ready");
+
+    window.setTimeout(() => {
+      window.location.assign(targetUrl);
+    }, pageTransitionDurationMs);
   };
 
   const setupPageTransitions = () => {
@@ -11,29 +75,24 @@
       return;
     }
 
-    const internalLinks = document.querySelectorAll('a[href$=".html"], a[href="index.html"], a[href="services.html"]');
+    document.addEventListener("click", (event) => {
+      const link = event.target.closest("a[href]");
+      if (!canAnimateNavigation(link, event)) return;
 
-    internalLinks.forEach((link) => {
-      link.addEventListener("click", (event) => {
-        const href = link.getAttribute("href");
+      const targetUrl = new URL(link.getAttribute("href"), window.location.href);
+      event.preventDefault();
+      navigateWithTransition(targetUrl.href);
+    });
 
-        if (!href || href.startsWith("#") || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-          return;
-        }
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) {
+        isPageTransitionActive = false;
+        preparePageFadeIn();
+      }
+    });
 
-        const targetUrl = new URL(href, window.location.href);
-
-        if (targetUrl.origin !== window.location.origin || targetUrl.pathname === window.location.pathname) {
-          return;
-        }
-
-        event.preventDefault();
-        body.classList.add("is-page-transition");
-
-        window.setTimeout(() => {
-          window.location.href = targetUrl.href;
-        }, 260);
-      });
+    window.addEventListener("pagehide", () => {
+      isPageTransitionActive = false;
     });
   };
 

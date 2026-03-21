@@ -1289,16 +1289,37 @@ p.manager-form-success {
 
 /* Motion system: light-weight awwwards-like micro interactions */
 body {
+  position: relative;
   opacity: 0;
-  transition: opacity 0.28s ease;
+  transition: opacity 0.22s ease;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--color-white);
+  opacity: 1;
+  pointer-events: none;
+  z-index: 999;
+  transition: opacity 0.26s ease;
 }
 
 body.is-page-ready {
   opacity: 1;
 }
 
+body.is-page-ready::before {
+  opacity: 0;
+}
+
 body.is-page-transition {
   opacity: 0;
+  pointer-events: none;
+}
+
+body.is-page-transition::before {
+  opacity: 1;
 }
 
 .hero-down,
@@ -1418,6 +1439,12 @@ button.btn:active,
   body.is-page-ready,
   body.is-page-transition {
     opacity: 1;
+  }
+
+  body::before,
+  body.is-page-ready::before,
+  body.is-page-transition::before {
+    opacity: 0;
   }
 
   [data-reveal] {
