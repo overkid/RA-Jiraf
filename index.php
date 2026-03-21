@@ -55,7 +55,7 @@ try {
               </li>
             </ul>
             <div class="nav-actions">
-              <a class="nav-vk" href="#" aria-label="ВКонтакте">
+              <a class="nav-vk" href="https://vk.com/giraf33" target="_blank" aria-label="ВКонтакте">
                 <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#vk"></use></svg>
               </a>
               <button class="btn btn-nav" type="button" data-open-manager-modal>
@@ -90,22 +90,22 @@ try {
             <article class="card">
               <div class="media"><img src="media/img/Visitka.png" alt="Изготовление визиток" /></div>
               <h3>Изготовление визиток</h3>
-              <a href="#" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
+              <a href="services.php" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
             </article>
             <article class="card">
               <div class="media"><img src="media/img/ShirPechat.png" alt="Широкоформатная печать" /></div>
               <h3>Широкоформатная печать</h3>
-              <a href="#" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
+              <a href="services.php" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
             </article>
             <article class="card">
               <div class="media"><img src="media/img/Stendi.png" alt="Информационные стенды" /></div>
               <h3>Информационные стенды</h3>
-              <a href="#" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
+              <a href="services.php" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
             </article>
             <article class="card">
               <div class="media"><img src="media/img/Reklama.png" alt="Наружная реклама" /></div>
               <h3>Наружная реклама</h3>
-              <a href="#" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
+              <a href="services.php" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
             </article>
           </div>
         </div>
