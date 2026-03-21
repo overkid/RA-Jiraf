@@ -1,7 +1,7 @@
 (() => {
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const body = document.body;
-  const pageTransitionDurationMs = 260;
+  const pageTransitionDurationMs = 250;
   let isPageTransitionActive = false;
 
   const preparePageFadeIn = () => {

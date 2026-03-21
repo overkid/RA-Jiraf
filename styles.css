@@ -1291,7 +1291,7 @@ p.manager-form-success {
 body {
   position: relative;
   opacity: 0;
-  transition: opacity 0.22s ease;
+  transition: opacity 0.25s ease;
 }
 
 body::before {
@@ -1302,7 +1302,7 @@ body::before {
   opacity: 1;
   pointer-events: none;
   z-index: 999;
-  transition: opacity 0.26s ease;
+  transition: opacity 0.25s ease;
 }
 
 body.is-page-ready {
