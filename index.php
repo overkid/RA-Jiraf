@@ -37,7 +37,7 @@ try {
                     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>
             <svg class="nav-toggle-icon nav-toggle-icon--bars" aria-hidden="true"><use href="media/icons/sprite.svg#menu-bars"></use></svg>
             <svg class="nav-toggle-icon nav-toggle-icon--close" aria-hidden="true"><use href="media/icons/sprite.svg#menu-x"></use></svg>
-            <span class="sr-only">����</span>
+            <span class="sr-only">Меню</span>
           </button>
           <div class="nav-panel" id="primary-nav" data-nav-panel aria-hidden="true">
             <ul class="menu">

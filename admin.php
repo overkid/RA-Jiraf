@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 session_start();
 
-require __DIR__ . '/api/content.php';
-
 $errors = [];
 $messages = [];
 $adminConfigPath = __DIR__ . '/config/admin.php';
@@ -21,30 +19,14 @@ $serviceCategories = [
 
 const ADMIN_FORM_ACTIONS = [
     'login',
-    'update_home',
     'add_service',
     'update_service',
     'delete_service',
+    'delete_request',
 ];
-
-const ADMIN_HOME_FIELDS = [
-    'hero_title' => 'Заголовок hero',
-    'hero_text' => 'Текст под заголовком',
-    'services_title' => 'Заголовок блока услуг',
-    'services_subtitle' => 'Подзаголовок блока услуг',
-    'highlights_title' => 'Заголовок преимуществ',
-    'highlight_1' => 'Преимущество 1',
-    'highlight_2' => 'Преимущество 2',
-    'highlight_3' => 'Преимущество 3',
-    'portfolio_title' => 'Заголовок портфолио',
-    'portfolio_subtitle' => 'Подзаголовок портфолио',
-    'footer_title' => 'Заголовок подвала',
-    'footer_text' => 'Текст подвала',
-];
-
-$homeContent = default_home_content();
 $services = [];
 $requests = [];
+$newRequestLookup = [];
 
 $formatDateTime = static function (?string $value): string {
     if (!$value) {
@@ -118,20 +100,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($pdo instanceof PDO) {
-            if ($action === 'update_home') {
-                $payload = [];
-                foreach (array_keys(ADMIN_HOME_FIELDS) as $field) {
-                    $payload[$field] = (string) ($_POST[$field] ?? '');
-                }
-
-                try {
-                    save_home_content($pdo, $payload);
-                    $messages[] = 'Тексты главной обновлены.';
-                } catch (Throwable $exception) {
-                    $errors[] = 'Не удалось сохранить тексты: ' . $exception->getMessage();
-                }
-            }
-
             if ($action === 'add_service') {
                 $category = trim((string) ($_POST['category'] ?? ''));
                 $title = trim((string) ($_POST['title'] ?? ''));
@@ -202,6 +170,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             }
+
+            if ($action === 'delete_request') {
+                $requestId = (int) ($_POST['request_id'] ?? 0);
+                if ($requestId <= 0) {
+                    $errors[] = 'Не удалось определить заявку для удаления.';
+                } else {
+                    try {
+                        $stmt = $pdo->prepare('DELETE FROM client_requests WHERE id = :id');
+                        $stmt->execute([':id' => $requestId]);
+
+                        if ($stmt->rowCount() > 0) {
+                            $messages[] = 'Заявка удалена.';
+                        } else {
+                            $errors[] = 'Заявка не найдена или уже удалена.';
+                        }
+
+                        $seenRequestIds = array_map('intval', (array) ($_SESSION['admin_seen_request_ids'] ?? []));
+                        $_SESSION['admin_seen_request_ids'] = array_values(array_filter(
+                            $seenRequestIds,
+                            static fn (int $seenId): bool => $seenId !== $requestId
+                        ));
+                    } catch (Throwable $exception) {
+                        $errors[] = 'Не удалось удалить заявку: ' . $exception->getMessage();
+                    }
+                }
+            }
         }
     }
 }
@@ -210,7 +204,6 @@ if ($loggedIn) {
     try {
         require_once __DIR__ . '/api/db.php';
         $pdo = db();
-        $homeContent = get_home_content($pdo);
         $services = $pdo->query('SELECT id, category, title, description FROM services ORDER BY category, id')->fetchAll();
         try {
             $requests = $pdo
@@ -219,6 +212,17 @@ if ($loggedIn) {
         } catch (Throwable $exception) {
             $requests = $pdo->query('SELECT id, name, phone, comment, created_at FROM client_requests ORDER BY created_at DESC')->fetchAll();
         }
+
+        $seenRequestIds = array_values(array_unique(array_map('intval', (array) ($_SESSION['admin_seen_request_ids'] ?? []))));
+        $requestIds = array_values(array_filter(
+            array_map(static fn (array $request): int => (int) ($request['id'] ?? 0), $requests),
+            static fn (int $id): bool => $id > 0
+        ));
+
+        $newRequestIds = array_values(array_diff($requestIds, $seenRequestIds));
+        $newRequestLookup = array_fill_keys($newRequestIds, true);
+
+        $_SESSION['admin_seen_request_ids'] = array_values(array_unique(array_merge($seenRequestIds, $requestIds)));
     } catch (Throwable $exception) {
         $errors[] = 'Не удалось загрузить данные: ' . $exception->getMessage();
     }
@@ -284,7 +288,7 @@ if ($loggedIn) {
 
         <div class="catalog-hero">
           <h1>Админ-панель</h1>
-          <p class="section-subtitle">Редактирование главной страницы, услуг и заявок клиентов</p>
+          <p class="section-subtitle">Управление услугами и заявками клиентов</p>
         </div>
       </div>
     </header>
@@ -338,8 +342,18 @@ if ($loggedIn) {
             <?php else: ?>
               <div class="admin-list">
                 <?php foreach ($requests as $request): ?>
+                  <?php
+                  $requestId = (int) ($request['id'] ?? 0);
+                  $isNewRequest = isset($newRequestLookup[$requestId]);
+                  ?>
                   <div class="admin-item">
-                    <h3><?= $escape($request['name'] ?? '') ?></h3>
+                    <div class="admin-request-head">
+                      <h3><?= $escape($request['name'] ?? '') ?></h3>
+                      <?php if ($isNewRequest): ?>
+                        <span class="admin-badge-new">Новое</span>
+                      <?php endif; ?>
+                    </div>
+                    <p><span>ID:</span> <?= $escape((string) $requestId) ?></p>
                     <p><span>Телефон:</span> <?= $escape($request['phone'] ?? '') ?></p>
                     <?php
                     $requestServiceTitle = trim((string) ($request['service_title'] ?? ''));
@@ -353,6 +367,13 @@ if ($loggedIn) {
                       <p><span>Комментарий:</span> <?= $escape($request['comment'] ?? '') ?></p>
                     <?php endif; ?>
                     <p><span>Дата:</span> <?= $escape($formatDateTime($request['created_at'] ?? null)) ?></p>
+                    <form class="admin-form admin-request-delete-form" method="post">
+                      <input type="hidden" name="action" value="delete_request" />
+                      <input type="hidden" name="request_id" value="<?= $escape((string) $requestId) ?>" />
+                      <button class="btn btn-danger" type="submit" onclick="return confirm('Удалить заявку?')">
+                        Удалить заявку
+                      </button>
+                    </form>
                   </div>
                 <?php endforeach; ?>
               </div>
@@ -360,7 +381,7 @@ if ($loggedIn) {
           </div>
         </section>
 
-        <section class="section admin-panel">
+        <section class="section admin-panel admin-panel-alt">
           <div class="container">
             <?php if ($errors): ?>
               <div class="admin-alert admin-alert--error">
@@ -378,35 +399,6 @@ if ($loggedIn) {
               </div>
             <?php endif; ?>
 
-
-            <div class="admin-section-title">
-              <h2 id="home">Тексты главной страницы</h2>
-            </div>
-            <div class="admin-card">
-              <form class="admin-form" method="post">
-                <input type="hidden" name="action" value="update_home" />
-                <div class="admin-grid admin-grid-2">
-                  <?php foreach (ADMIN_HOME_FIELDS as $field => $label): ?>
-                    <div class="admin-field">
-                      <label for="home-<?= $escape($field) ?>"><?= $escape($label) ?></label>
-                      <textarea
-                        id="home-<?= $escape($field) ?>"
-                        name="<?= $escape($field) ?>"
-                        rows="3"
-                      ><?= $escape($homeContent[$field] ?? '') ?></textarea>
-                    </div>
-                  <?php endforeach; ?>
-                </div>
-                <button class="btn btn-nav" type="submit">
-                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Сохранить тексты
-                </button>
-              </form>
-            </div>
-          </div>
-        </section>
-
-        <section class="section admin-panel admin-panel-alt">
-          <div class="container">
             <div class="admin-section-title">
               <h2 id="services-admin">Каталог услуг</h2>
             </div>
@@ -426,8 +418,8 @@ if ($loggedIn) {
                 <label for="service-title-new">Название</label>
                 <input id="service-title-new" type="text" name="title" required />
 
-                <label for="service-description-new">Описание (опционально)</label>
-                <textarea id="service-description-new" name="description" rows="3"></textarea>
+                <label for="service-description-new">Описание для карточки услуги (открывается по кнопке «Подробнее»)</label>
+                <textarea id="service-description-new" name="description" rows="6"></textarea>
 
                 <button class="btn btn-nav" type="submit">
                   <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Добавить услугу
@@ -477,11 +469,11 @@ if ($loggedIn) {
                       required
                     />
 
-                    <label for="service-description-<?= $escape((string) ($service['id'] ?? '')) ?>">Описание</label>
+                    <label for="service-description-<?= $escape((string) ($service['id'] ?? '')) ?>">Описание для карточки услуги (открывается по кнопке «Подробнее»)</label>
                     <textarea
                       id="service-description-<?= $escape((string) ($service['id'] ?? '')) ?>"
                       name="description"
-                      rows="3"
+                      rows="6"
                     ><?= $escape($service['description'] ?? '') ?></textarea>
 
                     <div class="admin-actions">

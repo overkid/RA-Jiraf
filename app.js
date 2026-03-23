@@ -30,32 +30,8 @@
   ];
 
   const safeText = (value) => String(value || '').trim();
-
-  const pickFirstSentence = (value) => {
-    const sentence = safeText(value)
-      .split(/[.!?]+/)
-      .map((part) => safeText(part))
-      .find(Boolean);
-    return sentence || '';
-  };
-
-  const toSentence = (value) => {
-    const cleaned = safeText(value).replace(/[.!?]+$/g, '');
-    return cleaned ? `${cleaned}.` : '';
-  };
-
-  const buildServiceDescription = ({ title, category, description }) => {
-    const serviceTitle = safeText(title) || 'Услуга';
-    const serviceCategory = safeText(category) || 'Рекламные услуги';
-    const fromDatabase = toSentence(pickFirstSentence(description));
-
-    const sentence1 = `Услуга «${serviceTitle}» относится к направлению «${serviceCategory}» и настраивается под конкретную задачу вашего бизнеса.`;
-    const sentence2 = fromDatabase || `Мы подбираем решение под формат размещения, фирменный стиль и целевую аудиторию, чтобы результат работал на вашу цель.`;
-    const sentence3 = 'Перед запуском согласовываем материалы, размер, тираж и сроки, чтобы вы заранее понимали итоговый вид и бюджет проекта.';
-    const sentence4 = 'Если макет еще не готов, менеджер поможет с подготовкой и предложит оптимальный вариант производства без лишних затрат.';
-
-    return [sentence1, sentence2, sentence3, sentence4].join(' ');
-  };
+  const defaultServiceDescription = 'Подробности по услуге уточняйте у менеджера.';
+  const byTitleLookupPrefix = 'title:';
 
   const escapeHtml = (value) =>
     String(value || '')
@@ -64,6 +40,48 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+
+  const getServiceLookupKey = (title, category) => `${safeText(category)}::${safeText(title)}`;
+
+  const normalizeServiceDescription = (title, category, description) => {
+    const preparedTitle = safeText(title) || 'Услуга';
+    const preparedCategory = safeText(category) || 'Рекламные услуги';
+    const cleanedDescription = String(description || '').trim();
+
+    if (cleanedDescription.startsWith('Услуга «')) {
+      return cleanedDescription;
+    }
+
+    const secondParagraph = cleanedDescription || defaultServiceDescription;
+
+    return [
+      `Услуга «${preparedTitle}» относится к направлению «${preparedCategory}» и настраивается под конкретную задачу вашего бизнеса.`,
+      secondParagraph,
+      'Перед запуском согласовываем материалы, размер, тираж и сроки, чтобы вы заранее понимали итоговый вид и бюджет проекта.',
+      'Если макет еще не готов, менеджер поможет с подготовкой и предложит оптимальный вариант производства без лишних затрат.'
+    ].join('\n\n');
+  };
+
+  const buildServiceDescriptionLookup = (services) => {
+    const lookup = new Map();
+
+    (services || []).forEach((service) => {
+      const title = safeText(service?.title);
+      const category = safeText(service?.category);
+      const description = normalizeServiceDescription(title, category, service?.description);
+
+      if (!title || !category) return;
+
+      lookup.set(getServiceLookupKey(title, category), description);
+
+      const titleKey = `${byTitleLookupPrefix}${title}`;
+      if (!lookup.has(titleKey)) {
+        lookup.set(titleKey, description);
+      }
+    });
+
+    return lookup;
+  };
 
   const getUniqueServiceTitles = (services) => {
     if (!Array.isArray(services) || !services.length) return [];
@@ -202,6 +220,48 @@
           group.hidden = group.dataset.category !== selectedCategory;
         });
       });
+    });
+  };
+
+  const setupAdminToasts = () => {
+    const alerts = Array.from(document.querySelectorAll('.admin-page .admin-alert'));
+    if (!alerts.length) return;
+
+    const stack = document.createElement('div');
+    stack.className = 'admin-toast-stack';
+    document.body.appendChild(stack);
+
+    const closeToast = (toast) => {
+      if (!toast || toast.dataset.toastClosing === 'true') return;
+
+      toast.dataset.toastClosing = 'true';
+      toast.classList.remove('is-visible');
+      window.setTimeout(() => {
+        toast.remove();
+      }, 220);
+    };
+
+    alerts.forEach((alert, index) => {
+      alert.classList.add('admin-toast');
+
+      const closeButton = document.createElement('button');
+      closeButton.type = 'button';
+      closeButton.className = 'admin-toast-close';
+      closeButton.setAttribute('aria-label', 'Закрыть уведомление');
+      closeButton.textContent = '×';
+      closeButton.addEventListener('click', () => closeToast(alert));
+      alert.appendChild(closeButton);
+
+      stack.appendChild(alert);
+
+      window.setTimeout(() => {
+        alert.classList.add('is-visible');
+      }, 80 + index * 70);
+
+      const ttl = alert.classList.contains('admin-alert--error') ? 7000 : 4500;
+      window.setTimeout(() => {
+        closeToast(alert);
+      }, ttl + index * 250);
     });
   };
 
@@ -516,7 +576,7 @@
     };
   };
 
-  const setupServiceDetailsModal = (managerModalApi) => {
+  const setupServiceDetailsModal = (managerModalApi, getServiceDescription) => {
     const modalOverlay = document.querySelector('[data-service-modal]');
     const closeModalButton = document.querySelector('[data-close-service-modal]');
     const contactButton = document.querySelector('[data-service-modal-contact]');
@@ -530,14 +590,15 @@
     let activeServiceCategory = '';
 
     const renderDescriptionParagraphs = (text) => {
-      const normalizedText = safeText(text);
-      const sentences = normalizedText
-        .split(/(?<=[.!?])\s+/)
-        .map((sentence) => safeText(sentence))
+      const paragraphs = String(text || '')
+        .split(/\r?\n\s*\r?\n/)
+        .map((paragraph) => paragraph.trim())
         .filter(Boolean);
 
-      const content = sentences.length ? sentences : [normalizedText];
-      descriptionNode.innerHTML = content.map((sentence) => `<p>${escapeHtml(sentence)}</p>`).join('');
+      const content = paragraphs.length ? paragraphs : [defaultServiceDescription];
+      descriptionNode.innerHTML = content
+        .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\r?\n/g, '<br>')}</p>`)
+        .join('');
     };
 
     const openModal = ({ title, category, description }) => {
@@ -550,11 +611,7 @@
         categoryNode.hidden = !activeServiceCategory;
       }
 
-      const modalDescription = safeText(description) || buildServiceDescription({
-        title: activeServiceTitle,
-        category: activeServiceCategory,
-        description: ''
-      });
+      const modalDescription = String(description || '').trim();
       renderDescriptionParagraphs(modalDescription);
 
       modalOverlay.classList.add('is-open');
@@ -580,7 +637,11 @@
       const tile = trigger.closest('.service-tile');
       const title = safeText(trigger.getAttribute('data-service-title')) || safeText(tile?.querySelector('h3')?.textContent);
       const category = safeText(trigger.getAttribute('data-service-category'));
-      const description = safeText(trigger.getAttribute('data-service-description'));
+      const mappedDescription = typeof getServiceDescription === 'function'
+        ? String(getServiceDescription(title, category) || '')
+        : '';
+      const descriptionFromDataAttribute = safeText(trigger.getAttribute('data-service-description')).replace(/\\n/g, '\n');
+      const description = safeText(mappedDescription) || descriptionFromDataAttribute;
       openModal({ title, category, description });
     });
 
@@ -646,16 +707,13 @@
         .map((service) => {
           const title = safeText(service?.title);
           const category = safeText(service?.category) || categoryTitle;
-          const description = buildServiceDescription({
-            title,
-            category,
-            description: safeText(service?.description)
-          });
+          const description = normalizeServiceDescription(title, category, service?.description);
+          const descriptionAttr = description.replace(/\r?\n/g, '\\n');
 
           return (
             `<article class="service-tile">` +
             `<h3>${escapeHtml(title)}</h3>` +
-            `<button class="btn btn-disabled" type="button" data-open-service-details data-service-title="${escapeHtml(title)}" data-service-category="${escapeHtml(category)}" data-service-description="${escapeHtml(description)}">Подробнее</button>` +
+            `<button class="btn btn-disabled" type="button" data-open-service-details data-service-title="${escapeHtml(title)}" data-service-category="${escapeHtml(category)}" data-service-description="${escapeHtml(descriptionAttr)}">Подробнее</button>` +
             `</article>`
           );
         })
@@ -693,7 +751,7 @@
       group.querySelectorAll('.service-tile').forEach((tile) => {
         const title = safeText(tile.querySelector('h3')?.textContent);
         const button = tile.querySelector('[data-open-service-details]');
-        const description = safeText(button?.getAttribute('data-service-description'));
+        const description = safeText(button?.getAttribute('data-service-description')).replace(/\\n/g, '\n');
 
         if (title && categoryTitle) {
           collected.push({ category: categoryTitle, title, description });
@@ -720,18 +778,29 @@
     setupMobileNav();
     setupNavContrast();
     setupCatalogTabs();
-
-    const managerModalApi = setupManagerModal();
-    setupServiceDetailsModal(managerModalApi);
-    setupVueCatalogSync();
+    setupAdminToasts();
 
     const initialCatalogServices = getInitialCatalogServicesFromDataAttribute();
+    let serviceDescriptionLookup = buildServiceDescriptionLookup(initialCatalogServices);
+    const getServiceDescription = (title, category) => {
+      const exact = serviceDescriptionLookup.get(getServiceLookupKey(title, category));
+      if (safeText(exact) !== '') return exact;
+
+      const byTitle = serviceDescriptionLookup.get(`${byTitleLookupPrefix}${safeText(title)}`);
+      return safeText(byTitle) !== '' ? byTitle : '';
+    };
+
+    const managerModalApi = setupManagerModal();
+    setupServiceDetailsModal(managerModalApi, getServiceDescription);
+    setupVueCatalogSync();
+
     if (initialCatalogServices.length) {
       syncCatalogDomFromServices(initialCatalogServices);
     } else {
       const fallbackCatalogServices = collectServicesFromCatalogDom();
       if (fallbackCatalogServices.length) {
         syncCatalogDomFromServices(fallbackCatalogServices);
+        serviceDescriptionLookup = buildServiceDescriptionLookup(fallbackCatalogServices);
       }
     }
 
@@ -746,6 +815,7 @@
     window.addEventListener('catalog:services-updated', (event) => {
       const updatedServices = Array.isArray(event.detail) ? event.detail : [];
       syncCatalogDomFromServices(updatedServices);
+      serviceDescriptionLookup = buildServiceDescriptionLookup(updatedServices);
 
       if (managerModalApi) {
         managerModalApi.setServiceOptions(getUniqueServiceTitles(updatedServices));

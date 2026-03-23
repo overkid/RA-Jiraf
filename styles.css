@@ -1022,7 +1022,7 @@ p.manager-form-success {
 
 .catalog-footer .footer-meta {
   margin-top: 12px;
-  border-top-color: #9b9b9b;
+  border-top-color: var(--color-gray);
 }
 
 .catalog-footer .footer-logo {
@@ -1034,7 +1034,7 @@ p.manager-form-success {
 }
 
 .catalog-footer .footer-meta p {
-  color: #777;
+  color: var(--color-gray);
 }
 
 @media (max-width: 1024px) {
@@ -1094,7 +1094,7 @@ p.manager-form-success {
 }
 
 .admin-panel-alt {
-  background: #fff7f0;
+  background: var(--color-white);
 }
 
 .admin-card {
@@ -1175,13 +1175,14 @@ p.manager-form-success {
 }
 
 .btn-danger {
-  border: 2px solid #ff8a5c;
-  background: #ffe6e0;
-  color: #9a2c14;
+  border: 2px solid var(--color-orange);
+  background: var(--color-white);
+  color: var(--color-orange);
 }
 
 .btn-danger:hover {
-  background: #ffd3c6;
+  background: var(--color-orange);
+  color: var(--color-white);
 }
 
 .admin-section-title {
@@ -1211,10 +1212,34 @@ p.manager-form-success {
 }
 
 .admin-item {
-  background: #fff7f0;
+  background: var(--color-white);
   border: 2px solid var(--color-orange);
   border-radius: 16px;
   padding: 16px;
+}
+
+.admin-request-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-badge-new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-orange);
+  color: var(--color-white);
+  font: var(--font-body-small);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-item .admin-badge-new {
+  color: var(--color-white);
 }
 
 .admin-item h3 {
@@ -1233,6 +1258,16 @@ p.manager-form-success {
   color: var(--color-gray);
 }
 
+.admin-request-delete-form {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.admin-request-delete-form .btn {
+  padding: 8px 14px;
+}
+
 .admin-alert {
   border-radius: 12px;
   padding: 12px 16px;
@@ -1245,15 +1280,55 @@ p.manager-form-success {
 }
 
 .admin-alert--error {
-  background: #ffe6e0;
-  color: #9a2c14;
-  border: 2px solid #ff8a5c;
+  background: var(--color-white);
+  color: var(--color-orange-dark);
+  border: 2px solid var(--color-orange);
 }
 
 .admin-alert--success {
-  background: #e7f7e9;
-  color: #23602b;
-  border: 2px solid #7fd18a;
+  background: var(--color-white);
+  color: var(--color-violet);
+  border: 2px solid var(--color-violet);
+}
+
+.admin-toast-stack {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 240;
+  display: grid;
+  gap: 10px;
+  width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.admin-toast-stack .admin-alert {
+  position: relative;
+  margin: 0;
+  padding-right: 44px;
+  box-shadow: 0 12px 28px var(--color-gray);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  pointer-events: auto;
+}
+
+.admin-toast-stack .admin-alert.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.admin-toast-close {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  border: none;
+  background: transparent;
+  color: currentColor;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
 }
 
 @media (min-width: 1024px) {
@@ -1272,7 +1347,8 @@ p.manager-form-success {
   }
 
   .admin-section-title,
-  .admin-service-meta {
+  .admin-service-meta,
+  .admin-request-head {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -1284,6 +1360,21 @@ p.manager-form-success {
   .admin-actions .btn {
     flex: 1 1 100%;
     justify-content: center;
+  }
+
+  .admin-request-delete-form {
+    justify-content: stretch;
+  }
+
+  .admin-request-delete-form .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-toast-stack {
+    left: 12px;
+    bottom: 12px;
+    width: calc(100vw - 24px);
   }
 }
 

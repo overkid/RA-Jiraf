@@ -1,6 +1,7 @@
 (() => {
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const body = document.body;
+  const isAdminPage = body.classList.contains("admin-page");
   const pageTransitionDurationMs = 250;
   let isPageTransitionActive = false;
 
@@ -304,10 +305,13 @@
     }
   };
 
-  setupHeroWordReveal();
-  setupHeroContentReveal();
   preparePageFadeIn();
   setupPageTransitions();
-  setupRevealAnimations();
-  setupCatalogConsistency();
+
+  if (!isAdminPage) {
+    setupHeroWordReveal();
+    setupHeroContentReveal();
+    setupRevealAnimations();
+    setupCatalogConsistency();
+  }
 })();
