@@ -2,6 +2,7 @@
   --color-orange: #ff6600;
   --color-orange-dark: #d55500;
   --color-violet: #7b00ff;
+  --color-violet-dark: #6B01DB;
   --color-black: #000000;
   --color-gray: #909090;
   --color-white: #ffffff;
@@ -58,6 +59,11 @@
   --layout-nav-gutter-mobile: var(--space-24);
   --layout-section-y: var(--space-80);
   --layout-section-y-mobile: var(--space-56);
+}
+
+::selection {
+  background-color: var(--color-violet-dark);
+  color: var(--color-white);
 }
 
 * {
@@ -188,13 +194,35 @@ h3 { font: var(--font-h3); }
 .hero::before {
   content: "";
   position: absolute;
-  left: 30px;
-  bottom: 0;
-  width: min(130px, 20vw);
-  height: 430px;
+  left: clamp(20px, 4vw, 72px);
+  bottom: -400px;
+  width: min(540px, 40.5vw);
+  height: min(1260px, 144vh);
   background: url("media/logo/Jiraf.svg") no-repeat bottom left / contain;
-  opacity: 0.35;
+  opacity: 0.28;
+  animation: jiraf-float-desktop 2s ease-in-out infinite;
+  will-change: transform;
   pointer-events: none;
+}
+
+@keyframes jiraf-float-desktop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes jiraf-float-mobile {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-12px);
+  }
 }
 
 .top-nav {
@@ -911,11 +939,13 @@ p.manager-form-success {
 
   .hero::before {
     left: 50%;
+    bottom: calc(var(--space-140) * -3);
     transform: translateX(-50%);
-    width: min(220px, 58vw);
-    height: min(560px, 62vh);
+    width: min(480px, 117vw);
+    height: min(1140px, 138vh);
     background-position: center bottom;
     opacity: 0.22;
+    animation-name: jiraf-float-mobile;
   }
 
   .card .media {
