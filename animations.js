@@ -269,34 +269,53 @@
     }
 
     const animateGroupTiles = (group) => {
-      const tiles = group.querySelectorAll(".service-tile");
+      const tiles = Array.from(group.querySelectorAll(".service-tile"));
+      if (!tiles.length) return;
 
-      tiles.forEach((tile, index) => {
-        tile.style.setProperty("--reveal-delay", `${Math.min(index * 0.08, 0.32)}s`);
+      tiles.forEach((tile) => {
+        tile.style.transition = "none";
+        tile.style.setProperty("--reveal-delay", "0s");
         tile.classList.remove("is-visible");
       });
 
+      // Force layout so the hidden state is applied before reveal.
+      void group.offsetWidth;
+
       if (prefersReducedMotion) {
-        tiles.forEach((tile) => tile.classList.add("is-visible"));
+        tiles.forEach((tile) => {
+          tile.style.removeProperty("transition");
+          tile.classList.add("is-visible");
+        });
         return;
       }
 
+      tiles.forEach((tile, index) => {
+        tile.style.removeProperty("transition");
+        tile.style.setProperty("--reveal-delay", `${Math.min(index * 0.08, 0.32)}s`);
+      });
+
       window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          tiles.forEach((tile) => tile.classList.add("is-visible"));
-        });
+        tiles.forEach((tile) => tile.classList.add("is-visible"));
       });
     };
 
-    categoryTabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        const selectedCategory = tab.dataset.categoryTab;
-        const activeGroup = Array.from(categoryGroups).find((group) => group.dataset.category === selectedCategory && !group.hidden);
+    const animateSelectedCategory = (selectedCategory) => {
+      if (!selectedCategory) return;
+
+      window.requestAnimationFrame(() => {
+        const activeGroup = Array.from(categoryGroups).find(
+          (group) => group.dataset.category === selectedCategory && !group.hidden
+        );
 
         if (activeGroup) {
           animateGroupTiles(activeGroup);
         }
       });
+    };
+
+    window.addEventListener("catalog:category-changed", (event) => {
+      const selectedCategory = event?.detail?.category;
+      animateSelectedCategory(selectedCategory);
     });
 
     const initialGroup = Array.from(categoryGroups).find((group) => !group.hidden);

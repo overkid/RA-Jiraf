@@ -2,7 +2,6 @@
 
 return [
     'username' => 'admin',
-    'password' => 'change_me',
-    // Можно использовать хэш вместо пароля:
-    // 'password_hash' => password_hash('change_me', PASSWORD_DEFAULT),
+    // Замените хэш на свой. Это пример для пароля "change_me".
+    'password_hash' => 'pbkdf2_sha256$210000$8d7pVrAAUdk3gpRtARRs3Q==$aowOVQvuVl09XQLSlxq61Y1xTQ8ny75jAB795K5bzk8=',
 ];

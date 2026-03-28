@@ -156,6 +156,8 @@ h3 { font: var(--font-h3); }
   height: 100%;
   object-fit: cover;
   display: block;
+  transform-origin: center;
+  transition: transform 0.35s ease, filter 0.35s ease;
 }
 
 .grid-4 {
@@ -429,6 +431,7 @@ h3 { font: var(--font-h3); }
   color: var(--color-white);
   border-radius: 16px;
   padding: var(--space-12);
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
 }
 
 .card {
@@ -457,6 +460,23 @@ h3 { font: var(--font-h3); }
   font: var(--font-body-small);
 }
 
+.services .card:hover,
+.services .card:focus-within,
+.portfolio .portfolio-card:hover,
+.portfolio .portfolio-card:focus-within {
+  transform: translateY(-6px);
+}
+
+.services .card {
+  display: flex;
+  flex-direction: column;
+}
+
+.services .card .btn-card {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
 .highlights {
   background: var(--color-violet);
   color: var(--color-white);
@@ -483,6 +503,11 @@ h3 { font: var(--font-h3); }
   align-items: center;
   justify-content: space-between;
   gap: var(--space-12);
+}
+
+.highlights .feature:hover,
+.highlights .feature:focus-within {
+  transform: translateY(-6px);
 }
 
 .feature .icon {
@@ -565,7 +590,7 @@ h3 { font: var(--font-h3); }
 .manager-modal {
   width: min(100%, 560px);
   background: var(--color-white);
-  border: 2px solid var(--color-orange);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 16px;
   padding: var(--space-24);
   position: relative;
@@ -1618,6 +1643,15 @@ button.btn:active,
 [data-reveal].is-visible {
   opacity: 1;
   transform: translate3d(0, 0, 0);
+}
+
+.cards > .card.is-visible,
+.cards > .portfolio-card.is-visible {
+  transition-delay: 0s;
+}
+
+.feature.is-visible {
+  transition-delay: 0s;
 }
 
 @media (prefers-reduced-motion: reduce) {

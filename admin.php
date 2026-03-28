@@ -2,6 +2,18 @@
 
 declare(strict_types=1);
 
+$isHttps =
+    (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
+    || ((int) ($_SERVER['SERVER_PORT'] ?? 0) === 443);
+
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'secure' => $isHttps,
+    'httponly' => true,
+    'samesite' => 'Strict',
+]);
+ini_set('session.use_strict_mode', '1');
 session_start();
 
 $errors = [];
@@ -24,6 +36,11 @@ const ADMIN_FORM_ACTIONS = [
     'delete_service',
     'delete_request',
 ];
+const ADMIN_CSRF_TOKEN_KEY = 'admin_csrf_token';
+const ADMIN_LOGIN_ATTEMPTS_KEY = 'admin_login_attempts';
+const ADMIN_LOGIN_LOCK_UNTIL_KEY = 'admin_login_lock_until';
+const ADMIN_MAX_LOGIN_ATTEMPTS = 5;
+const ADMIN_LOGIN_LOCK_SECONDS = 600;
 $services = [];
 $requests = [];
 $newRequestLookup = [];
@@ -45,6 +62,62 @@ $escape = static function (?string $value): string {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 };
 
+if (empty($_SESSION[ADMIN_CSRF_TOKEN_KEY]) || !is_string($_SESSION[ADMIN_CSRF_TOKEN_KEY])) {
+    $_SESSION[ADMIN_CSRF_TOKEN_KEY] = bin2hex(random_bytes(32));
+}
+$csrfToken = (string) $_SESSION[ADMIN_CSRF_TOKEN_KEY];
+
+$refreshCsrfToken = static function () use (&$csrfToken): void {
+    $_SESSION[ADMIN_CSRF_TOKEN_KEY] = bin2hex(random_bytes(32));
+    $csrfToken = (string) $_SESSION[ADMIN_CSRF_TOKEN_KEY];
+};
+
+$isValidCsrfToken = static function (string $token) use (&$csrfToken): bool {
+    return $token !== '' && hash_equals($csrfToken, $token);
+};
+
+$verifyPasswordHash = static function (string $password, string $storedHash): bool {
+    $normalizedHash = trim($storedHash);
+    if ($normalizedHash === '') {
+        return false;
+    }
+
+    $passwordInfo = password_get_info($normalizedHash);
+    if (!empty($passwordInfo['algo'])) {
+        return password_verify($password, $normalizedHash);
+    }
+
+    if (str_starts_with($normalizedHash, 'pbkdf2_sha256$')) {
+        $parts = explode('$', $normalizedHash);
+        if (count($parts) !== 4) {
+            return false;
+        }
+
+        [, $iterationsRaw, $saltBase64, $hashBase64] = $parts;
+        $iterations = filter_var($iterationsRaw, FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 100000, 'max_range' => 2000000],
+        ]);
+
+        $salt = base64_decode($saltBase64, true);
+        $expectedHash = base64_decode($hashBase64, true);
+
+        if ($iterations === false || !is_string($salt) || !is_string($expectedHash) || $salt === '' || $expectedHash === '') {
+            return false;
+        }
+
+        $derivedHash = hash_pbkdf2('sha256', $password, $salt, (int) $iterations, strlen($expectedHash), true);
+        return hash_equals($expectedHash, $derivedHash);
+    }
+
+    return false;
+};
+
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Pragma: no-cache');
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+
 if (isset($_GET['logout'])) {
     session_unset();
     session_destroy();
@@ -54,38 +127,59 @@ if (isset($_GET['logout'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string) ($_POST['action'] ?? '');
+    $csrfTokenFromRequest = trim((string) ($_POST['csrf_token'] ?? ''));
 
-    if (!in_array($action, ADMIN_FORM_ACTIONS, true)) {
+    if (!$isValidCsrfToken($csrfTokenFromRequest)) {
+        $errors[] = 'Сессия формы истекла. Обновите страницу и попробуйте снова.';
+    } elseif (!in_array($action, ADMIN_FORM_ACTIONS, true)) {
         $errors[] = 'Неизвестное действие.';
     } elseif ($action === 'login') {
         $inputUser = trim((string) ($_POST['username'] ?? ''));
         $inputPass = trim((string) ($_POST['password'] ?? ''));
+        $lockUntil = (int) ($_SESSION[ADMIN_LOGIN_LOCK_UNTIL_KEY] ?? 0);
+        $now = time();
+
+        if ($lockUntil > 0 && $lockUntil <= $now) {
+            unset($_SESSION[ADMIN_LOGIN_LOCK_UNTIL_KEY], $_SESSION[ADMIN_LOGIN_ATTEMPTS_KEY]);
+            $lockUntil = 0;
+        }
 
         if (!$adminConfig) {
-            $errors[] = 'Файл config/admin.php не найден. Скопируйте config/admin.php.example и задайте логин с паролем.';
+            $errors[] = 'Файл config/admin.php не найден. Скопируйте config/admin.php.example и задайте логин с хэшем пароля.';
+        } elseif ($lockUntil > $now) {
+            $minutesLeft = (int) ceil(($lockUntil - $now) / 60);
+            $errors[] = 'Слишком много попыток входа. Повторите через ' . $minutesLeft . ' мин.';
         } elseif ($inputUser === '' || $inputPass === '') {
             $errors[] = 'Введите логин и пароль.';
         } else {
             $configUser = (string) ($adminConfig['username'] ?? '');
-            $configPassword = (string) ($adminConfig['password'] ?? '');
             $configHash = (string) ($adminConfig['password_hash'] ?? '');
 
-            $validUser = $configUser !== '' && hash_equals($configUser, $inputUser);
-            $validPassword = false;
-
-            if ($configHash !== '') {
-                $validPassword = password_verify($inputPass, $configHash);
-            } elseif ($configPassword !== '') {
-                $validPassword = hash_equals($configPassword, $inputPass);
-            }
-
-            if ($validUser && $validPassword) {
-                session_regenerate_id(true);
-                $_SESSION['admin_logged_in'] = true;
-                $loggedIn = true;
-                $messages[] = 'Вы вошли в админку.';
+            if ($configHash === '') {
+                $errors[] = 'В config/admin.php отсутствует password_hash. Укажите хэш пароля.';
             } else {
-                $errors[] = 'Неверный логин или пароль.';
+                $validUser = $configUser !== '' && hash_equals($configUser, $inputUser);
+                $validPassword = $verifyPasswordHash($inputPass, $configHash);
+
+                if ($validUser && $validPassword) {
+                    session_regenerate_id(true);
+                    $_SESSION['admin_logged_in'] = true;
+                    unset($_SESSION[ADMIN_LOGIN_ATTEMPTS_KEY], $_SESSION[ADMIN_LOGIN_LOCK_UNTIL_KEY]);
+                    $refreshCsrfToken();
+                    $loggedIn = true;
+                    $messages[] = 'Вы вошли в админку.';
+                } else {
+                    $attempts = (int) ($_SESSION[ADMIN_LOGIN_ATTEMPTS_KEY] ?? 0) + 1;
+
+                    if ($attempts >= ADMIN_MAX_LOGIN_ATTEMPTS) {
+                        $_SESSION[ADMIN_LOGIN_ATTEMPTS_KEY] = 0;
+                        $_SESSION[ADMIN_LOGIN_LOCK_UNTIL_KEY] = time() + ADMIN_LOGIN_LOCK_SECONDS;
+                        $errors[] = 'Слишком много попыток входа. Доступ временно заблокирован на 10 минут.';
+                    } else {
+                        $_SESSION[ADMIN_LOGIN_ATTEMPTS_KEY] = $attempts;
+                        $errors[] = 'Неверный логин или пароль.';
+                    }
+                }
             }
         }
     } elseif (!$loggedIn) {
@@ -311,6 +405,7 @@ if ($loggedIn) {
 
               <form class="admin-form" method="post">
                 <input type="hidden" name="action" value="login" />
+                <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
                 <label for="admin-username">Логин</label>
                 <input id="admin-username" type="text" name="username" autocomplete="username" required />
 
@@ -369,6 +464,7 @@ if ($loggedIn) {
                     <p><span>Дата:</span> <?= $escape($formatDateTime($request['created_at'] ?? null)) ?></p>
                     <form class="admin-form admin-request-delete-form" method="post">
                       <input type="hidden" name="action" value="delete_request" />
+                      <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
                       <input type="hidden" name="request_id" value="<?= $escape((string) $requestId) ?>" />
                       <button class="btn btn-danger" type="submit" onclick="return confirm('Удалить заявку?')">
                         Удалить заявку
@@ -407,6 +503,7 @@ if ($loggedIn) {
               <h3>Добавить услугу</h3>
               <form class="admin-form" method="post">
                 <input type="hidden" name="action" value="add_service" />
+                <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
                 <label for="service-category-new">Категория</label>
                 <select id="service-category-new" name="category" required>
                   <option value="" disabled selected>Выберите категорию</option>
@@ -443,6 +540,7 @@ if ($loggedIn) {
                   <form class="admin-form" method="post">
                     <input type="hidden" name="action" value="update_service" />
                     <input type="hidden" name="service_id" value="<?= $escape((string) ($service['id'] ?? '')) ?>" />
+                    <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
 
                     <label for="service-category-<?= $escape((string) ($service['id'] ?? '')) ?>">Категория</label>
                     <select
@@ -497,6 +595,7 @@ if ($loggedIn) {
                   >
                     <input type="hidden" name="action" value="delete_service" />
                     <input type="hidden" name="service_id" value="<?= $escape((string) ($service['id'] ?? '')) ?>" />
+                    <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
                   </form>
                 </div>
               <?php endforeach; ?>

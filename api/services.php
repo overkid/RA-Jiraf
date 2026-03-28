@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
+header('X-Content-Type-Options: nosniff');
 
 require_once __DIR__ . '/db.php';
 
@@ -11,9 +12,6 @@ try {
     echo json_encode(['services' => $stmt->fetchAll()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
-    echo json_encode([
-        'message' => 'Ошибка получения услуг',
-        'details' => $exception->getMessage(),
-    ], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['message' => 'Ошибка получения услуг'], JSON_UNESCAPED_UNICODE);
 }
 

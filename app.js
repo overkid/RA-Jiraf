@@ -219,6 +219,10 @@
         categoryGroups.forEach((group) => {
           group.hidden = group.dataset.category !== selectedCategory;
         });
+
+        window.dispatchEvent(
+          new CustomEvent('catalog:category-changed', { detail: { category: selectedCategory } })
+        );
       });
     });
   };
@@ -711,7 +715,7 @@
           const descriptionAttr = description.replace(/\r?\n/g, '\\n');
 
           return (
-            `<article class="service-tile">` +
+            `<article class="service-tile reveal-horizontal is-visible" data-reveal data-reveal-manual>` +
             `<h3>${escapeHtml(title)}</h3>` +
             `<button class="btn btn-disabled" type="button" data-open-service-details data-service-title="${escapeHtml(title)}" data-service-category="${escapeHtml(category)}" data-service-description="${escapeHtml(descriptionAttr)}">Подробнее</button>` +
             `</article>`
