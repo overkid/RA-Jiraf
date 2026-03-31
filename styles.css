@@ -470,6 +470,7 @@ h3 { font: var(--font-h3); }
 .services .card {
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .services .card .btn-card {
@@ -1106,6 +1107,13 @@ p.manager-form-success {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  cursor: pointer;
+}
+
+.services-catalog .service-tile:hover,
+.services-catalog .service-tile:focus-within {
+  transform: translateY(-6px);
+  transition-delay: 0s;
 }
 
 .service-tile h3 {
@@ -1570,6 +1578,19 @@ button.btn:active,
   transform: translateY(0) scale(0.98);
 }
 
+.catalog-tab {
+  transform-origin: center;
+}
+
+.catalog-tab:hover,
+.catalog-tab:focus-visible {
+  transform: scale(0.96);
+}
+
+.catalog-tab:active {
+  transform: scale(0.93);
+}
+
 .menu a {
   position: relative;
 }
@@ -1581,16 +1602,18 @@ button.btn:active,
   bottom: -4px;
   width: 100%;
   height: 2px;
+  border-radius: 999px;
   background: currentColor;
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 0.24s ease;
-  opacity: 0.85;
+  opacity: 0;
+  transform: translateY(4px) scaleY(0.4);
+  transform-origin: center bottom;
+  transition: opacity 0.22s ease, transform 0.22s ease;
 }
 
 .menu a:hover::after,
 .menu a:focus-visible::after {
-  transform: scaleX(1);
+  opacity: 0.85;
+  transform: translateY(0) scaleY(1);
 }
 
 
@@ -1643,6 +1666,19 @@ button.btn:active,
 [data-reveal].is-visible {
   opacity: 1;
   transform: translate3d(0, 0, 0);
+}
+
+.catalog-tab[data-reveal].is-visible {
+  transition-delay: 0s;
+}
+
+.catalog-tab[data-reveal].is-visible:hover,
+.catalog-tab[data-reveal].is-visible:focus-visible {
+  transform: scale(0.96);
+}
+
+.catalog-tab[data-reveal].is-visible:active {
+  transform: scale(0.93);
 }
 
 .cards > .card.is-visible,

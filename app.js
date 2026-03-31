@@ -227,6 +227,27 @@
     });
   };
 
+  const setupCardWideClickTargets = () => {
+    const isInteractiveElement = (element) =>
+      Boolean(element.closest('a, button, input, select, textarea, label'));
+
+    const triggerPrimaryAction = (event, cardSelector, actionSelector) => {
+      const card = event.target.closest(cardSelector);
+      if (!card || isInteractiveElement(event.target)) return false;
+
+      const action = card.querySelector(actionSelector);
+      if (!action) return false;
+
+      action.click();
+      return true;
+    };
+
+    document.addEventListener('click', (event) => {
+      if (triggerPrimaryAction(event, '.services .card', '.btn-card[href]')) return;
+      triggerPrimaryAction(event, '.services-catalog .service-tile', '[data-open-service-details]');
+    });
+  };
+
   const setupAdminToasts = () => {
     const alerts = Array.from(document.querySelectorAll('.admin-page .admin-alert'));
     if (!alerts.length) return;
@@ -782,6 +803,7 @@
     setupMobileNav();
     setupNavContrast();
     setupCatalogTabs();
+    setupCardWideClickTargets();
     setupAdminToasts();
 
     const initialCatalogServices = getInitialCatalogServicesFromDataAttribute();
