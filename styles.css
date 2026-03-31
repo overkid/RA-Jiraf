@@ -6,6 +6,7 @@
   --color-black: #000000;
   --color-gray: #909090;
   --color-white: #ffffff;
+  --color-field-placeholder: var(--color-gray);
 
   --font-family-inter: Inter, Arial, sans-serif;
   --font-family-nunito: Nunito, Inter, Arial, sans-serif;
@@ -279,8 +280,8 @@ h3 { font: var(--font-h3); }
 
 .nav-toggle-icon {
   position: absolute;
-  width: 24px;
-  height: 24px;
+  width: 40px;
+  height: 40px;
   color: inherit;
   pointer-events: none;
   transition: opacity 0.25s ease, transform 0.25s ease;
@@ -742,6 +743,21 @@ h3 { font: var(--font-h3); }
   position: relative;
 }
 
+.manager-phone-prefix {
+  position: absolute;
+  left: var(--space-14);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-black);
+  font: var(--font-body);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.manager-field #manager-phone {
+  padding-left: calc(var(--space-14) + 28px);
+}
+
 .manager-field-error-icon {
   position: absolute;
   right: 12px;
@@ -763,17 +779,25 @@ p.manager-field-error {
 }
 
 .manager-form input::placeholder {
-  color: var(--color-gray);
+  color: var(--color-field-placeholder);
 }
 
 .manager-form select {
   appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, var(--color-violet) 50%), linear-gradient(135deg, var(--color-violet) 50%, transparent 50%);
-  background-position: calc(100% - 20px) calc(50% - 3px), calc(100% - 14px) calc(50% - 3px);
+  background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
   background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
   padding-right: var(--space-40);
   cursor: pointer;
+}
+
+.manager-form select.is-placeholder {
+  color: var(--color-field-placeholder);
+}
+
+.manager-form select option {
+  color: var(--color-black);
 }
 
 .manager-form textarea {
@@ -879,6 +903,9 @@ p.manager-form-success {
 
   .nav-toggle {
     display: inline-flex;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .nav-panel {
@@ -957,6 +984,10 @@ p.manager-form-success {
   .manager-form input,
   .manager-form select,
   .manager-form textarea {
+    font-size: 18px;
+  }
+
+  .manager-phone-prefix {
     font-size: 18px;
   }
 

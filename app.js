@@ -103,14 +103,16 @@
     const digitsOnly = String(rawValue || '').replace(/\D/g, '');
     const localNumber = digitsOnly.replace(/^7|^8/, '').slice(0, phoneDigitsCount);
 
-    let formattedValue = phonePrefix;
+    let formattedValue = '';
 
-    if (localNumber.length > 0) formattedValue += ` ${localNumber.slice(0, 3)}`;
+    if (localNumber.length > 0) formattedValue += `${localNumber.slice(0, 3)}`;
     if (localNumber.length > 3) formattedValue += ` ${localNumber.slice(3, 6)}`;
     if (localNumber.length > 6) formattedValue += ` ${localNumber.slice(6, 8)}`;
     if (localNumber.length > 8) formattedValue += ` ${localNumber.slice(8, 10)}`;
 
-    return { formattedValue, localDigitsLength: localNumber.length };
+    const fullPhone = localNumber.length > 0 ? `${phonePrefix} ${formattedValue}` : phonePrefix;
+
+    return { formattedValue, localDigitsLength: localNumber.length, fullPhone };
   };
 
   const setupMobileNav = () => {
@@ -363,6 +365,7 @@
       } else {
         serviceSelect.value = '';
       }
+      updateServicePlaceholderState();
     };
 
     const setSelectedService = (serviceTitle) => {
@@ -373,6 +376,7 @@
 
       if (!normalizedTitle) {
         serviceSelect.value = '';
+        updateServicePlaceholderState();
         return;
       }
 
@@ -392,6 +396,12 @@
       }
 
       serviceSelect.value = normalizedTitle;
+      updateServicePlaceholderState();
+    };
+
+    const updateServicePlaceholderState = () => {
+      if (!serviceSelect) return;
+      serviceSelect.classList.toggle('is-placeholder', safeText(serviceSelect.value) === '');
     };
 
     const getServicePayload = () => {
@@ -471,6 +481,7 @@
       if (serviceSelect) {
         serviceSelect.value = '';
       }
+      updateServicePlaceholderState();
     };
 
     const openModal = (options = {}) => {
@@ -479,6 +490,7 @@
         setSelectedService(options.serviceTitle);
       } else if (serviceSelect) {
         serviceSelect.value = '';
+        updateServicePlaceholderState();
       }
 
       modalOverlay.classList.add('is-open');
@@ -505,6 +517,7 @@
     };
 
     ensureServicePlaceholder();
+    updateServicePlaceholderState();
     normalizePhoneInput(phoneInput.value);
 
     phoneInput.addEventListener('focus', () => normalizePhoneInput(phoneInput.value));
@@ -519,6 +532,10 @@
         openModal({ serviceTitle: safeText(button.getAttribute('data-service-title')) });
       });
     });
+
+    if (serviceSelect) {
+      serviceSelect.addEventListener('change', updateServicePlaceholderState);
+    }
 
     closeModalButton.addEventListener('click', closeModal);
 
@@ -550,9 +567,10 @@
 
       const formData = new FormData(managerForm);
       const { serviceTitle, serviceIsOther } = getServicePayload();
+      const { fullPhone } = formatPhoneValue(formData.get('phone'));
       const payload = {
         name: safeText(formData.get('name')),
-        phone: safeText(formData.get('phone')),
+        phone: fullPhone,
         comment: safeText(formData.get('comment')),
         service_title: serviceTitle,
         service_is_other: serviceIsOther

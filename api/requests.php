@@ -30,9 +30,9 @@ $stringLength = static function (string $value): int {
 };
 $phoneDigits = preg_replace('/\D+/', '', $phone);
 
-if ($name === '' || $phone === '') {
+if ($name === '' || $phone === '' || $comment === '') {
     http_response_code(422);
-    echo json_encode(['message' => 'Имя и телефон обязательны'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['message' => 'Имя, телефон и комментарий обязательны'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

@@ -192,11 +192,12 @@ try {
 
             <label for="manager-phone">Ваш номер телефона</label>
             <div class="manager-field" data-phone-field>
+              <span class="manager-phone-prefix" aria-hidden="true">+7</span>
               <input
                 id="manager-phone"
                 type="tel"
                 name="phone"
-                placeholder="+7 900 000 00 00"
+                placeholder="900 000 00 00"
                 autocomplete="tel"
                 inputmode="tel"
                 required
@@ -213,7 +214,7 @@ try {
             </select>
 
             <label for="manager-comment">Комментарий к заявке или вопрос</label>
-            <textarea id="manager-comment" name="comment" rows="3"></textarea>
+            <textarea id="manager-comment" name="comment" rows="3" required></textarea>
           </div>
 
           <p class="manager-form-success" data-manager-success role="status" aria-live="polite" hidden>
