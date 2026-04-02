@@ -1139,12 +1139,18 @@ p.manager-form-success {
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
+  transition-delay: 0s;
 }
 
 .services-catalog .service-tile:hover,
 .services-catalog .service-tile:focus-within {
   transform: translateY(-6px);
   transition-delay: 0s;
+}
+
+.services-catalog .service-tile[data-reveal],
+.services-catalog .service-tile[data-reveal].is-visible {
+  transition-delay: 0s !important;
 }
 
 .service-tile h3 {

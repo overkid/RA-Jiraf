@@ -263,18 +263,27 @@
   const setupCatalogConsistency = () => {
     const categoryTabs = document.querySelectorAll("[data-category-tab]");
     const categoryGroups = document.querySelectorAll("[data-category]");
+    const catalogRevealTimers = [];
 
     if (!categoryTabs.length || !categoryGroups.length) {
       return;
     }
 
+    const clearCatalogRevealTimers = () => {
+      while (catalogRevealTimers.length) {
+        const timerId = catalogRevealTimers.pop();
+        window.clearTimeout(timerId);
+      }
+    };
+
     const animateGroupTiles = (group) => {
       const tiles = Array.from(group.querySelectorAll(".service-tile"));
       if (!tiles.length) return;
+      clearCatalogRevealTimers();
 
       tiles.forEach((tile) => {
         tile.style.transition = "none";
-        tile.style.setProperty("--reveal-delay", "0s");
+        tile.style.removeProperty("--reveal-delay");
         tile.classList.remove("is-visible");
       });
 
@@ -291,11 +300,11 @@
 
       tiles.forEach((tile, index) => {
         tile.style.removeProperty("transition");
-        tile.style.setProperty("--reveal-delay", `${Math.min(index * 0.08, 0.32)}s`);
-      });
-
-      window.requestAnimationFrame(() => {
-        tiles.forEach((tile) => tile.classList.add("is-visible"));
+        const delayMs = Math.min(index * 80, 320);
+        const timerId = window.setTimeout(() => {
+          tile.classList.add("is-visible");
+        }, delayMs);
+        catalogRevealTimers.push(timerId);
       });
     };
 
