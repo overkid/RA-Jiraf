@@ -229,41 +229,48 @@
     appendCloneSegment();
     appendCloneSegment();
 
-    const baseSpeed = 0.35;
-    let direction = 1;
-    let boost = 0;
-    let targetSpeed = baseSpeed;
-    let currentSpeed = baseSpeed;
+    const baseSpeed = 0.3;
+    let cruiseDirection = 1;
+    let cruiseSpeed = baseSpeed * cruiseDirection;
+    let momentumSpeed = 0;
     let segmentWidth = 0;
     let offset = 0;
     let frameId = 0;
-    let scrollIdleTimerId = 0;
     let lastScrollY = window.scrollY || window.pageYOffset || 0;
+    let isDragging = false;
+    let autoMotionFactor = 1;
+    let activePointerId = null;
+    let dragLastX = 0;
+    let dragLastTs = 0;
+    let dragVelocityPxPerMs = 0;
 
-    const updateTargetSpeed = () => {
-      targetSpeed = direction * (baseSpeed + boost);
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+    const normalizeOffset = () => {
+      if (offset >= 0) {
+        offset -= segmentWidth;
+      } else if (offset < -(segmentWidth * 2)) {
+        offset += segmentWidth;
+      }
+    };
+
+    const render = () => {
+      track.style.transform = `translate3d(${offset.toFixed(3)}px, 0, 0)`;
     };
 
     const measure = () => {
       segmentWidth = track.scrollWidth / 3;
       // Start from the middle of the center segment.
       offset = -(segmentWidth * 1.5);
-      track.style.transform = `translate3d(${offset}px, 0, 0)`;
+      render();
     };
 
-    const applyScrollImpulse = (delta) => {
+    const applyImpulse = (delta, gain) => {
       if (!Number.isFinite(delta) || delta === 0) return;
-
-      direction = delta > 0 ? 1 : -1;
-      const intensity = Math.min(0.9, Math.abs(delta) * 0.02);
-      boost = Math.max(boost, intensity);
-      updateTargetSpeed();
-
-      window.clearTimeout(scrollIdleTimerId);
-      scrollIdleTimerId = window.setTimeout(() => {
-        boost = 0;
-        updateTargetSpeed();
-      }, 160);
+      const impulseDirection = delta > 0 ? 1 : -1;
+      cruiseDirection = impulseDirection;
+      const impulse = clamp(Math.abs(delta) * gain, 0.02, 1.8) * impulseDirection;
+      momentumSpeed = clamp(momentumSpeed + impulse, -4.2, 4.2);
     };
 
     const tick = () => {
@@ -272,19 +279,74 @@
         return;
       }
 
-      currentSpeed += (targetSpeed - currentSpeed) * 0.08;
-      offset += currentSpeed;
+      const cruiseTarget = baseSpeed * cruiseDirection;
+      const autoFactorTarget = isDragging ? 0 : 1;
+      autoMotionFactor += (autoFactorTarget - autoMotionFactor) * 0.14;
 
-      // Wrap within the center segment range to keep the loop seamless.
-      if (offset >= 0) {
-        offset -= segmentWidth;
-      } else if (offset < -(segmentWidth * 2)) {
-        offset += segmentWidth;
+      cruiseSpeed += (cruiseTarget - cruiseSpeed) * 0.035;
+      momentumSpeed *= isDragging ? 0.992 : 0.985;
+      if (Math.abs(momentumSpeed) < 0.001) {
+        momentumSpeed = 0;
       }
+      offset += (cruiseSpeed + momentumSpeed) * autoMotionFactor;
 
-      track.style.transform = `translate3d(${offset.toFixed(3)}px, 0, 0)`;
+      normalizeOffset();
+      render();
       frameId = window.requestAnimationFrame(tick);
     };
+
+    const endDragWithMomentum = () => {
+      if (dragVelocityPxPerMs === 0) return;
+      const releaseSpeed = clamp(dragVelocityPxPerMs * 18, -3.2, 3.2);
+      if (Math.abs(releaseSpeed) > 0.02) {
+        cruiseDirection = releaseSpeed > 0 ? 1 : -1;
+      }
+      momentumSpeed = clamp(momentumSpeed + releaseSpeed, -4.2, 4.2);
+    };
+
+    const onPointerMove = (event) => {
+      if (!isDragging || event.pointerId !== activePointerId) return;
+
+      const nowX = event.clientX;
+      const nowTs = event.timeStamp || performance.now();
+      const dx = nowX - dragLastX;
+      const dt = Math.max(1, nowTs - dragLastTs);
+
+      dragVelocityPxPerMs = dx / dt;
+      offset += dx;
+      normalizeOffset();
+      render();
+
+      dragLastX = nowX;
+      dragLastTs = nowTs;
+    };
+
+    const stopDrag = (event) => {
+      if (!isDragging || event.pointerId !== activePointerId) return;
+      isDragging = false;
+      conveyor.classList.remove('is-dragging');
+      endDragWithMomentum();
+      activePointerId = null;
+    };
+
+    conveyor.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
+      isDragging = true;
+      activePointerId = event.pointerId;
+      dragLastX = event.clientX;
+      dragLastTs = event.timeStamp || performance.now();
+      dragVelocityPxPerMs = 0;
+      conveyor.classList.add('is-dragging');
+      momentumSpeed *= 0.65;
+      if (conveyor.setPointerCapture) {
+        conveyor.setPointerCapture(event.pointerId);
+      }
+      event.preventDefault();
+    });
+
+    conveyor.addEventListener('pointermove', onPointerMove);
+    conveyor.addEventListener('pointerup', stopDrag);
+    conveyor.addEventListener('pointercancel', stopDrag);
 
     let resizeTimerId = 0;
     const onResize = () => {
@@ -300,7 +362,7 @@
     window.addEventListener(
       'wheel',
       (event) => {
-        applyScrollImpulse(event.deltaY);
+        applyImpulse(event.deltaY, 0.0018);
       },
       { passive: true }
     );
@@ -310,14 +372,13 @@
         const currentScrollY = window.scrollY || window.pageYOffset || 0;
         const delta = currentScrollY - lastScrollY;
         if (delta !== 0) {
-          applyScrollImpulse(delta);
+          applyImpulse(delta, 0.004);
           lastScrollY = currentScrollY;
         }
       },
       { passive: true }
     );
 
-    updateTargetSpeed();
     measure();
     frameId = window.requestAnimationFrame(tick);
   };
