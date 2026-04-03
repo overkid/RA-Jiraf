@@ -230,10 +230,19 @@
     appendCloneSegment();
 
     const baseSpeed = 0.35;
-    const currentSpeed = baseSpeed;
+    let direction = 1;
+    let boost = 0;
+    let targetSpeed = baseSpeed;
+    let currentSpeed = baseSpeed;
     let segmentWidth = 0;
     let offset = 0;
     let frameId = 0;
+    let scrollIdleTimerId = 0;
+    let lastScrollY = window.scrollY || window.pageYOffset || 0;
+
+    const updateTargetSpeed = () => {
+      targetSpeed = direction * (baseSpeed + boost);
+    };
 
     const measure = () => {
       segmentWidth = track.scrollWidth / 3;
@@ -242,12 +251,28 @@
       track.style.transform = `translate3d(${offset}px, 0, 0)`;
     };
 
+    const applyScrollImpulse = (delta) => {
+      if (!Number.isFinite(delta) || delta === 0) return;
+
+      direction = delta > 0 ? 1 : -1;
+      const intensity = Math.min(0.9, Math.abs(delta) * 0.02);
+      boost = Math.max(boost, intensity);
+      updateTargetSpeed();
+
+      window.clearTimeout(scrollIdleTimerId);
+      scrollIdleTimerId = window.setTimeout(() => {
+        boost = 0;
+        updateTargetSpeed();
+      }, 160);
+    };
+
     const tick = () => {
       if (segmentWidth <= 0) {
         frameId = window.requestAnimationFrame(tick);
         return;
       }
 
+      currentSpeed += (targetSpeed - currentSpeed) * 0.08;
       offset += currentSpeed;
 
       // Wrap within the center segment range to keep the loop seamless.
@@ -272,7 +297,27 @@
     };
 
     window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener(
+      'wheel',
+      (event) => {
+        applyScrollImpulse(event.deltaY);
+      },
+      { passive: true }
+    );
+    window.addEventListener(
+      'scroll',
+      () => {
+        const currentScrollY = window.scrollY || window.pageYOffset || 0;
+        const delta = currentScrollY - lastScrollY;
+        if (delta !== 0) {
+          applyScrollImpulse(delta);
+          lastScrollY = currentScrollY;
+        }
+      },
+      { passive: true }
+    );
 
+    updateTargetSpeed();
     measure();
     frameId = window.requestAnimationFrame(tick);
   };
