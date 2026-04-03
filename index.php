@@ -126,27 +126,49 @@ try {
         <div class="container">
           <h2><?= htmlspecialchars($homeContent['portfolio_title'], ENT_QUOTES, 'UTF-8') ?></h2>
           <p class="section-subtitle"><?= nl2br(htmlspecialchars($homeContent['portfolio_subtitle'], ENT_QUOTES, 'UTF-8')) ?></p>
-          <div class="cards grid-4">
-            <article class="portfolio-card">
-              <div class="media"><img src="media/img/Stakan.png" alt="Чашки с печатью" /></div>
-              <h3>Чашки с печатью</h3>
-              <p>Аккуратный и качественный перенос фирменного стиля на сувенирную продукцию.</p>
-            </article>
-            <article class="portfolio-card">
-              <div class="media"><img src="media/img/KachestvVisit.png" alt="Качественные визитки" /></div>
-              <h3>Отличные визитки</h3>
-              <p>Мы напечатали визитки для приёмщиков макулатуры: плотные, аккуратные</p>
-            </article>
-            <article class="portfolio-card">
-              <div class="media"><img src="media/img/Knigi.png" alt="Важные книжки" /></div>
-              <h3>Важные книжки</h3>
-              <p>Каждая такая книжка аккуратная, плотная и собрана с вниманием</p>
-            </article>
-            <article class="portfolio-card">
-              <div class="media"><img src="media/img/Stickers.png" alt="Объёмные стикеры" /></div>
-              <h3>Объёмные стикеры</h3>
-              <p>Яркий дизайн, плотные цвета и объём делают их заметными</p>
-            </article>
+          <div class="portfolio-conveyor" data-portfolio-conveyor>
+            <div class="portfolio-track" data-portfolio-track>
+              <article class="portfolio-card">
+                <div class="media"><img src="media/img/Stakan.png" alt="Чашки с печатью" /></div>
+                <h3>Чашки с печатью</h3>
+                <p>Аккуратный и качественный перенос фирменного стиля на сувенирную продукцию.</p>
+              </article>
+              <article class="portfolio-card">
+                <div class="media"><img src="media/img/KachestvVisit.png" alt="Качественные визитки" /></div>
+                <h3>Отличные визитки</h3>
+                <p>Мы напечатали визитки для приёмщиков макулатуры: плотные, аккуратные.</p>
+              </article>
+              <article class="portfolio-card">
+                <div class="media"><img src="media/img/Knigi.png" alt="Важные книжки" /></div>
+                <h3>Важные книжки</h3>
+                <p>Каждая такая книжка аккуратная, плотная и собрана с вниманием.</p>
+              </article>
+              <article class="portfolio-card">
+                <div class="media"><img src="media/img/Stickers.png" alt="Объёмные стикеры" /></div>
+                <h3>Объёмные стикеры</h3>
+                <p>Яркий дизайн, плотные цвета и объём делают их заметными.</p>
+              </article>
+              <article class="portfolio-card">
+                <div class="media"><img src="media/img/Visitka.png" alt="Тестовая карточка проекта 1" /></div>
+                <h3>Тестовый проект №1</h3>
+                <p>Временный текст-заглушка для карточки. Позже заменим на реальный кейс и описание.</p>
+              </article>
+              <article class="portfolio-card">
+                <div class="media"><img src="media/img/ShirPechat.png" alt="Тестовая карточка проекта 2" /></div>
+                <h3>Тестовый проект №2</h3>
+                <p>Черновое описание: пример результата, сроки и детали будут обновлены после согласования.</p>
+              </article>
+              <article class="portfolio-card">
+                <div class="media"><img src="media/img/Stendi.png" alt="Тестовая карточка проекта 3" /></div>
+                <h3>Тестовый проект №3</h3>
+                <p>Заглушка под будущий кейс. Здесь появится финальный текст после подготовки материалов.</p>
+              </article>
+              <article class="portfolio-card">
+                <div class="media"><img src="media/img/Reklama.png" alt="Тестовая карточка проекта 4" /></div>
+                <h3>Тестовый проект №4</h3>
+                <p>Временный контент для макета блока. Фото и формулировки заменим в рабочей версии.</p>
+              </article>
+            </div>
           </div>
         </div>
       </section>

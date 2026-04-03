@@ -207,6 +207,76 @@
     window.addEventListener('resize', onScroll);
   };
 
+  const setupPortfolioConveyor = () => {
+    const conveyor = document.querySelector('[data-portfolio-conveyor]');
+    const track = conveyor ? conveyor.querySelector('[data-portfolio-track]') : null;
+    if (!conveyor || !track) return;
+
+    const cards = Array.from(track.querySelectorAll('.portfolio-card'));
+    if (cards.length < 2) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const appendCloneSegment = () => {
+      const fragment = document.createDocumentFragment();
+      cards.forEach((card) => {
+        const clone = card.cloneNode(true);
+        clone.setAttribute('aria-hidden', 'true');
+        fragment.appendChild(clone);
+      });
+      track.appendChild(fragment);
+    };
+
+    appendCloneSegment();
+    appendCloneSegment();
+
+    const baseSpeed = 0.35;
+    const currentSpeed = baseSpeed;
+    let segmentWidth = 0;
+    let offset = 0;
+    let frameId = 0;
+
+    const measure = () => {
+      segmentWidth = track.scrollWidth / 3;
+      // Start from the middle of the center segment.
+      offset = -(segmentWidth * 1.5);
+      track.style.transform = `translate3d(${offset}px, 0, 0)`;
+    };
+
+    const tick = () => {
+      if (segmentWidth <= 0) {
+        frameId = window.requestAnimationFrame(tick);
+        return;
+      }
+
+      offset += currentSpeed;
+
+      // Wrap within the center segment range to keep the loop seamless.
+      if (offset >= 0) {
+        offset -= segmentWidth;
+      } else if (offset < -(segmentWidth * 2)) {
+        offset += segmentWidth;
+      }
+
+      track.style.transform = `translate3d(${offset.toFixed(3)}px, 0, 0)`;
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    let resizeTimerId = 0;
+    const onResize = () => {
+      window.clearTimeout(resizeTimerId);
+      resizeTimerId = window.setTimeout(() => {
+        window.cancelAnimationFrame(frameId);
+        measure();
+        frameId = window.requestAnimationFrame(tick);
+      }, 120);
+    };
+
+    window.addEventListener('resize', onResize, { passive: true });
+
+    measure();
+    frameId = window.requestAnimationFrame(tick);
+  };
+
   const setupCatalogTabs = () => {
     const categoryTabs = document.querySelectorAll('[data-category-tab]');
     const categoryGroups = document.querySelectorAll('[data-category]');
@@ -820,6 +890,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     setupMobileNav();
     setupNavContrast();
+    setupPortfolioConveyor();
     setupCatalogTabs();
     setupCardWideClickTargets();
     setupAdminToasts();

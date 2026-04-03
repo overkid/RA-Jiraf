@@ -187,19 +187,22 @@
   };
 
   const setupRevealAnimations = () => {
+    const isConveyorPortfolioCard = (element) =>
+      element.classList.contains("portfolio-card") && Boolean(element.closest("[data-portfolio-track]"));
+
     const revealElements = Array.from(
       document.querySelectorAll(
         ".section, .cards > article, .feature, .catalog-tab, .service-tile, .portfolio-card, .footer-cta"
       )
-    ).filter((element) => !element.classList.contains("catalog-header"));
+    ).filter((element) => !element.classList.contains("catalog-header") && !isConveyorPortfolioCard(element));
 
     revealElements.forEach((element) => {
       element.setAttribute("data-reveal", "");
     });
 
-    const horizontalElements = document.querySelectorAll(
+    const horizontalElements = Array.from(document.querySelectorAll(
       ".feature, .catalog-tab, .service-tile, .portfolio-card, .card"
-    );
+    )).filter((element) => !isConveyorPortfolioCard(element));
 
     horizontalElements.forEach((element) => {
       element.classList.add("reveal-horizontal");
