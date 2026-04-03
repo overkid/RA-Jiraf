@@ -229,7 +229,7 @@
     appendCloneSegment();
     appendCloneSegment();
 
-    const baseSpeed = 0.3;
+    const baseSpeed = 0.45;
     let cruiseDirection = 1;
     let cruiseSpeed = baseSpeed * cruiseDirection;
     let momentumSpeed = 0;
