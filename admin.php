@@ -114,6 +114,7 @@ $verifyPasswordHash = static function (string $password, string $storedHash): bo
 
 header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Pragma: no-cache');
+header('X-Robots-Tag: noindex, nofollow, noarchive, nosnippet, noimageindex');
 header('X-Frame-Options: SAMEORIGIN');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
@@ -327,6 +328,8 @@ if ($loggedIn) {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
     <title>РА «Жираф» — Админка</title>
     <link rel="icon" href="media/favicon.ico" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -370,7 +373,7 @@ if ($loggedIn) {
               </li>
             </ul>
             <div class="nav-actions">
-              <a class="nav-vk" href="#" aria-label="ВКонтакте">
+              <a class="nav-vk" href="https://vk.com/giraf33" target="_blank" rel="noopener noreferrer" aria-label="ВКонтакте">
                 <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#vk"></use></svg>
               </a>
               <?php if ($loggedIn): ?>

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin.php
+Disallow: /config/
+Disallow: /db/
+Disallow: /api/
+Disallow: /docs/
+

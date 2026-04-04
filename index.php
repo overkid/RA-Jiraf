@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/api/content.php';
+require __DIR__ . '/api/seo.php';
 
 $homeContent = default_home_content();
 
@@ -12,13 +13,52 @@ try {
 } catch (Throwable $exception) {
     $homeContent = default_home_content();
 }
+
+$pageTitle = 'РА «Жираф» — рекламное агентство во Владимире';
+$pageDescription = 'Рекламное агентство «Жираф»: типография, сувенирная продукция, широкоформатная печать и наружная реклама во Владимире и области.';
+$canonicalUrl = seo_url('/');
+$ogImageUrl = seo_url('/media/img/KachestvVisit.png');
+
+$organizationStructuredData = [
+    '@context' => 'https://schema.org',
+    '@type' => 'AdvertisingAgency',
+    'name' => 'РА «Жираф»',
+    'url' => seo_base_url(),
+    'logo' => seo_url('/media/logo/Logo-Full.svg'),
+    'telephone' => ['+7 (4922) 46-64-84', '+7 (958) 510-64-84'],
+    'address' => [
+        '@type' => 'PostalAddress',
+        'streetAddress' => 'ул. Ставровская, д. 4',
+        'addressLocality' => 'Владимир',
+        'addressCountry' => 'RU',
+    ],
+    'sameAs' => ['https://vk.com/giraf33'],
+];
 ?>
 <!doctype html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>РА «Жираф» — Главная</title>
+    <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
+    <meta name="description" content="<?= htmlspecialchars($pageDescription, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta name="keywords" content="рекламное агентство Владимир, типография Владимир, полиграфия, наружная реклама, широкоформатная печать, сувенирная продукция" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="theme-color" content="#ff6600" />
+    <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8') ?>" />
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.php" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="РА «Жираф»" />
+    <meta property="og:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta property="og:description" content="<?= htmlspecialchars($pageDescription, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta property="og:url" content="<?= htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta property="og:image" content="<?= htmlspecialchars($ogImageUrl, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta name="twitter:description" content="<?= htmlspecialchars($pageDescription, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta name="twitter:image" content="<?= htmlspecialchars($ogImageUrl, ENT_QUOTES, 'UTF-8') ?>" />
+    <script type="application/ld+json"><?= json_encode($organizationStructuredData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
     <link rel="icon" href="media/favicon.ico" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -55,7 +95,7 @@ try {
               </li>
             </ul>
             <div class="nav-actions">
-              <a class="nav-vk" href="https://vk.com/giraf33" target="_blank" aria-label="ВКонтакте">
+              <a class="nav-vk" href="https://vk.com/giraf33" target="_blank" rel="noopener noreferrer" aria-label="ВКонтакте">
                 <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#vk"></use></svg>
               </a>
               <button class="btn btn-nav" type="button" data-open-manager-modal>
@@ -88,22 +128,22 @@ try {
           <p class="section-subtitle"><?= nl2br(htmlspecialchars($homeContent['services_subtitle'], ENT_QUOTES, 'UTF-8')) ?></p>
           <div class="cards grid-4">
             <article class="card">
-              <div class="media"><img src="media/img/Visitka.png" alt="Изготовление визиток" /></div>
+              <div class="media"><img loading="lazy" decoding="async" src="media/img/Visitka.png" alt="Изготовление визиток" /></div>
               <h3>Изготовление визиток</h3>
               <a href="services.php" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
             </article>
             <article class="card">
-              <div class="media"><img src="media/img/ShirPechat.png" alt="Широкоформатная печать" /></div>
+              <div class="media"><img loading="lazy" decoding="async" src="media/img/ShirPechat.png" alt="Широкоформатная печать" /></div>
               <h3>Широкоформатная печать</h3>
               <a href="services.php" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
             </article>
             <article class="card">
-              <div class="media"><img src="media/img/Stendi.png" alt="Информационные стенды" /></div>
+              <div class="media"><img loading="lazy" decoding="async" src="media/img/Stendi.png" alt="Информационные стенды" /></div>
               <h3>Информационные стенды</h3>
               <a href="services.php" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
             </article>
             <article class="card">
-              <div class="media"><img src="media/img/Reklama.png" alt="Наружная реклама" /></div>
+              <div class="media"><img loading="lazy" decoding="async" src="media/img/Reklama.png" alt="Наружная реклама" /></div>
               <h3>Наружная реклама</h3>
               <a href="services.php" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
             </article>
@@ -129,42 +169,42 @@ try {
           <div class="portfolio-conveyor" data-portfolio-conveyor>
             <div class="portfolio-track" data-portfolio-track>
               <article class="portfolio-card">
-                <div class="media"><img src="media/img/Stakan.png" alt="Чашки с печатью" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/Stakan.png" alt="Чашки с печатью" /></div>
                 <h3>Чашки с печатью</h3>
                 <p>Аккуратный и качественный перенос фирменного стиля на сувенирную продукцию.</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img src="media/img/KachestvVisit.png" alt="Качественные визитки" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/KachestvVisit.png" alt="Качественные визитки" /></div>
                 <h3>Отличные визитки</h3>
                 <p>Мы напечатали визитки для приёмщиков макулатуры: плотные, аккуратные.</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img src="media/img/Knigi.png" alt="Важные книжки" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/Knigi.png" alt="Важные книжки" /></div>
                 <h3>Важные книжки</h3>
                 <p>Каждая такая книжка аккуратная, плотная и собрана с вниманием.</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img src="media/img/Stickers.png" alt="Объёмные стикеры" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/Stickers.png" alt="Объёмные стикеры" /></div>
                 <h3>Объёмные стикеры</h3>
                 <p>Яркий дизайн, плотные цвета и объём делают их заметными.</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img src="media/img/Visitka.png" alt="Тестовая карточка проекта 1" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/Visitka.png" alt="Тестовая карточка проекта 1" /></div>
                 <h3>Тестовый проект №1</h3>
                 <p>Временный текст-заглушка для карточки. Позже заменим на реальный кейс и описание.</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img src="media/img/ShirPechat.png" alt="Тестовая карточка проекта 2" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/ShirPechat.png" alt="Тестовая карточка проекта 2" /></div>
                 <h3>Тестовый проект №2</h3>
                 <p>Черновое описание: пример результата, сроки и детали будут обновлены после согласования.</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img src="media/img/Stendi.png" alt="Тестовая карточка проекта 3" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/Stendi.png" alt="Тестовая карточка проекта 3" /></div>
                 <h3>Тестовый проект №3</h3>
                 <p>Заглушка под будущий кейс. Здесь появится финальный текст после подготовки материалов.</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img src="media/img/Reklama.png" alt="Тестовая карточка проекта 4" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/Reklama.png" alt="Тестовая карточка проекта 4" /></div>
                 <h3>Тестовый проект №4</h3>
                 <p>Временный контент для макета блока. Фото и формулировки заменим в рабочей версии.</p>
               </article>

@@ -1,4 +1,6 @@
 <?php
+require __DIR__ . '/api/seo.php';
+
 $servicesData = [];
 try {
     require_once __DIR__ . '/api/db.php';
@@ -7,13 +9,49 @@ try {
 } catch (Throwable $exception) {
     $servicesData = [];
 }
+
+$pageTitle = 'Услуги РА «Жираф» — типография, сувениры, печать и наружная реклама';
+$pageDescription = 'Каталог услуг рекламного агентства «Жираф»: полиграфия, сувенирная продукция, широкоформатная печать и наружная реклама.';
+$canonicalUrl = seo_url('/services.php');
+$ogImageUrl = seo_url('/media/img/Visitka.png');
+
+$servicesStructuredData = [
+    '@context' => 'https://schema.org',
+    '@type' => 'Service',
+    'name' => 'Рекламные услуги РА «Жираф»',
+    'serviceType' => 'Полиграфия, сувениры, широкоформатная печать, наружная реклама',
+    'areaServed' => 'Владимирская область',
+    'provider' => [
+        '@type' => 'AdvertisingAgency',
+        'name' => 'РА «Жираф»',
+        'url' => seo_base_url(),
+    ],
+];
 ?>
 <!doctype html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>РА «Жираф» — Каталог услуг</title>
+    <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
+    <meta name="description" content="<?= htmlspecialchars($pageDescription, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta name="keywords" content="каталог услуг, типография, полиграфия, сувенирная продукция, широкоформатная печать, наружная реклама, Владимир" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="theme-color" content="#ff6600" />
+    <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8') ?>" />
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.php" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="РА «Жираф»" />
+    <meta property="og:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta property="og:description" content="<?= htmlspecialchars($pageDescription, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta property="og:url" content="<?= htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta property="og:image" content="<?= htmlspecialchars($ogImageUrl, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta name="twitter:description" content="<?= htmlspecialchars($pageDescription, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta name="twitter:image" content="<?= htmlspecialchars($ogImageUrl, ENT_QUOTES, 'UTF-8') ?>" />
+    <script type="application/ld+json"><?= json_encode($servicesStructuredData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
     <link rel="icon" href="media/favicon.ico" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -50,7 +88,7 @@ try {
               </li>
             </ul>
             <div class="nav-actions">
-              <a class="nav-vk" href="#" aria-label="ВКонтакте">
+              <a class="nav-vk" href="https://vk.com/giraf33" target="_blank" rel="noopener noreferrer" aria-label="ВКонтакте">
                 <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#vk"></use></svg>
               </a>
               <button class="btn btn-nav" type="button" data-open-manager-modal>
