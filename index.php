@@ -204,8 +204,8 @@ $organizationStructuredData = [
                 <p>Напечатали дипломы с насыщенной ровной заливкой цвета и аккуратным дизайном</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/Posters.png" alt="Эффективные постеры" /></div>
-                <h3>Эффективные постеры</h3>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/Posters.png" alt="Рабочие постеры" /></div>
+                <h3>Рабочие постеры</h3>
                 <p>Печатаем их быстро, ярко и точно в формат — будь то распродажа, скидка или акция</p>
               </article>
             </div>
