@@ -158,7 +158,7 @@ $servicesStructuredData = [
       <section class="catalog-help section">
         <div class="container">
           <h2>Не нашли нужную услугу?</h2>
-          <p class="section-subtitle">Свяжитесь с нами для уточнения</p>
+          <p class="section-subtitle">Свяжитесь с нами для уточнения</p>
           <button type="button" class="btn btn-contact" data-open-manager-modal>
             <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Связаться с нами
           </button>
@@ -190,9 +190,9 @@ $servicesStructuredData = [
         <h2 id="service-modal-title">Услуга</h2>
         <p class="service-modal-category" data-service-modal-category></p>
         <div class="service-modal-description" data-service-modal-description>
-          <p>Подробности по услуге уточняйте у менеджера.</p>
+          <p>Подробности по услуге уточняйте у менеджера</p>
         </div>
-        <p class="service-modal-note">Оставьте заявку, и менеджер подскажет сроки, материалы и точную стоимость под ваш тираж.</p>
+        <p class="service-modal-note">Оставьте заявку, и менеджер подскажет сроки, материалы и точную стоимость под ваш тираж</p>
         <button class="btn manager-submit" type="button" data-service-modal-contact>
           <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Написать нам
         </button>
@@ -205,7 +205,7 @@ $servicesStructuredData = [
           <span aria-hidden="true">✕</span>
         </button>
         <h2>Заявка менеджеру</h2>
-        <p>Мы свяжемся с вами для уточнения заказа и ответим на все ваши вопросы</p>
+        <p>Мы свяжемся с вами для уточнения заказа и ответим на все ваши вопросы</p>
         <form class="manager-form">
           <div class="manager-form-fields">
             <label for="manager-name">Представьтесь, пожалуйста</label>
@@ -239,7 +239,7 @@ $servicesStructuredData = [
           </div>
 
           <p class="manager-form-success" data-manager-success role="status" aria-live="polite" hidden>
-            Вы успешно отправили заявку, мы свяжемся с вами в скором времени.
+            Вы успешно отправили заявку, мы свяжемся с вами в скором времени
           </p>
           <button class="btn manager-submit" type="submit">
             <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Отправить

@@ -171,42 +171,42 @@ $organizationStructuredData = [
               <article class="portfolio-card">
                 <div class="media"><img loading="lazy" decoding="async" src="media/img/Stakan.png" alt="Чашки с печатью" /></div>
                 <h3>Чашки с печатью</h3>
-                <p>Аккуратный и качественный перенос фирменного стиля на сувенирную продукцию.</p>
+                <p>Аккуратный и качественный перенос фирменного стиля на сувенирную продукцию</p>
               </article>
               <article class="portfolio-card">
                 <div class="media"><img loading="lazy" decoding="async" src="media/img/KachestvVisit.png" alt="Качественные визитки" /></div>
                 <h3>Отличные визитки</h3>
-                <p>Мы напечатали визитки для приёмщиков макулатуры: плотные, аккуратные.</p>
+                <p>Мы напечатали визитки для приёмщиков макулатуры: плотные, аккуратные</p>
               </article>
               <article class="portfolio-card">
                 <div class="media"><img loading="lazy" decoding="async" src="media/img/Knigi.png" alt="Важные книжки" /></div>
                 <h3>Важные книжки</h3>
-                <p>Каждая такая книжка аккуратная, плотная и собрана с вниманием.</p>
+                <p>Каждая такая книжка аккуратная, плотная и собрана с вниманием</p>
               </article>
               <article class="portfolio-card">
                 <div class="media"><img loading="lazy" decoding="async" src="media/img/Stickers.png" alt="Объёмные стикеры" /></div>
                 <h3>Объёмные стикеры</h3>
-                <p>Яркий дизайн, плотные цвета и объём делают их заметными.</p>
+                <p>Яркий дизайн, плотные цвета и объём делают их заметными</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/Visitka.png" alt="Тестовая карточка проекта 1" /></div>
-                <h3>Тестовый проект №1</h3>
-                <p>Временный текст-заглушка для карточки. Позже заменим на реальный кейс и описание.</p>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/Brasleti.png" alt="Приятные браслеты" /></div>
+                <h3>Приятные браслеты</h3>
+                <p>Сделали браслетики для Президентской академии: мягкие, лёгкие и с чётким лого</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/ShirPechat.png" alt="Тестовая карточка проекта 2" /></div>
-                <h3>Тестовый проект №2</h3>
-                <p>Черновое описание: пример результата, сроки и детали будут обновлены после согласования.</p>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/Prints.png" alt="Идеальные принты" /></div>
+                <h3>Идеальные принты</h3>
+                <p>Сделали нанесение на рукава свитшотов: плёнка и плоттерная резка</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/Stendi.png" alt="Тестовая карточка проекта 3" /></div>
-                <h3>Тестовый проект №3</h3>
-                <p>Заглушка под будущий кейс. Здесь появится финальный текст после подготовки материалов.</p>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/Diplomi.png" alt="Гордые дипломы" /></div>
+                <h3>Гордые дипломы</h3>
+                <p>Напечатали дипломы с насыщенной ровной заливкой цвета и аккуратным дизайном</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/Reklama.png" alt="Тестовая карточка проекта 4" /></div>
-                <h3>Тестовый проект №4</h3>
-                <p>Временный контент для макета блока. Фото и формулировки заменим в рабочей версии.</p>
+                <div class="media"><img loading="lazy" decoding="async" src="media/img/Posters.png" alt="Эффективные постеры" /></div>
+                <h3>Эффективные постеры</h3>
+                <p>Печатаем их быстро, ярко и точно в формат — будь то распродажа, скидка или акция</p>
               </article>
             </div>
           </div>
@@ -246,7 +246,7 @@ $organizationStructuredData = [
           <span aria-hidden="true">✕</span>
         </button>
         <h2>Заявка менеджеру</h2>
-        <p>Мы свяжемся с вами для уточнения заказа и ответим на все ваши вопросы</p>
+        <p>Мы свяжемся с вами для уточнения заказа и ответим на все ваши вопросы</p>
         <form class="manager-form">
           <div class="manager-form-fields">
             <label for="manager-name">Представьтесь, пожалуйста</label>
@@ -280,7 +280,7 @@ $organizationStructuredData = [
           </div>
 
           <p class="manager-form-success" data-manager-success role="status" aria-live="polite" hidden>
-            Вы успешно отправили заявку, мы свяжемся с вами в скором времени.
+            Вы успешно отправили заявку, мы свяжемся с вами в скором времени
           </p>
           <button class="btn manager-submit" type="submit">
             <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Отправить
