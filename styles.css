@@ -383,11 +383,17 @@ h3 { font: var(--font-h3); }
   color: var(--color-white);
   text-decoration: none;
   border: 2px solid transparent;
-  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  transition: transform 0.24s ease, box-shadow 0.24s ease, filter 0.24s ease, opacity 0.24s ease, background-color 0.22s ease, color 0.22s ease;
+  will-change: transform;
+}
+
+.nav-vk:hover,
+.nav-vk:focus-visible {
+  transform: translateY(-2px);
 }
 
 .nav-vk:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.98);
 }
 
 .nav-vk .icon {
