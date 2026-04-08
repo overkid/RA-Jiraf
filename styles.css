@@ -183,6 +183,49 @@ h3 { font: var(--font-h3); }
   margin: 0 auto var(--space-34);
 }
 
+.privacy-policy {
+  padding: var(--space-120) 0 var(--space-80);
+}
+
+.privacy-policy .container {
+  width: min(860px, calc(100% - var(--layout-page-gutter)));
+}
+
+.privacy-policy h1 {
+  margin-bottom: var(--space-16);
+  text-align: left;
+  color: var(--color-orange);
+  font: var(--font-h2);
+}
+
+.privacy-updated {
+  margin: 0 0 var(--space-24);
+  color: var(--color-gray);
+  font: var(--font-body-small);
+}
+
+.privacy-content {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.privacy-content .privacy-text {
+  margin: 0;
+  color: var(--color-black);
+  font: var(--font-body-small);
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.privacy-content .btn {
+  margin-top: var(--space-10);
+  width: max-content;
+}
+
+.privacy-page .privacy-policy {
+  padding: calc(var(--space-120) + var(--space-32)) 0 var(--space-80);
+}
+
 .hero {
   position: relative;
   overflow: hidden;
@@ -777,6 +820,10 @@ h3 { font: var(--font-h3); }
   pointer-events: none;
 }
 
+.manager-form.is-success .manager-consent {
+  display: none;
+}
+
 .manager-form label {
   color: var(--color-violet);
   font: var(--font-body-small);
@@ -862,6 +909,85 @@ p.manager-field-error {
   min-height: 68px;
 }
 
+.manager-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-10);
+  margin-top: var(--space-8);
+}
+
+.manager-consent input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px;
+  max-width: 22px;
+  margin: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  border: 2px solid var(--color-orange) !important;
+  border-radius: 50% !important;
+  background: var(--color-white) !important;
+  box-shadow: none !important;
+  display: grid;
+  place-content: center;
+  flex: 0 0 auto;
+  cursor: pointer;
+  box-sizing: border-box;
+  line-height: 1;
+  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.manager-consent input[type="checkbox"]::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  background: url("media/icons/check.svg") center / contain no-repeat;
+  transform: scale(0);
+  transform-origin: center;
+  transition: transform 0.16s ease;
+}
+
+.manager-consent input[type="checkbox"]:checked {
+  background: var(--color-orange) !important;
+  border-color: var(--color-orange) !important;
+}
+
+.manager-consent input[type="checkbox"]:checked::before {
+  transform: scale(1);
+}
+
+.manager-consent input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.22) !important;
+}
+
+.manager-consent input[type="checkbox"]:focus,
+.manager-consent input[type="checkbox"]:hover,
+.manager-consent input[type="checkbox"]:active {
+  border-color: var(--color-orange) !important;
+  background: var(--color-white) !important;
+  box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.22) !important;
+}
+
+.manager-consent-label {
+  margin: 0;
+  color: var(--color-black);
+  font: var(--font-body-small);
+  line-height: 1.35;
+}
+
+.manager-consent-label a {
+  color: var(--color-orange);
+  text-decoration: none;
+}
+
+.manager-consent-label a:hover,
+.manager-consent-label a:focus-visible {
+  text-decoration: underline;
+}
+
 p.manager-form-success {
   margin: var(--space-8) 0 var(--space-6);
   padding: var(--space-10) var(--space-12);
@@ -879,6 +1005,15 @@ p.manager-form-success {
   border-color: var(--color-violet);
   box-shadow: inset 0 0 0 1px var(--color-violet);
   outline: none;
+}
+
+.manager-consent input[type="checkbox"]:checked:focus,
+.manager-consent input[type="checkbox"]:checked:focus-visible,
+.manager-consent input[type="checkbox"]:checked:hover,
+.manager-consent input[type="checkbox"]:checked:active {
+  background: var(--color-orange) !important;
+  border-color: var(--color-orange) !important;
+  box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.22) !important;
 }
 
 .manager-field.is-error .manager-field-error-icon,
@@ -919,6 +1054,18 @@ p.manager-form-success {
 @media (max-width: 768px) {
   .container {
     width: min(1200px, calc(100% - var(--layout-page-gutter-tablet)));
+  }
+
+  .privacy-policy {
+    padding: var(--space-96) 0 var(--space-56);
+  }
+
+  .privacy-page .privacy-policy {
+    padding: calc(var(--space-96) + var(--space-26)) 0 var(--space-56);
+  }
+
+  .privacy-policy .container {
+    width: min(860px, calc(100% - var(--layout-page-gutter-tablet)));
   }
 
   .section {

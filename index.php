@@ -278,7 +278,13 @@ $organizationStructuredData = [
             <label for="manager-comment">Комментарий к заявке или вопрос</label>
             <textarea id="manager-comment" name="comment" rows="3" required></textarea>
           </div>
-
+          <div class="manager-consent">
+            <input id="manager-consent" type="checkbox" name="privacy_consent" required />
+            <label for="manager-consent" class="manager-consent-label">
+              &#1071; &#1089;&#1086;&#1075;&#1083;&#1072;&#1089;&#1077;&#1085; &#1085;&#1072;
+              <a href="privacy.php" target="_blank" rel="noopener noreferrer">&#1086;&#1073;&#1088;&#1072;&#1073;&#1086;&#1090;&#1082;&#1091; &#1087;&#1077;&#1088;&#1089;&#1086;&#1085;&#1072;&#1083;&#1100;&#1085;&#1099;&#1093; &#1076;&#1072;&#1085;&#1085;&#1099;&#1093;</a>
+            </label>
+          </div>
           <p class="manager-form-success" data-manager-success role="status" aria-live="polite" hidden>
             Вы успешно отправили заявку, мы свяжемся с вами в скором времени
           </p>
@@ -294,7 +300,3 @@ $organizationStructuredData = [
     <script src="app.js" defer></script>
   </body>
 </html>
-
-
-
-
