@@ -231,6 +231,7 @@ h3 { font: var(--font-h3); }
   overflow: hidden;
   background: var(--color-orange);
   color: var(--color-white);
+  --hero-jiraf-opacity: 0.28;
   min-height: 95vh;
   border-bottom-left-radius: 64px;
   border-bottom-right-radius: 64px;
@@ -245,7 +246,8 @@ h3 { font: var(--font-h3); }
   width: min(540px, 40.5vw);
   height: min(1260px, 144vh);
   background: url("media/logo/Jiraf.svg") no-repeat bottom left / contain;
-  opacity: 0.28;
+  opacity: var(--hero-jiraf-opacity);
+  z-index: 1;
   animation: jiraf-float-desktop 2s ease-in-out infinite;
   will-change: transform;
   pointer-events: none;
@@ -271,13 +273,22 @@ h3 { font: var(--font-h3); }
   }
 }
 
+@keyframes jiraf-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: var(--hero-jiraf-opacity);
+  }
+}
+
 .top-nav {
   position: fixed;
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
   width: min(1100px, calc(100% - var(--layout-page-gutter)));
-  z-index: 40;
+  z-index: 400;
   background: var(--color-white);
   color: var(--color-orange);
   border-radius: 16px;
@@ -1073,6 +1084,7 @@ p.manager-form-success {
   }
 
   .hero {
+    --hero-jiraf-opacity: 0.22;
     min-height: 95vh;
     min-height: 95svh;
     padding: var(--space-96) 0 var(--space-48);
@@ -1209,7 +1221,6 @@ p.manager-form-success {
     width: min(480px, 117vw);
     height: min(1140px, 138vh);
     background-position: center bottom;
-    opacity: 0.22;
     animation-name: jiraf-float-mobile;
   }
 
@@ -1297,7 +1308,7 @@ p.manager-form-success {
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 60;
+  z-index: 420;
 }
 
 .catalog-hero {
@@ -1796,6 +1807,66 @@ body.is-page-transition {
 
 body.is-page-transition::before {
   opacity: 1;
+}
+
+body.has-hero-intro .hero,
+body.has-hero-intro .catalog-header {
+  background: transparent;
+}
+
+body.has-hero-intro .hero-content,
+body.has-hero-intro .hero-down,
+body.has-hero-intro .catalog-hero {
+  position: relative;
+  z-index: 2;
+}
+
+body.has-hero-intro .hero::after,
+body.has-hero-intro .catalog-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+  background: var(--color-orange);
+  opacity: 0;
+  transform: translate3d(0, -40px, 0);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: opacity, transform;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body.has-hero-intro.is-page-ready .hero::after,
+body.has-hero-intro.is-page-ready .catalog-header::after {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+body.has-hero-intro .hero::before {
+  opacity: 0;
+  animation: none;
+}
+
+body.has-hero-intro.is-page-ready .hero::before {
+  animation: jiraf-fade-in 0.6s ease 0.6s both,
+    jiraf-float-desktop 2s ease-in-out 1.2s infinite;
+}
+
+@media (max-width: 768px) {
+  body.has-hero-intro.is-page-ready .hero::before {
+    animation: jiraf-fade-in 0.6s ease 0.6s both,
+      jiraf-float-mobile 2s ease-in-out 1.2s infinite;
+  }
+}
+
+body.has-hero-intro .hero-content h1:not(.hero-title-words),
+body.has-hero-intro .catalog-hero h1:not(.hero-title-words),
+body.has-hero-intro .hero-content p:not([data-hero-reveal]),
+body.has-hero-intro .catalog-hero p:not([data-hero-reveal]),
+body.has-hero-intro .hero-content .btn:not([data-hero-reveal]),
+body.has-hero-intro .catalog-hero .btn:not([data-hero-reveal]) {
+  opacity: 0;
 }
 
 .hero-down,

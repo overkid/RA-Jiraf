@@ -2,6 +2,8 @@
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const body = document.body;
   const isAdminPage = body.classList.contains("admin-page");
+  const hasHeroBackdrop = Boolean(document.querySelector(".hero, .catalog-header"));
+  const heroStageDelayMs = !prefersReducedMotion && hasHeroBackdrop ? 500 : 0;
   const pageTransitionDurationMs = 250;
   let isPageTransitionActive = false;
 
@@ -133,7 +135,7 @@
 
       window.setTimeout(() => {
         title.classList.add("is-visible");
-      }, 70);
+      }, 70 + heroStageDelayMs);
     });
   };
 
@@ -169,11 +171,11 @@
 
       window.setTimeout(() => {
         if (subtitle) subtitle.classList.add("is-visible");
-      }, subtitleDelayMs);
+      }, subtitleDelayMs + heroStageDelayMs);
 
       window.setTimeout(() => {
         if (button) button.classList.add("is-visible");
-      }, buttonDelayMs);
+      }, buttonDelayMs + heroStageDelayMs);
     });
   };
 
@@ -335,6 +337,10 @@
       animateGroupTiles(initialGroup);
     }
   };
+
+  if (!prefersReducedMotion && hasHeroBackdrop) {
+    body.classList.add("has-hero-intro");
+  }
 
   preparePageFadeIn();
   setupPageTransitions();
