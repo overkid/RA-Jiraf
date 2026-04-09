@@ -25,7 +25,7 @@
    - Услуги: `http://localhost/RA-Jiraf/services.php`
    - Админка (только по прямой ссылке): `http://localhost/RA-Jiraf/admin.php`
 
-ТЕКУЩИЙ ЛОГИН:ПАРОЛЬ: admin:123
+ТЕКУЩИЙ ЛОГИН:ПАРОЛЬ: `admin:123`
 
 ## Если не запускается
 - Проверьте, что `Apache` и `MySQL` действительно запущены в XAMPP.
