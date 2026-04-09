@@ -1,4 +1,4 @@
-﻿# RA-Jiraf
+# RA-Jiraf
 
 <img width="800" height="100" alt="banner" src="https://github.com/user-attachments/assets/9b02744b-82e8-4323-9e0b-a7c89ccd9cf7" />
 
