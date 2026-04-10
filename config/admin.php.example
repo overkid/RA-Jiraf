@@ -1,7 +1,0 @@
-<?php
-
-return [
-    'username' => 'admin',
-    // Замените хэш на свой. Это пример для пароля "change_me".
-    'password_hash' => 'pbkdf2_sha256$210000$8d7pVrAAUdk3gpRtARRs3Q==$aowOVQvuVl09XQLSlxq61Y1xTQ8ny75jAB795K5bzk8=',
-];
