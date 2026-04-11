@@ -689,7 +689,7 @@ h3 { font: var(--font-h3); }
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 120;
+  z-index: 520;
   background: rgba(0, 0, 0, 0.55);
   display: grid;
   place-items: center;
@@ -724,7 +724,7 @@ h3 { font: var(--font-h3); }
 }
 
 .modal-overlay-service {
-  z-index: 121;
+  z-index: 521;
 }
 
 .service-modal {
@@ -1510,6 +1510,10 @@ p.manager-form-success {
 .admin-card--center {
   max-width: 520px;
   margin: 0 auto;
+}
+
+.admin-panel-alt .admin-section-title + .admin-card {
+  margin-bottom: var(--space-16);
 }
 
 .admin-form {
