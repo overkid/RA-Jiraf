@@ -610,6 +610,7 @@ h3 { font: var(--font-h3); }
   background: var(--color-white);
   color: var(--color-violet);
   font: var(--font-h3);
+  text-transform: uppercase;
   padding: var(--space-18);
   min-height: 88px;
   display: flex;
@@ -1512,7 +1513,58 @@ p.manager-form-success {
   margin: 0 auto;
 }
 
+.admin-role-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  padding: var(--space-8) var(--space-12);
+  border-radius: 999px;
+  background: var(--color-white);
+  color: var(--color-orange);
+  border: 2px solid var(--color-orange);
+  font: var(--font-body-small);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .admin-panel-alt .admin-section-title + .admin-card {
+  margin-bottom: var(--space-16);
+}
+
+.admin-collapsible {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding-top: var(--space-12);
+}
+
+.admin-collapsible:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.admin-collapsible-body {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.admin-collapsible.is-collapsed .admin-collapsible-body {
+  display: none;
+}
+
+.btn-collapse-toggle {
+  background: var(--color-white);
+  color: var(--color-orange);
+  border: 2px solid var(--color-orange);
+  padding: var(--space-8) var(--space-16);
+  min-width: 132px;
+}
+
+.btn-collapse-toggle:hover {
+  background: var(--color-orange);
+  color: var(--color-white);
+}
+
+.admin-card-add-service {
   margin-bottom: var(--space-16);
 }
 
@@ -1625,6 +1677,13 @@ p.manager-form-success {
   gap: var(--space-12);
 }
 
+.admin-request-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+
 .admin-badge-new {
   display: inline-flex;
   align-items: center;
@@ -1642,6 +1701,35 @@ p.manager-form-success {
   color: var(--color-white);
 }
 
+.admin-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4) var(--space-10);
+  border-radius: 999px;
+  font: var(--font-body-small);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-status-badge--new {
+  background: rgba(255, 102, 0, 0.12);
+  border: 1px solid var(--color-orange);
+  color: var(--color-orange);
+}
+
+.admin-status-badge--in_progress {
+  background: rgba(123, 0, 255, 0.1);
+  border: 1px solid var(--color-violet);
+  color: var(--color-violet);
+}
+
+.admin-status-badge--closed {
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-gray);
+  color: var(--color-black);
+}
+
 .admin-item h3 {
   margin: 0 0 var(--space-8);
   font: var(--font-h3);
@@ -1654,8 +1742,158 @@ p.manager-form-success {
   color: var(--color-black);
 }
 
-.admin-item span {
+.admin-item p > span {
   color: var(--color-gray);
+}
+
+.admin-item .admin-status-badge--new {
+  color: var(--color-orange-dark);
+}
+
+.admin-item .admin-status-badge--in_progress {
+  color: var(--color-violet);
+}
+
+.admin-item .admin-status-badge--closed {
+  color: var(--color-black);
+}
+
+.admin-request-status-form,
+.admin-request-note-form {
+  margin-top: var(--space-10);
+}
+
+.admin-inline-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-10);
+  align-items: center;
+}
+
+.admin-inline-fields .btn {
+  min-height: 48px;
+}
+
+.admin-notes {
+  margin-top: var(--space-12);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: var(--space-10) var(--space-12);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.admin-notes h4 {
+  margin: 0 0 var(--space-8);
+  font: var(--font-body-small);
+  color: var(--color-violet);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-note-item {
+  border-top: 1px dashed rgba(0, 0, 0, 0.12);
+  padding-top: var(--space-8);
+  margin-top: var(--space-8);
+}
+
+.admin-note-item:first-of-type {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.admin-note-meta {
+  margin: 0 0 var(--space-4);
+  font: var(--font-body-small);
+  color: var(--color-gray);
+}
+
+.admin-note-empty {
+  margin: 0;
+  font: var(--font-body-small);
+  color: var(--color-gray);
+}
+
+.admin-notes-more {
+  margin-top: var(--space-10);
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.admin-notes-more > summary {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font: var(--font-body-small);
+  color: var(--color-orange);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.admin-notes-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-notes-more > summary .admin-notes-more-label--less {
+  display: none;
+}
+
+.admin-notes-more[open] > summary {
+  margin-top: var(--space-8);
+}
+
+.admin-notes-more[open] > summary .admin-notes-more-label--more {
+  display: none;
+}
+
+.admin-notes-more[open] > summary .admin-notes-more-label--less {
+  display: inline;
+}
+
+.admin-notes-more-list {
+  margin-top: 0;
+}
+
+.admin-note-editor {
+  margin-top: var(--space-10);
+}
+
+.admin-note-editor > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  border: 2px solid var(--color-orange);
+  border-radius: 999px;
+  background: var(--color-white);
+  color: var(--color-orange);
+  padding: var(--space-8) var(--space-14);
+  font: var(--font-body-small);
+}
+
+.admin-note-editor > summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-note-editor > summary:hover {
+  background: var(--color-orange);
+  color: var(--color-white);
+}
+
+.admin-note-editor[open] > summary {
+  margin-bottom: var(--space-10);
+}
+
+.admin-note-editor .admin-request-note-form {
+  margin-top: 0;
+}
+
+.admin-note-editor .admin-request-note-form .btn {
+  width: auto;
+  justify-self: start;
 }
 
 .admin-request-delete-form {
@@ -1689,6 +1927,23 @@ p.manager-form-success {
   background: var(--color-white);
   color: var(--color-violet);
   border: 2px solid var(--color-violet);
+}
+
+.admin-image-preview {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--color-violet);
+  background: var(--color-white);
+  margin-bottom: var(--space-10);
+  aspect-ratio: 16 / 10;
+}
+
+.admin-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .admin-toast-stack {
@@ -1760,6 +2015,10 @@ p.manager-form-success {
   .admin-actions .btn {
     flex: 1 1 100%;
     justify-content: center;
+  }
+
+  .admin-inline-fields {
+    grid-template-columns: 1fr;
   }
 
   .admin-request-delete-form {

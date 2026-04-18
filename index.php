@@ -6,18 +6,24 @@ require __DIR__ . '/api/content.php';
 require __DIR__ . '/api/seo.php';
 
 $homeContent = default_home_content();
+$siteImages = default_site_images();
+$dbConnection = null;
 
 try {
     require_once __DIR__ . '/api/db.php';
-    $homeContent = get_home_content(db());
+    $dbConnection = db();
+    $homeContent = get_home_content($dbConnection);
+    $siteImages = get_site_images($dbConnection);
 } catch (Throwable $exception) {
     $homeContent = default_home_content();
+    $siteImages = default_site_images();
 }
 
 $pageTitle = 'РА «Жираф» — рекламное агентство во Владимире';
 $pageDescription = 'Рекламное агентство «Жираф»: типография, сувенирная продукция, широкоформатная печать и наружная реклама во Владимире и области.';
 $canonicalUrl = seo_url('/');
-$ogImageUrl = seo_url('/media/img/KachestvVisit.png');
+$ogImagePath = (string) ($siteImages['portfolio_card_2'] ?? 'media/img/KachestvVisit.png');
+$ogImageUrl = seo_url('/' . ltrim($ogImagePath, '/'));
 
 $organizationStructuredData = [
     '@context' => 'https://schema.org',
@@ -84,13 +90,13 @@ $organizationStructuredData = [
               <li>
                 <a href="index.php">
                   <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#home"></use></svg>
-                  Главная
+                  <?= htmlspecialchars($homeContent['nav_home_label'], ENT_QUOTES, 'UTF-8') ?>
                 </a>
               </li>
               <li>
                 <a href="services.php">
                   <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>
-                  Услуги
+                  <?= htmlspecialchars($homeContent['nav_services_label'], ENT_QUOTES, 'UTF-8') ?>
                 </a>
               </li>
             </ul>
@@ -100,7 +106,7 @@ $organizationStructuredData = [
               </a>
               <button class="btn btn-nav" type="button" data-open-manager-modal>
                 <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>
-                Написать нам
+                <?= htmlspecialchars($homeContent['nav_contact_button'], ENT_QUOTES, 'UTF-8') ?>
               </button>
             </div>
           </div>
@@ -112,7 +118,7 @@ $organizationStructuredData = [
             <?= nl2br(htmlspecialchars($homeContent['hero_text'], ENT_QUOTES, 'UTF-8')) ?>
           </p>
           <button class="btn btn-contact" type="button" data-open-manager-modal>
-            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Связаться с нами
+            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($homeContent['contact_button_text'], ENT_QUOTES, 'UTF-8') ?>
           </button>
         </div>
         <a href="#services" class="hero-down" aria-label="Вниз">
@@ -128,22 +134,22 @@ $organizationStructuredData = [
           <p class="section-subtitle"><?= nl2br(htmlspecialchars($homeContent['services_subtitle'], ENT_QUOTES, 'UTF-8')) ?></p>
           <div class="cards grid-4">
             <article class="card">
-              <div class="media"><img loading="lazy" decoding="async" src="media/img/Visitka.png" alt="Изготовление визиток" /></div>
+              <div class="media"><img loading="lazy" decoding="async" src="<?= htmlspecialchars($siteImages['services_card_1'], ENT_QUOTES, 'UTF-8') ?>" alt="Изготовление визиток" /></div>
               <h3>Изготовление визиток</h3>
               <a href="services.php" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
             </article>
             <article class="card">
-              <div class="media"><img loading="lazy" decoding="async" src="media/img/ShirPechat.png" alt="Широкоформатная печать" /></div>
+              <div class="media"><img loading="lazy" decoding="async" src="<?= htmlspecialchars($siteImages['services_card_2'], ENT_QUOTES, 'UTF-8') ?>" alt="Широкоформатная печать" /></div>
               <h3>Широкоформатная печать</h3>
               <a href="services.php" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
             </article>
             <article class="card">
-              <div class="media"><img loading="lazy" decoding="async" src="media/img/Stendi.png" alt="Информационные стенды" /></div>
+              <div class="media"><img loading="lazy" decoding="async" src="<?= htmlspecialchars($siteImages['services_card_3'], ENT_QUOTES, 'UTF-8') ?>" alt="Информационные стенды" /></div>
               <h3>Информационные стенды</h3>
               <a href="services.php" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
             </article>
             <article class="card">
-              <div class="media"><img loading="lazy" decoding="async" src="media/img/Reklama.png" alt="Наружная реклама" /></div>
+              <div class="media"><img loading="lazy" decoding="async" src="<?= htmlspecialchars($siteImages['services_card_4'], ENT_QUOTES, 'UTF-8') ?>" alt="Наружная реклама" /></div>
               <h3>Наружная реклама</h3>
               <a href="services.php" class="btn btn-card"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>Подробнее</a>
             </article>
@@ -169,42 +175,42 @@ $organizationStructuredData = [
           <div class="portfolio-conveyor" data-portfolio-conveyor>
             <div class="portfolio-track" data-portfolio-track>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/Stakan.png" alt="Чашки с печатью" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="<?= htmlspecialchars($siteImages['portfolio_card_1'], ENT_QUOTES, 'UTF-8') ?>" alt="Чашки с печатью" /></div>
                 <h3>Чашки с печатью</h3>
                 <p>Аккуратный и качественный перенос фирменного стиля на сувенирную продукцию</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/KachestvVisit.png" alt="Качественные визитки" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="<?= htmlspecialchars($siteImages['portfolio_card_2'], ENT_QUOTES, 'UTF-8') ?>" alt="Качественные визитки" /></div>
                 <h3>Отличные визитки</h3>
                 <p>Мы напечатали визитки для приёмщиков макулатуры: плотные, аккуратные</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/Knigi.png" alt="Важные книжки" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="<?= htmlspecialchars($siteImages['portfolio_card_3'], ENT_QUOTES, 'UTF-8') ?>" alt="Важные книжки" /></div>
                 <h3>Важные книжки</h3>
                 <p>Каждая такая книжка аккуратная, плотная и собрана с вниманием</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/Stickers.png" alt="Объёмные стикеры" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="<?= htmlspecialchars($siteImages['portfolio_card_4'], ENT_QUOTES, 'UTF-8') ?>" alt="Объёмные стикеры" /></div>
                 <h3>Объёмные стикеры</h3>
                 <p>Яркий дизайн, плотные цвета и объём делают их заметными</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/Brasleti.png" alt="Приятные браслеты" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="<?= htmlspecialchars($siteImages['portfolio_card_5'], ENT_QUOTES, 'UTF-8') ?>" alt="Приятные браслеты" /></div>
                 <h3>Приятные браслеты</h3>
                 <p>Сделали браслетики для Президентской академии: мягкие, лёгкие и с чётким лого</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/Prints.png" alt="Идеальные принты" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="<?= htmlspecialchars($siteImages['portfolio_card_6'], ENT_QUOTES, 'UTF-8') ?>" alt="Идеальные принты" /></div>
                 <h3>Идеальные принты</h3>
                 <p>Сделали нанесение на рукава свитшотов: плёнка и плоттерная резка</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/Diplomi.png" alt="Гордые дипломы" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="<?= htmlspecialchars($siteImages['portfolio_card_7'], ENT_QUOTES, 'UTF-8') ?>" alt="Гордые дипломы" /></div>
                 <h3>Гордые дипломы</h3>
                 <p>Напечатали дипломы с насыщенной ровной заливкой цвета и аккуратным дизайном</p>
               </article>
               <article class="portfolio-card">
-                <div class="media"><img loading="lazy" decoding="async" src="media/img/Posters.png" alt="Рабочие постеры" /></div>
+                <div class="media"><img loading="lazy" decoding="async" src="<?= htmlspecialchars($siteImages['portfolio_card_8'], ENT_QUOTES, 'UTF-8') ?>" alt="Рабочие постеры" /></div>
                 <h3>Рабочие постеры</h3>
                 <p>Печатаем их быстро, ярко и точно в формат — будь то распродажа, скидка или акция</p>
               </article>
@@ -221,20 +227,20 @@ $organizationStructuredData = [
           <?= nl2br(htmlspecialchars($homeContent['footer_text'], ENT_QUOTES, 'UTF-8')) ?>
         </p>
         <button type="button" class="btn btn-contact" data-open-manager-modal>
-          <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Связаться с нами
+          <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($homeContent['contact_button_text'], ENT_QUOTES, 'UTF-8') ?>
         </button>
 
         <div class="footer-meta">
           <div>
-            <p>E-mail: giraf33@mail.ru</p>
-            <p>8 (492) 46-64-84</p>
-            <p>8 (958) 510-64-84</p>
+            <p><?= htmlspecialchars($homeContent['footer_email'], ENT_QUOTES, 'UTF-8') ?></p>
+            <p><?= htmlspecialchars($homeContent['footer_phone_1'], ENT_QUOTES, 'UTF-8') ?></p>
+            <p><?= htmlspecialchars($homeContent['footer_phone_2'], ENT_QUOTES, 'UTF-8') ?></p>
           </div>
           <div class="footer-logo"><img src="media/logo/Logo-Full.svg" alt="РА Жираф" /></div>
           <div>
-            <p>Офис находится по адресу:</p>
-            <p>г. Владимир, ул. Ставровская, д. 4</p>
-            <p>ост. 1001 мелочь, парковка рядом с домом</p>
+            <p><?= htmlspecialchars($homeContent['footer_address_title'], ENT_QUOTES, 'UTF-8') ?></p>
+            <p><?= htmlspecialchars($homeContent['footer_address_line_1'], ENT_QUOTES, 'UTF-8') ?></p>
+            <p><?= htmlspecialchars($homeContent['footer_address_line_2'], ENT_QUOTES, 'UTF-8') ?></p>
           </div>
         </div>
       </div>
@@ -245,14 +251,14 @@ $organizationStructuredData = [
         <button class="modal-close" type="button" data-close-manager-modal aria-label="Закрыть форму">
           <span aria-hidden="true">✕</span>
         </button>
-        <h2>Заявка менеджеру</h2>
-        <p>Мы свяжемся с вами для уточнения заказа и ответим на все ваши вопросы</p>
+        <h2><?= htmlspecialchars($homeContent['manager_modal_title'], ENT_QUOTES, 'UTF-8') ?></h2>
+        <p><?= htmlspecialchars($homeContent['manager_modal_text'], ENT_QUOTES, 'UTF-8') ?></p>
         <form class="manager-form">
           <div class="manager-form-fields">
-            <label for="manager-name">Представьтесь, пожалуйста</label>
-            <input id="manager-name" type="text" name="name" placeholder="Ваше имя" autocomplete="name" required />
+            <label for="manager-name"><?= htmlspecialchars($homeContent['manager_name_label'], ENT_QUOTES, 'UTF-8') ?></label>
+            <input id="manager-name" type="text" name="name" placeholder="<?= htmlspecialchars($homeContent['manager_name_placeholder'], ENT_QUOTES, 'UTF-8') ?>" autocomplete="name" required />
 
-            <label for="manager-phone">Ваш номер телефона</label>
+            <label for="manager-phone"><?= htmlspecialchars($homeContent['manager_phone_label'], ENT_QUOTES, 'UTF-8') ?></label>
             <div class="manager-field" data-phone-field>
               <span class="manager-phone-prefix" aria-hidden="true">+7</span>
               <input
@@ -269,13 +275,13 @@ $organizationStructuredData = [
             </div>
             <p class="manager-field-error" id="manager-phone-error">Неверный формат номера</p>
 
-            <label for="manager-service">Услуга</label>
+            <label for="manager-service"><?= htmlspecialchars($homeContent['manager_service_label'], ENT_QUOTES, 'UTF-8') ?></label>
             <select id="manager-service" name="service">
-              <option value="" selected disabled>Выберите услугу</option>
-              <option value="other">Другое</option>
+              <option value="" selected disabled><?= htmlspecialchars($homeContent['manager_service_placeholder'], ENT_QUOTES, 'UTF-8') ?></option>
+              <option value="other"><?= htmlspecialchars($homeContent['manager_service_other'], ENT_QUOTES, 'UTF-8') ?></option>
             </select>
 
-            <label for="manager-comment">Комментарий к заявке или вопрос</label>
+            <label for="manager-comment"><?= htmlspecialchars($homeContent['manager_comment_label'], ENT_QUOTES, 'UTF-8') ?></label>
             <textarea id="manager-comment" name="comment" rows="3" required></textarea>
           </div>
           <div class="manager-consent">
@@ -285,11 +291,9 @@ $organizationStructuredData = [
               <a href="privacy.php" target="_blank" rel="noopener noreferrer">&#1086;&#1073;&#1088;&#1072;&#1073;&#1086;&#1090;&#1082;&#1091; &#1087;&#1077;&#1088;&#1089;&#1086;&#1085;&#1072;&#1083;&#1100;&#1085;&#1099;&#1093; &#1076;&#1072;&#1085;&#1085;&#1099;&#1093;</a>
             </label>
           </div>
-          <p class="manager-form-success" data-manager-success role="status" aria-live="polite" hidden>
-            Вы успешно отправили заявку, мы свяжемся с вами в скором времени
-          </p>
+          <p class="manager-form-success" data-manager-success role="status" aria-live="polite" hidden><?= htmlspecialchars($homeContent['manager_success_text'], ENT_QUOTES, 'UTF-8') ?></p>
           <button class="btn manager-submit" type="submit">
-            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Отправить
+            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($homeContent['manager_submit_button'], ENT_QUOTES, 'UTF-8') ?>
           </button>
         </form>
       </section>

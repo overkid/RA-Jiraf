@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   const phoneDigitsCount = 10;
   const phonePrefix = '+7';
   const serviceOtherValue = 'other';
@@ -468,6 +468,44 @@
     });
   };
 
+  const setupAdminSectionToggles = () => {
+    const sections = Array.from(document.querySelectorAll('.admin-page [data-admin-section]'));
+    if (!sections.length) return;
+
+    const storagePrefix = 'admin-section-open:';
+
+    const setState = (section, isOpen) => {
+      const body = section.querySelector('[data-admin-section-body]');
+      const toggle = section.querySelector('[data-admin-section-toggle]');
+      if (!body || !toggle) return;
+
+      section.classList.toggle('is-collapsed', !isOpen);
+      body.hidden = !isOpen;
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      toggle.textContent = isOpen ? 'Свернуть' : 'Развернуть';
+    };
+
+    sections.forEach((section, index) => {
+      const body = section.querySelector('[data-admin-section-body]');
+      const toggle = section.querySelector('[data-admin-section-toggle]');
+      if (!body || !toggle) return;
+
+      const sectionId = safeText(section.getAttribute('data-section-id')) || `section-${index}`;
+      const storageKey = `${storagePrefix}${sectionId}`;
+      const storedState = window.localStorage.getItem(storageKey);
+      const initialOpen = storedState === null ? true : storedState === '1';
+
+      setState(section, initialOpen);
+
+      toggle.addEventListener('click', () => {
+        const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+        const nextOpen = !isOpen;
+        setState(section, nextOpen);
+        window.localStorage.setItem(storageKey, nextOpen ? '1' : '0');
+      });
+    });
+  };
+
   const setupManagerModal = () => {
     const modalOverlay = document.querySelector('[data-manager-modal]');
     const openModalButtons = document.querySelectorAll('[data-open-manager-modal]');
@@ -487,13 +525,20 @@
     const ensureServicePlaceholder = () => {
       if (!serviceSelect) return;
 
+      const placeholderText =
+        safeText(serviceSelect.querySelector('option[value=""]')?.textContent)
+        || serviceSelect.getAttribute('data-placeholder')
+        || 'Выберите услугу';
+
       let placeholder = serviceSelect.querySelector('option[value=""]');
       if (!placeholder) {
         placeholder = document.createElement('option');
         placeholder.value = '';
-        placeholder.textContent = 'Выберите услугу';
+        placeholder.textContent = placeholderText;
         placeholder.disabled = true;
         serviceSelect.insertBefore(placeholder, serviceSelect.firstChild);
+      } else {
+        placeholder.textContent = placeholderText;
       }
     };
 
@@ -1000,6 +1045,7 @@
     setupCatalogTabs();
     setupCardWideClickTargets();
     setupAdminToasts();
+    setupAdminSectionToggles();
 
     const initialCatalogServices = getInitialCatalogServicesFromDataAttribute();
     let serviceDescriptionLookup = buildServiceDescriptionLookup(initialCatalogServices);
@@ -1044,3 +1090,4 @@
     });
   });
 })();
+

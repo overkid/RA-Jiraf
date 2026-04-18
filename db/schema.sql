@@ -15,7 +15,18 @@ CREATE TABLE IF NOT EXISTS client_requests (
   service_title VARCHAR(255) NULL,
   service_is_other TINYINT(1) NOT NULL DEFAULT 0,
   comment TEXT NULL,
+  request_status VARCHAR(20) NOT NULL DEFAULT 'new',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS request_notes (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  request_id INT UNSIGNED NOT NULL,
+  author_login VARCHAR(64) NOT NULL,
+  author_role VARCHAR(20) NOT NULL,
+  note_text TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_request_notes_request_id_created_at (request_id, created_at)
 );
 
 CREATE TABLE IF NOT EXISTS site_content (

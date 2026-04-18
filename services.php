@@ -1,19 +1,31 @@
 <?php
+
+declare(strict_types=1);
+
+require __DIR__ . '/api/content.php';
 require __DIR__ . '/api/seo.php';
 
 $servicesData = [];
+$homeContent = default_home_content();
+$siteImages = default_site_images();
+
 try {
     require_once __DIR__ . '/api/db.php';
-    $stmt = db()->query('SELECT id, category, title, description FROM services ORDER BY category, id');
+    $connection = db();
+    $stmt = $connection->query('SELECT id, category, title, description FROM services ORDER BY category, id');
     $servicesData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $homeContent = get_home_content($connection);
+    $siteImages = get_site_images($connection);
 } catch (Throwable $exception) {
     $servicesData = [];
+    $homeContent = default_home_content();
+    $siteImages = default_site_images();
 }
 
 $pageTitle = 'Услуги РА «Жираф» — типография, сувениры, печать и наружная реклама';
 $pageDescription = 'Каталог услуг рекламного агентства «Жираф»: полиграфия, сувенирная продукция, широкоформатная печать и наружная реклама.';
 $canonicalUrl = seo_url('/services.php');
-$ogImageUrl = seo_url('/media/img/Visitka.png');
+$ogImageUrl = seo_url('/' . ltrim((string) ($siteImages['services_card_1'] ?? 'media/img/Visitka.png'), '/'));
 
 $servicesStructuredData = [
     '@context' => 'https://schema.org',
@@ -67,7 +79,7 @@ $servicesStructuredData = [
       <div class="container">
         <nav class="top-nav top-nav-catalog">
           <a class="logo" href="index.php"><img src="media/logo/Logo-Full.svg" alt="РА Жираф" /></a>
-                    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>
+          <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>
             <svg class="nav-toggle-icon nav-toggle-icon--bars" aria-hidden="true"><use href="media/icons/sprite.svg#menu-bars"></use></svg>
             <svg class="nav-toggle-icon nav-toggle-icon--close" aria-hidden="true"><use href="media/icons/sprite.svg#menu-x"></use></svg>
             <span class="sr-only">Меню</span>
@@ -77,13 +89,13 @@ $servicesStructuredData = [
               <li>
                 <a href="index.php">
                   <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#home"></use></svg>
-                  Главная
+                  <?= htmlspecialchars($homeContent['nav_home_label'], ENT_QUOTES, 'UTF-8') ?>
                 </a>
               </li>
               <li>
                 <a href="services.php">
                   <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#catalog"></use></svg>
-                  Услуги
+                  <?= htmlspecialchars($homeContent['nav_services_label'], ENT_QUOTES, 'UTF-8') ?>
                 </a>
               </li>
             </ul>
@@ -93,21 +105,21 @@ $servicesStructuredData = [
               </a>
               <button class="btn btn-nav" type="button" data-open-manager-modal>
                 <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>
-                Написать нам
+                <?= htmlspecialchars($homeContent['nav_contact_button'], ENT_QUOTES, 'UTF-8') ?>
               </button>
             </div>
           </div>
         </nav>
 
         <div class="catalog-hero">
-          <h1>Наши основные услуги</h1>
-          <p class="section-subtitle">Услуги рекламного агентства покрывают почти все возможные потребности</p>
+          <h1><?= htmlspecialchars($homeContent['catalog_title'], ENT_QUOTES, 'UTF-8') ?></h1>
+          <p class="section-subtitle"><?= nl2br(htmlspecialchars($homeContent['catalog_subtitle'], ENT_QUOTES, 'UTF-8')) ?></p>
         </div>
       </div>
     </header>
 
     <main>
-      <div data-vue-catalog data-initial-services="<?= htmlspecialchars(json_encode($servicesData, JSON_UNESCAPED_UNICODE), ENT_QUOTES, "UTF-8") ?>" hidden></div>
+      <div data-vue-catalog data-initial-services="<?= htmlspecialchars(json_encode($servicesData, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>" hidden></div>
       <section class="services-catalog section">
         <div class="container">
           <div class="catalog-tabs" role="tablist" aria-label="Категории услуг">
@@ -157,10 +169,10 @@ $servicesStructuredData = [
 
       <section class="catalog-help section">
         <div class="container">
-          <h2>Не нашли нужную услугу?</h2>
-          <p class="section-subtitle">Свяжитесь с нами для уточнения</p>
+          <h2><?= htmlspecialchars($homeContent['catalog_help_title'], ENT_QUOTES, 'UTF-8') ?></h2>
+          <p class="section-subtitle"><?= nl2br(htmlspecialchars($homeContent['catalog_help_subtitle'], ENT_QUOTES, 'UTF-8')) ?></p>
           <button type="button" class="btn btn-contact" data-open-manager-modal>
-            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Связаться с нами
+            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($homeContent['contact_button_text'], ENT_QUOTES, 'UTF-8') ?>
           </button>
         </div>
       </section>
@@ -169,15 +181,15 @@ $servicesStructuredData = [
     <footer class="catalog-footer">
       <div class="container footer-meta">
         <div>
-          <p>E-mail: giraf33@mail.ru</p>
-          <p>8 (4922) 46-64-84</p>
-          <p>8 (958) 510-64-84</p>
+          <p><?= htmlspecialchars($homeContent['footer_email'], ENT_QUOTES, 'UTF-8') ?></p>
+          <p><?= htmlspecialchars($homeContent['footer_phone_1'], ENT_QUOTES, 'UTF-8') ?></p>
+          <p><?= htmlspecialchars($homeContent['footer_phone_2'], ENT_QUOTES, 'UTF-8') ?></p>
         </div>
         <div class="footer-logo"><img src="media/logo/Logo-Full.svg" alt="РА Жираф" /></div>
         <div>
-          <p>Офис находится по адресу:</p>
-          <p>г. Владимир, ул. Ставровская, д. 4</p>
-          <p>ост. 1001 мелочь, парковка рядом с домом</p>
+          <p><?= htmlspecialchars($homeContent['footer_address_title'], ENT_QUOTES, 'UTF-8') ?></p>
+          <p><?= htmlspecialchars($homeContent['footer_address_line_1'], ENT_QUOTES, 'UTF-8') ?></p>
+          <p><?= htmlspecialchars($homeContent['footer_address_line_2'], ENT_QUOTES, 'UTF-8') ?></p>
         </div>
       </div>
     </footer>
@@ -187,14 +199,14 @@ $servicesStructuredData = [
         <button class="modal-close" type="button" data-close-service-modal aria-label="Закрыть описание услуги">
           <span aria-hidden="true">✕</span>
         </button>
-        <h2 id="service-modal-title">Услуга</h2>
+        <h2 id="service-modal-title"><?= htmlspecialchars($homeContent['service_modal_title'], ENT_QUOTES, 'UTF-8') ?></h2>
         <p class="service-modal-category" data-service-modal-category></p>
         <div class="service-modal-description" data-service-modal-description>
-          <p>Подробности по услуге уточняйте у менеджера</p>
+          <p><?= htmlspecialchars($homeContent['service_modal_fallback_text'], ENT_QUOTES, 'UTF-8') ?></p>
         </div>
-        <p class="service-modal-note">Оставьте заявку, и менеджер подскажет сроки, материалы и точную стоимость под ваш тираж</p>
+        <p class="service-modal-note"><?= htmlspecialchars($homeContent['service_modal_note'], ENT_QUOTES, 'UTF-8') ?></p>
         <button class="btn manager-submit" type="button" data-service-modal-contact>
-          <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Написать нам
+          <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($homeContent['service_modal_contact_button'], ENT_QUOTES, 'UTF-8') ?>
         </button>
       </section>
     </div>
@@ -204,14 +216,14 @@ $servicesStructuredData = [
         <button class="modal-close" type="button" data-close-manager-modal aria-label="Закрыть форму">
           <span aria-hidden="true">✕</span>
         </button>
-        <h2>Заявка менеджеру</h2>
-        <p>Мы свяжемся с вами для уточнения заказа и ответим на все ваши вопросы</p>
+        <h2><?= htmlspecialchars($homeContent['manager_modal_title'], ENT_QUOTES, 'UTF-8') ?></h2>
+        <p><?= htmlspecialchars($homeContent['manager_modal_text'], ENT_QUOTES, 'UTF-8') ?></p>
         <form class="manager-form">
           <div class="manager-form-fields">
-            <label for="manager-name">Представьтесь, пожалуйста</label>
-            <input id="manager-name" type="text" name="name" placeholder="Ваше имя" autocomplete="name" required />
+            <label for="manager-name"><?= htmlspecialchars($homeContent['manager_name_label'], ENT_QUOTES, 'UTF-8') ?></label>
+            <input id="manager-name" type="text" name="name" placeholder="<?= htmlspecialchars($homeContent['manager_name_placeholder'], ENT_QUOTES, 'UTF-8') ?>" autocomplete="name" required />
 
-            <label for="manager-phone">Ваш номер телефона</label>
+            <label for="manager-phone"><?= htmlspecialchars($homeContent['manager_phone_label'], ENT_QUOTES, 'UTF-8') ?></label>
             <div class="manager-field" data-phone-field>
               <span class="manager-phone-prefix" aria-hidden="true">+7</span>
               <input
@@ -228,34 +240,31 @@ $servicesStructuredData = [
             </div>
             <p class="manager-field-error" id="manager-phone-error">Неверный формат номера</p>
 
-            <label for="manager-service">Услуга</label>
+            <label for="manager-service"><?= htmlspecialchars($homeContent['manager_service_label'], ENT_QUOTES, 'UTF-8') ?></label>
             <select id="manager-service" name="service">
-              <option value="" selected disabled>Выберите услугу</option>
-              <option value="other">Другое</option>
+              <option value="" selected disabled><?= htmlspecialchars($homeContent['manager_service_placeholder'], ENT_QUOTES, 'UTF-8') ?></option>
+              <option value="other"><?= htmlspecialchars($homeContent['manager_service_other'], ENT_QUOTES, 'UTF-8') ?></option>
             </select>
 
-            <label for="manager-comment">Комментарий к заявке или вопрос</label>
+            <label for="manager-comment"><?= htmlspecialchars($homeContent['manager_comment_label'], ENT_QUOTES, 'UTF-8') ?></label>
             <textarea id="manager-comment" name="comment" rows="3" required></textarea>
           </div>
           <div class="manager-consent">
             <input id="manager-consent" type="checkbox" name="privacy_consent" required />
             <label for="manager-consent" class="manager-consent-label">
-              &#1071; &#1089;&#1086;&#1075;&#1083;&#1072;&#1089;&#1077;&#1085; &#1085;&#1072;
-              <a href="privacy.php" target="_blank" rel="noopener noreferrer">&#1086;&#1073;&#1088;&#1072;&#1073;&#1086;&#1090;&#1082;&#1091; &#1087;&#1077;&#1088;&#1089;&#1086;&#1085;&#1072;&#1083;&#1100;&#1085;&#1099;&#1093; &#1076;&#1072;&#1085;&#1085;&#1099;&#1093;</a>
+              Я согласен на
+              <a href="privacy.php" target="_blank" rel="noopener noreferrer">обработку персональных данных</a>
             </label>
           </div>
-          <p class="manager-form-success" data-manager-success role="status" aria-live="polite" hidden>
-            Вы успешно отправили заявку, мы свяжемся с вами в скором времени
-          </p>
+          <p class="manager-form-success" data-manager-success role="status" aria-live="polite" hidden><?= htmlspecialchars($homeContent['manager_success_text'], ENT_QUOTES, 'UTF-8') ?></p>
           <button class="btn manager-submit" type="submit">
-            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Отправить
+            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($homeContent['manager_submit_button'], ENT_QUOTES, 'UTF-8') ?>
           </button>
         </form>
       </section>
     </div>
 
-    
-      <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js" defer></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js" defer></script>
     <script src="app.js" defer></script>
   </body>
 </html>
