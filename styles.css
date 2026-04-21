@@ -231,7 +231,7 @@ h3 { font: var(--font-h3); }
   overflow: hidden;
   background: var(--color-orange);
   color: var(--color-white);
-  --hero-jiraf-opacity: 0.28;
+  --hero-jiraf-opacity: 1;
   min-height: 95vh;
   border-bottom-left-radius: 64px;
   border-bottom-right-radius: 64px;
@@ -1085,7 +1085,7 @@ p.manager-form-success {
   }
 
   .hero {
-    --hero-jiraf-opacity: 0.22;
+    --hero-jiraf-opacity: 1;
     min-height: 95vh;
     min-height: 95svh;
     padding: var(--space-96) 0 var(--space-48);
