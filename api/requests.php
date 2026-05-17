@@ -31,6 +31,30 @@ try {
         ':comment' => $comment,
     ]);
 
+
+    $emailStmt = db()->prepare('SELECT content_value FROM site_content WHERE content_key = :key LIMIT 1');
+    $emailStmt->execute([':key' => 'notification_email']);
+    $notificationEmail = trim((string) ($emailStmt->fetchColumn() ?: ''));
+
+    if ($notificationEmail !== '' && filter_var($notificationEmail, FILTER_VALIDATE_EMAIL)) {
+        $subject = 'Новая заявка с сайта РА «Жираф»';
+        $messageLines = [
+            'Поступила новая заявка:',
+            'Имя: ' . $name,
+            'Телефон: ' . $phone,
+            'Комментарий: ' . ($comment !== '' ? $comment : '—'),
+        ];
+        $message = implode("
+", $messageLines);
+        $headers = [
+            'Content-Type: text/plain; charset=UTF-8',
+            'From: noreply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost'),
+        ];
+
+        @mail($notificationEmail, $subject, $message, implode("
+", $headers));
+    }
+
     echo json_encode(['message' => 'ok'], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
