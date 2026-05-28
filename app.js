@@ -1038,6 +1038,174 @@
       .catch(() => {});
   };
 
+
+  const setupOrderCalculator = () => {
+    const root = document.querySelector('[data-calculator]');
+    if (!root) return;
+
+    let services = [];
+    try {
+      services = JSON.parse(root.getAttribute('data-services') || '[]');
+    } catch (error) {
+      services = [];
+    }
+
+    const form = root.querySelector('[data-calculator-form]');
+    const serviceSelect = root.querySelector('[data-calc-service]');
+    const quantityInput = root.querySelector('[data-calc-quantity]');
+    const areaInput = root.querySelector('[data-calc-area]');
+    const optionsBox = root.querySelector('[data-calc-options]');
+    const totalBox = root.querySelector('[data-calc-total]');
+    const breakdownBox = root.querySelector('[data-calc-breakdown]');
+    const messageBox = root.querySelector('[data-calc-message]');
+    if (!form || !serviceSelect || !quantityInput || !areaInput || !optionsBox || !totalBox || !breakdownBox) return;
+
+    const money = (value) => `${Math.max(0, Math.round(value)).toLocaleString('ru-RU')} ₽`;
+    const getSelectedService = () => services.find((service) => String(service.id) === String(serviceSelect.value)) || null;
+    const groupedOptions = (service) => {
+      const groups = new Map();
+      (service?.options || []).forEach((option) => {
+        const type = safeText(option.option_type) || 'Дополнительно';
+        if (!groups.has(type)) groups.set(type, []);
+        groups.get(type).push(option);
+      });
+      return groups;
+    };
+
+    const renderOptions = () => {
+      const service = getSelectedService();
+      optionsBox.innerHTML = '';
+      const groups = groupedOptions(service);
+      if (!service || groups.size === 0) {
+        optionsBox.innerHTML = '<p class="calculator-muted">Для этой услуги пока нет дополнительных параметров. Базовую цену можно настроить в админке.</p>';
+        return;
+      }
+
+      groups.forEach((options, type) => {
+        const fieldset = document.createElement('fieldset');
+        fieldset.className = 'calculator-option-group';
+        const legend = document.createElement('legend');
+        legend.textContent = type;
+        fieldset.appendChild(legend);
+
+        options.forEach((option, index) => {
+          const label = document.createElement('label');
+          label.className = 'calculator-check';
+          const input = document.createElement('input');
+          input.type = 'radio';
+          input.name = `calc-option-${type}`;
+          input.value = String(option.id);
+          input.dataset.priceDelta = String(option.price_delta || 0);
+          input.dataset.multiplier = String(option.multiplier || 1);
+          input.dataset.title = safeText(option.title);
+          if (index === 0) input.checked = true;
+          const span = document.createElement('span');
+          span.textContent = `${safeText(option.title)} (${Number(option.multiplier || 1).toFixed(2)}×, +${money(Number(option.price_delta || 0))})`;
+          label.append(input, span);
+          fieldset.appendChild(label);
+        });
+        optionsBox.appendChild(fieldset);
+      });
+    };
+
+    const calculate = () => {
+      const service = getSelectedService();
+      if (!service) {
+        totalBox.textContent = '0 ₽';
+        breakdownBox.textContent = 'Выберите услугу и параметры — сумма появится автоматически.';
+        return { total: 0, selectedOptions: [], service: null };
+      }
+
+      const quantity = Math.max(1, Number(quantityInput.value || 1));
+      const area = Math.max(0, Number(areaInput.value || 0));
+      const basePrice = Math.max(0, Number(service.base_price || 0));
+      const areaFactor = area > 0 ? area : 1;
+      let total = basePrice * quantity * areaFactor;
+      const selectedOptions = [];
+
+      optionsBox.querySelectorAll('input[type="radio"]:checked').forEach((input) => {
+        const multiplier = Number(input.dataset.multiplier || 1);
+        const priceDelta = Number(input.dataset.priceDelta || 0);
+        total = (total * multiplier) + priceDelta;
+        selectedOptions.push({
+          id: input.value,
+          title: input.dataset.title || input.value,
+          multiplier,
+          price_delta: priceDelta,
+        });
+      });
+
+      totalBox.textContent = money(total);
+      breakdownBox.textContent = `База: ${money(basePrice)} × ${quantity} ${service.unit_name || 'шт.'}${area > 0 ? ` × ${area} м²` : ''}. Итог является предварительным и уточняется менеджером.`;
+      return { total, selectedOptions, service, quantity, area };
+    };
+
+    const update = () => {
+      calculate();
+      if (messageBox) messageBox.textContent = '';
+    };
+
+    serviceSelect.addEventListener('change', () => {
+      renderOptions();
+      update();
+    });
+    [quantityInput, areaInput].forEach((input) => input.addEventListener('input', update));
+    optionsBox.addEventListener('change', update);
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const result = calculate();
+      if (!result.service) return;
+
+      const name = safeText(root.querySelector('[data-calc-name]')?.value);
+      const phone = safeText(root.querySelector('[data-calc-phone]')?.value);
+      const email = safeText(root.querySelector('[data-calc-email]')?.value);
+      const comment = safeText(root.querySelector('[data-calc-comment]')?.value);
+      const submit = form.querySelector('button[type="submit"]');
+      if (submit) submit.disabled = true;
+      if (messageBox) messageBox.textContent = 'Отправляем расчёт...';
+
+      try {
+        const response = await fetch('api/requests.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            phone,
+            email,
+            comment,
+            service_title: result.service.title,
+            service_is_other: false,
+            estimated_total: result.total,
+            calculator: {
+              service_id: result.service.id,
+              service_title: result.service.title,
+              quantity: result.quantity,
+              area: result.area,
+              selected_options: result.selectedOptions,
+              total: result.total,
+            },
+          }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.message || 'Не удалось отправить расчёт');
+        form.reset();
+        renderOptions();
+        calculate();
+        if (messageBox) {
+          messageBox.innerHTML = `Расчёт отправлен. Номер заявки: ${payload.request_id || 'создан'}. <a href="cabinet.php?phone=${encodeURIComponent(phone)}">Открыть кабинет</a>`;
+        }
+      } catch (error) {
+        if (messageBox) messageBox.textContent = error.message || 'Ошибка отправки расчёта';
+      } finally {
+        if (submit) submit.disabled = false;
+      }
+    });
+
+    renderOptions();
+    calculate();
+  };
+
   document.addEventListener('DOMContentLoaded', () => {
     setupMobileNav();
     setupNavContrast();
@@ -1046,6 +1214,7 @@
     setupCardWideClickTargets();
     setupAdminToasts();
     setupAdminSectionToggles();
+    setupOrderCalculator();
 
     const initialCatalogServices = getInitialCatalogServicesFromDataAttribute();
     let serviceDescriptionLookup = buildServiceDescriptionLookup(initialCatalogServices);

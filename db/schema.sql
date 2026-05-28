@@ -5,16 +5,22 @@ CREATE TABLE IF NOT EXISTS services (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   category VARCHAR(100) NOT NULL,
   title VARCHAR(255) NOT NULL,
-  description TEXT NOT NULL
+  description TEXT NOT NULL,
+  base_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+  unit_name VARCHAR(40) NOT NULL DEFAULT 'шт.',
+  calculator_enabled TINYINT(1) NOT NULL DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS client_requests (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   phone VARCHAR(40) NOT NULL,
+  email VARCHAR(160) NULL,
   service_title VARCHAR(255) NULL,
   service_is_other TINYINT(1) NOT NULL DEFAULT 0,
   comment TEXT NULL,
+  calculator_payload JSON NULL,
+  estimated_total DECIMAL(12,2) NULL,
   request_status VARCHAR(20) NOT NULL DEFAULT 'new',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -27,6 +33,87 @@ CREATE TABLE IF NOT EXISTS request_notes (
   note_text TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_request_notes_request_id_created_at (request_id, created_at)
+);
+
+
+
+CREATE TABLE IF NOT EXISTS clients (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  phone VARCHAR(40) NOT NULL,
+  email VARCHAR(160) NULL,
+  company VARCHAR(180) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_clients_phone (phone)
+);
+
+CREATE TABLE IF NOT EXISTS calculation_options (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  service_id INT UNSIGNED NOT NULL,
+  option_type VARCHAR(40) NOT NULL,
+  title VARCHAR(160) NOT NULL,
+  price_delta DECIMAL(12,2) NOT NULL DEFAULT 0,
+  multiplier DECIMAL(8,3) NOT NULL DEFAULT 1,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  sort_order INT NOT NULL DEFAULT 100,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_calculation_options_service (service_id, option_type, is_active, sort_order)
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  client_id INT UNSIGNED NOT NULL,
+  request_id INT UNSIGNED NULL,
+  service_id INT UNSIGNED NULL,
+  title VARCHAR(255) NOT NULL,
+  status VARCHAR(40) NOT NULL DEFAULT 'new',
+  total_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  deadline DATE NULL,
+  manager_comment TEXT NULL,
+  calculator_payload JSON NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_orders_client_status (client_id, status),
+  INDEX idx_orders_request (request_id)
+);
+
+CREATE TABLE IF NOT EXISTS order_items (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  order_id INT UNSIGNED NOT NULL,
+  service_id INT UNSIGNED NULL,
+  title VARCHAR(255) NOT NULL,
+  quantity DECIMAL(12,2) NOT NULL DEFAULT 1,
+  unit_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+  amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  INDEX idx_order_items_order (order_id)
+);
+
+CREATE TABLE IF NOT EXISTS order_status_history (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  order_id INT UNSIGNED NOT NULL,
+  old_status VARCHAR(40) NULL,
+  new_status VARCHAR(40) NOT NULL,
+  changed_by VARCHAR(80) NOT NULL,
+  comment TEXT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_order_history_order_created (order_id, created_at)
+);
+
+CREATE TABLE IF NOT EXISTS request_files (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  request_id INT UNSIGNED NULL,
+  order_id INT UNSIGNED NULL,
+  client_phone VARCHAR(40) NOT NULL,
+  original_name VARCHAR(255) NOT NULL,
+  stored_path VARCHAR(255) NOT NULL,
+  mime_type VARCHAR(120) NOT NULL,
+  file_size INT UNSIGNED NOT NULL,
+  uploaded_by VARCHAR(40) NOT NULL DEFAULT 'client',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_request_files_request (request_id, created_at),
+  INDEX idx_request_files_order (order_id, created_at),
+  INDEX idx_request_files_phone (client_phone)
 );
 
 CREATE TABLE IF NOT EXISTS site_content (
@@ -148,3 +235,19 @@ INSERT INTO services (category, title, description) VALUES
 Перед запуском согласовываем материалы, размер, тираж и сроки, чтобы вы заранее понимали итоговый вид и бюджет проекта.
 
 Если макет еще не готов, менеджер поможет с подготовкой и предложит оптимальный вариант производства без лишних затрат.');
+
+UPDATE services SET base_price = CASE
+  WHEN category = 'Широкоформатная печать' THEN 950
+  WHEN category = 'Наружная реклама' THEN 3500
+  WHEN category = 'Сувенирная продукция' THEN 420
+  ELSE 850
+END WHERE base_price = 0;
+
+INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
+SELECT id, 'Материал', 'Стандарт', 0, 1, 10 FROM services;
+
+INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
+SELECT id, 'Срочность', 'Обычный срок', 0, 1, 10 FROM services;
+
+INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
+SELECT id, 'Срочность', 'Срочно +30%', 0, 1.3, 20 FROM services;

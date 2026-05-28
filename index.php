@@ -99,6 +99,12 @@ $organizationStructuredData = [
                   <?= htmlspecialchars($homeContent['nav_services_label'], ENT_QUOTES, 'UTF-8') ?>
                 </a>
               </li>
+              <li>
+                <a href="cabinet.php">
+                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#case"></use></svg>
+                  Кабинет
+                </a>
+              </li>
             </ul>
             <div class="nav-actions">
               <a class="nav-vk" href="https://vk.com/giraf33" target="_blank" rel="noopener noreferrer" aria-label="ВКонтакте">
@@ -299,7 +305,7 @@ $organizationStructuredData = [
       </section>
     </div>
 
-    
+
       <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js" defer></script>
     <script src="app.js" defer></script>
   </body>

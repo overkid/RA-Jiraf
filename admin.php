@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/api/content.php';
+require_once __DIR__ . '/api/crm.php';
 
 $isHttps =
     (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
@@ -50,6 +51,12 @@ const ADMIN_FORM_ACTIONS = [
     'upload_site_image',
     'restore_site_image',
     'save_site_text',
+    'add_calc_option',
+    'update_calc_option',
+    'delete_calc_option',
+    'convert_request_order',
+    'update_order_status',
+    'upload_request_file',
 ];
 const ADMIN_CSRF_TOKEN_KEY = 'admin_csrf_token';
 const ADMIN_LOGIN_ATTEMPTS_KEY = 'admin_login_attempts';
@@ -67,6 +74,11 @@ const REQUEST_STATUS_LABELS = [
 $services = [];
 $requests = [];
 $requestNotesByRequestId = [];
+$requestFilesByRequestId = [];
+$orderFilesByOrderId = [];
+$orders = [];
+$clients = [];
+$calculationOptions = [];
 $newRequestLookup = [];
 
 $siteTextDefaults = default_home_content();
@@ -222,6 +234,8 @@ $ensureAdminSchema = static function (PDO $pdo): void {
         // Legacy schema update ignored.
     }
 
+    crm_ensure_schema($pdo);
+
     $pdo->exec(
         'CREATE TABLE IF NOT EXISTS request_notes (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -369,8 +383,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($pdo instanceof PDO) {
             $isAdmin = $currentRole === 'admin';
-            $managerRequestActions = ['update_request_status', 'add_request_note'];
-            $adminOnlyActions = ['add_service', 'update_service', 'delete_service', 'delete_request', 'upload_site_image', 'restore_site_image', 'save_site_text'];
+            $managerRequestActions = ['update_request_status', 'add_request_note', 'convert_request_order', 'update_order_status', 'upload_request_file'];
+            $adminOnlyActions = ['add_service', 'update_service', 'delete_service', 'delete_request', 'upload_site_image', 'restore_site_image', 'save_site_text', 'add_calc_option', 'update_calc_option', 'delete_calc_option'];
 
             if (in_array($action, $adminOnlyActions, true) && !$isAdmin) {
                 $errors[] = 'Недостаточно прав для этого действия.';
@@ -381,6 +395,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $category = trim((string) ($_POST['category'] ?? ''));
                     $title = trim((string) ($_POST['title'] ?? ''));
                     $description = trim((string) ($_POST['description'] ?? ''));
+                    $basePrice = max(0, round((float) ($_POST['base_price'] ?? 0), 2));
+                    $unitName = trim((string) ($_POST['unit_name'] ?? 'шт.'));
+                    $calculatorEnabled = isset($_POST['calculator_enabled']) ? 1 : 0;
+                    if ($unitName === '') { $unitName = 'шт.'; }
 
                     if ($category === '' || $title === '') {
                         $errors[] = 'Категория и название услуги обязательны.';
@@ -389,11 +407,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
                         try {
                             if ($action === 'add_service') {
-                                $stmt = $pdo->prepare('INSERT INTO services (category, title, description) VALUES (:category, :title, :description)');
+                                $stmt = $pdo->prepare('INSERT INTO services (category, title, description, base_price, unit_name, calculator_enabled) VALUES (:category, :title, :description, :base_price, :unit_name, :calculator_enabled)');
                                 $stmt->execute([
                                     ':category' => $category,
                                     ':title' => $title,
                                     ':description' => $description,
+                                    ':base_price' => $basePrice,
+                                    ':unit_name' => $unitName,
+                                    ':calculator_enabled' => $calculatorEnabled,
                                 ]);
                                 $messages[] = 'Услуга добавлена.';
                             } else {
@@ -401,11 +422,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 if ($serviceId <= 0) {
                                     $errors[] = 'Не удалось определить услугу для обновления.';
                                 } else {
-                                    $stmt = $pdo->prepare('UPDATE services SET category = :category, title = :title, description = :description WHERE id = :id');
+                                    $stmt = $pdo->prepare('UPDATE services SET category = :category, title = :title, description = :description, base_price = :base_price, unit_name = :unit_name, calculator_enabled = :calculator_enabled WHERE id = :id');
                                     $stmt->execute([
                                         ':category' => $category,
                                         ':title' => $title,
                                         ':description' => $description,
+                                        ':base_price' => $basePrice,
+                                        ':unit_name' => $unitName,
+                                        ':calculator_enabled' => $calculatorEnabled,
                                         ':id' => $serviceId,
                                     ]);
                                     $messages[] = 'Услуга обновлена.';
@@ -511,6 +535,110 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+
+                if ($action === 'convert_request_order') {
+                    $requestId = (int) ($_POST['request_id'] ?? 0);
+                    if ($requestId <= 0) {
+                        $errors[] = 'Не удалось определить заявку для создания заказа.';
+                    } else {
+                        try {
+                            $orderId = crm_create_order_from_request($pdo, $requestId, $currentLogin);
+                            $messages[] = 'Создан заказ №' . $orderId . ' из заявки.';
+                        } catch (Throwable $exception) {
+                            $errors[] = 'Не удалось создать заказ: ' . $exception->getMessage();
+                        }
+                    }
+                }
+
+                if ($action === 'update_order_status') {
+                    $orderId = (int) ($_POST['order_id'] ?? 0);
+                    $orderStatus = crm_normalize_order_status(trim((string) ($_POST['order_status'] ?? 'new')));
+                    $comment = trim((string) ($_POST['status_comment'] ?? ''));
+                    if ($orderId <= 0) {
+                        $errors[] = 'Не удалось определить заказ.';
+                    } else {
+                        try {
+                            crm_change_order_status($pdo, $orderId, $orderStatus, $currentLogin, $comment);
+                            $messages[] = 'Статус заказа обновлён.';
+                        } catch (Throwable $exception) {
+                            $errors[] = 'Не удалось обновить заказ: ' . $exception->getMessage();
+                        }
+                    }
+                }
+
+                if ($action === 'upload_request_file') {
+                    $requestId = (int) ($_POST['request_id'] ?? 0);
+                    $orderId = (int) ($_POST['order_id'] ?? 0);
+                    $phone = trim((string) ($_POST['phone'] ?? ''));
+                    if ($phone === '' || (!isset($_FILES['layout_file']) || !is_array($_FILES['layout_file']))) {
+                        $errors[] = 'Укажите телефон и выберите файл.';
+                    } else {
+                        try {
+                            $stored = crm_store_uploaded_file($_FILES['layout_file'], $phone, $requestId > 0 ? $requestId : null, $orderId > 0 ? $orderId : null, 'manager');
+                            crm_insert_file($pdo, $stored);
+                            $messages[] = 'Файл макета прикреплён.';
+                        } catch (Throwable $exception) {
+                            $errors[] = 'Не удалось загрузить файл: ' . $exception->getMessage();
+                        }
+                    }
+                }
+
+                if ($action === 'add_calc_option' || $action === 'update_calc_option') {
+                    $serviceId = (int) ($_POST['service_id'] ?? 0);
+                    $optionId = (int) ($_POST['option_id'] ?? 0);
+                    $optionType = trim((string) ($_POST['option_type'] ?? 'Материал'));
+                    $title = trim((string) ($_POST['option_title'] ?? ''));
+                    $priceDelta = round((float) ($_POST['price_delta'] ?? 0), 2);
+                    $multiplier = max(0.01, round((float) ($_POST['multiplier'] ?? 1), 3));
+                    $sortOrder = (int) ($_POST['sort_order'] ?? 100);
+                    $isActive = isset($_POST['is_active']) ? 1 : 0;
+
+                    if ($serviceId <= 0 || $title === '') {
+                        $errors[] = 'Для параметра калькулятора нужны услуга и название.';
+                    } else {
+                        try {
+                            if ($action === 'add_calc_option') {
+                                $stmt = $pdo->prepare('INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, is_active, sort_order) VALUES (:service_id, :option_type, :title, :price_delta, :multiplier, :is_active, :sort_order)');
+                                $messages[] = 'Параметр калькулятора добавлен.';
+                            } else {
+                                $stmt = $pdo->prepare('UPDATE calculation_options SET service_id = :service_id, option_type = :option_type, title = :title, price_delta = :price_delta, multiplier = :multiplier, is_active = :is_active, sort_order = :sort_order WHERE id = :option_id');
+                            }
+                            $params = [
+                                ':service_id' => $serviceId,
+                                ':option_type' => $optionType,
+                                ':title' => $title,
+                                ':price_delta' => $priceDelta,
+                                ':multiplier' => $multiplier,
+                                ':is_active' => $isActive,
+                                ':sort_order' => $sortOrder,
+                            ];
+                            if ($action === 'update_calc_option') {
+                                if ($optionId <= 0) { throw new RuntimeException('Параметр не найден.'); }
+                                $params[':option_id'] = $optionId;
+                                $messages[] = 'Параметр калькулятора обновлён.';
+                            }
+                            $stmt->execute($params);
+                        } catch (Throwable $exception) {
+                            $errors[] = 'Не удалось сохранить параметр калькулятора: ' . $exception->getMessage();
+                        }
+                    }
+                }
+
+                if ($action === 'delete_calc_option') {
+                    $optionId = (int) ($_POST['option_id'] ?? 0);
+                    if ($optionId <= 0) {
+                        $errors[] = 'Не удалось определить параметр калькулятора.';
+                    } else {
+                        try {
+                            $stmt = $pdo->prepare('DELETE FROM calculation_options WHERE id = :id');
+                            $stmt->execute([':id' => $optionId]);
+                            $messages[] = 'Параметр калькулятора удалён.';
+                        } catch (Throwable $exception) {
+                            $errors[] = 'Не удалось удалить параметр: ' . $exception->getMessage();
+                        }
+                    }
+                }
+
                 if ($action === 'upload_site_image') {
                     $imageKey = trim((string) ($_POST['image_key'] ?? ''));
                     if (!array_key_exists($imageKey, $siteImageDefaults)) {
@@ -601,14 +729,14 @@ if ($loggedIn) {
         $ensureAdminSchema($pdo);
 
         if ($currentRole === 'admin') {
-            $services = $pdo->query('SELECT id, category, title, description FROM services ORDER BY category, id')->fetchAll(PDO::FETCH_ASSOC);
+            $services = $pdo->query('SELECT id, category, title, description, base_price, unit_name, calculator_enabled FROM services ORDER BY category, id')->fetchAll(PDO::FETCH_ASSOC);
             $siteTextValues = get_home_content($pdo);
             $siteImageValues = get_site_images($pdo);
         }
 
         try {
             $requests = $pdo->query(
-                "SELECT id, name, phone, comment, created_at, service_title, service_is_other, request_status
+                "SELECT id, name, phone, email, comment, calculator_payload, estimated_total, created_at, service_title, service_is_other, request_status
                  FROM client_requests
                  ORDER BY
                    CASE request_status
@@ -631,6 +759,37 @@ if ($loggedIn) {
             $notes = $pdo->query('SELECT id, request_id, author_login, author_role, note_text, created_at FROM request_notes ORDER BY request_id ASC, created_at ASC, id ASC')->fetchAll(PDO::FETCH_ASSOC);
         } catch (Throwable $exception) {
             $notes = [];
+        }
+
+
+
+        $clients = $pdo->query('SELECT * FROM clients ORDER BY updated_at DESC, created_at DESC LIMIT 80')->fetchAll(PDO::FETCH_ASSOC);
+        $orders = $pdo->query(
+            "SELECT o.*, c.name AS client_name, c.phone AS client_phone
+             FROM orders o
+             INNER JOIN clients c ON c.id = o.client_id
+             ORDER BY
+               CASE o.status
+                 WHEN 'new' THEN 0
+                 WHEN 'calculation' THEN 1
+                 WHEN 'approval' THEN 2
+                 WHEN 'prepayment' THEN 3
+                 WHEN 'production' THEN 4
+                 WHEN 'ready' THEN 5
+                 WHEN 'completed' THEN 6
+                 ELSE 7
+               END ASC,
+               o.updated_at DESC"
+        )->fetchAll(PDO::FETCH_ASSOC);
+        $calculationOptions = $pdo->query('SELECT co.*, s.title AS service_title FROM calculation_options co INNER JOIN services s ON s.id = co.service_id ORDER BY s.category, s.id, co.option_type, co.sort_order, co.id')->fetchAll(PDO::FETCH_ASSOC);
+        $files = $pdo->query('SELECT * FROM request_files ORDER BY created_at DESC, id DESC')->fetchAll(PDO::FETCH_ASSOC);
+        $requestFilesByRequestId = [];
+        $orderFilesByOrderId = [];
+        foreach ($files as $file) {
+            $fileRequestId = (int) ($file['request_id'] ?? 0);
+            $fileOrderId = (int) ($file['order_id'] ?? 0);
+            if ($fileRequestId > 0) { $requestFilesByRequestId[$fileRequestId][] = $file; }
+            if ($fileOrderId > 0) { $orderFilesByOrderId[$fileOrderId][] = $file; }
         }
 
         $requestNotesByRequestId = [];
@@ -824,6 +983,37 @@ if ($loggedIn) {
                       <p><span>Комментарий:</span> <?= $escape((string) ($request['comment'] ?? '')) ?></p>
                     <?php endif; ?>
                     <p><span>Дата:</span> <?= $escape($formatDateTime((string) ($request['created_at'] ?? ''))) ?></p>
+                    <?php if (!empty($request['estimated_total'])): ?>
+                      <p><span>Оценка калькулятора:</span> <?= $escape(number_format((float) $request['estimated_total'], 0, ',', ' ')) ?> ₽</p>
+                    <?php endif; ?>
+
+                    <?php $requestFiles = $requestFilesByRequestId[$requestId] ?? []; ?>
+                    <div class="admin-files">
+                      <h4>Макеты и файлы</h4>
+                      <?php if (!$requestFiles): ?>
+                        <p class="admin-note-empty">Файлов пока нет.</p>
+                      <?php else: ?>
+                        <?php foreach ($requestFiles as $file): ?>
+                          <a class="admin-file-link" href="<?= $escape((string) $file['stored_path']) ?>" target="_blank" rel="noopener noreferrer"><?= $escape((string) $file['original_name']) ?></a>
+                        <?php endforeach; ?>
+                      <?php endif; ?>
+                      <form class="admin-form admin-request-note-form" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="action" value="upload_request_file" />
+                        <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
+                        <input type="hidden" name="request_id" value="<?= $escape((string) $requestId) ?>" />
+                        <input type="hidden" name="phone" value="<?= $escape((string) ($request['phone'] ?? '')) ?>" />
+                        <label for="request-file-<?= $escape((string) $requestId) ?>">Прикрепить макет к заявке</label>
+                        <input id="request-file-<?= $escape((string) $requestId) ?>" type="file" name="layout_file" accept=".pdf,.jpg,.jpeg,.png,.webp,.svg,.zip" required />
+                        <button class="btn btn-nav" type="submit">Загрузить файл</button>
+                      </form>
+                    </div>
+
+                    <form class="admin-form admin-request-status-form" method="post">
+                      <input type="hidden" name="action" value="convert_request_order" />
+                      <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
+                      <input type="hidden" name="request_id" value="<?= $escape((string) $requestId) ?>" />
+                      <button class="btn btn-contact" type="submit">Создать заказ из заявки</button>
+                    </form>
 
                     <form class="admin-form admin-request-status-form" method="post">
                       <input type="hidden" name="action" value="update_request_status" />
@@ -907,6 +1097,67 @@ if ($loggedIn) {
           </div>
         </section>
 
+
+        <section class="section admin-panel admin-panel-alt">
+          <div class="container">
+            <div class="admin-section-title">
+              <h2 id="orders-admin">Заказы и клиенты</h2>
+            </div>
+            <div class="crm-dashboard">
+              <article class="crm-metric"><span><?= $escape((string) count($clients)) ?></span><p>Клиентов</p></article>
+              <article class="crm-metric"><span><?= $escape((string) count($orders)) ?></span><p>Заказов</p></article>
+              <article class="crm-metric"><span><?= $escape(number_format(array_sum(array_map(static fn (array $order): float => (float) ($order['total_amount'] ?? 0), $orders)), 0, ',', ' ')) ?> ₽</span><p>Сумма заказов</p></article>
+            </div>
+
+            <?php if (!$orders): ?>
+              <div class="admin-card"><p class="section-subtitle">Заказов пока нет. Создайте заказ из заявки.</p></div>
+            <?php else: ?>
+              <div class="admin-kanban">
+                <?php foreach (ORDER_STATUS_LABELS as $statusKey => $statusLabel): ?>
+                  <div class="admin-kanban-column">
+                    <h3><?= $escape($statusLabel) ?></h3>
+                    <?php foreach ($orders as $order): ?>
+                      <?php $orderStatus = crm_normalize_order_status((string) ($order['status'] ?? 'new')); ?>
+                      <?php if ($orderStatus !== $statusKey) { continue; } ?>
+                      <?php $orderId = (int) ($order['id'] ?? 0); $orderFiles = $orderFilesByOrderId[$orderId] ?? []; ?>
+                      <article class="admin-item admin-order-card">
+                        <div class="admin-request-head">
+                          <h3>№<?= $escape((string) $orderId) ?> · <?= $escape((string) ($order['title'] ?? 'Заказ')) ?></h3>
+                          <span class="admin-status-badge admin-status-badge--<?= $escape($orderStatus) ?>"><?= $escape($statusLabel) ?></span>
+                        </div>
+                        <p><span>Клиент:</span> <?= $escape((string) ($order['client_name'] ?? '')) ?></p>
+                        <p><span>Телефон:</span> <?= $escape((string) ($order['client_phone'] ?? '')) ?></p>
+                        <p><span>Сумма:</span> <?= $escape(number_format((float) ($order['total_amount'] ?? 0), 0, ',', ' ')) ?> ₽</p>
+                        <?php if ($orderFiles): ?>
+                          <div class="admin-files admin-files--compact">
+                            <?php foreach ($orderFiles as $file): ?>
+                              <a class="admin-file-link" href="<?= $escape((string) $file['stored_path']) ?>" target="_blank" rel="noopener noreferrer"><?= $escape((string) $file['original_name']) ?></a>
+                            <?php endforeach; ?>
+                          </div>
+                        <?php endif; ?>
+                        <form class="admin-form admin-request-status-form" method="post">
+                          <input type="hidden" name="action" value="update_order_status" />
+                          <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
+                          <input type="hidden" name="order_id" value="<?= $escape((string) $orderId) ?>" />
+                          <label for="order-status-<?= $escape((string) $orderId) ?>">Новый статус</label>
+                          <select id="order-status-<?= $escape((string) $orderId) ?>" name="order_status">
+                            <?php foreach (ORDER_STATUS_LABELS as $nextKey => $nextLabel): ?>
+                              <option value="<?= $escape($nextKey) ?>" <?= $nextKey === $orderStatus ? 'selected' : '' ?>><?= $escape($nextLabel) ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                          <label for="order-comment-<?= $escape((string) $orderId) ?>">Комментарий к смене статуса</label>
+                          <input id="order-comment-<?= $escape((string) $orderId) ?>" type="text" name="status_comment" placeholder="Например: макет согласован" />
+                          <button class="btn btn-nav" type="submit">Обновить заказ</button>
+                        </form>
+                      </article>
+                    <?php endforeach; ?>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+          </div>
+        </section>
+
         <?php if ($currentRole === 'admin'): ?>
           <section class="section admin-panel admin-panel-alt">
             <div class="container">
@@ -934,6 +1185,18 @@ if ($loggedIn) {
 
                       <label for="service-description-new">Описание для карточки услуги</label>
                       <textarea id="service-description-new" name="description" rows="6"></textarea>
+
+                      <div class="admin-inline-fields">
+                        <div>
+                          <label for="service-base-price-new">Базовая цена, ₽</label>
+                          <input id="service-base-price-new" type="number" min="0" step="0.01" name="base_price" value="0" />
+                        </div>
+                        <div>
+                          <label for="service-unit-new">Единица</label>
+                          <input id="service-unit-new" type="text" name="unit_name" value="шт." />
+                        </div>
+                      </div>
+                      <label class="admin-check"><input type="checkbox" name="calculator_enabled" checked /> Показывать в калькуляторе</label>
 
                       <button class="btn btn-nav" type="submit"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Добавить услугу</button>
                     </form>
@@ -969,6 +1232,18 @@ if ($loggedIn) {
                           <label for="service-description-<?= $escape((string) $serviceId) ?>">Описание для карточки услуги</label>
                           <textarea id="service-description-<?= $escape((string) $serviceId) ?>" name="description" rows="6"><?= $escape((string) ($service['description'] ?? '')) ?></textarea>
 
+                          <div class="admin-inline-fields">
+                            <div>
+                              <label for="service-base-price-<?= $escape((string) $serviceId) ?>">Базовая цена, ₽</label>
+                              <input id="service-base-price-<?= $escape((string) $serviceId) ?>" type="number" min="0" step="0.01" name="base_price" value="<?= $escape((string) ($service['base_price'] ?? '0')) ?>" />
+                            </div>
+                            <div>
+                              <label for="service-unit-<?= $escape((string) $serviceId) ?>">Единица</label>
+                              <input id="service-unit-<?= $escape((string) $serviceId) ?>" type="text" name="unit_name" value="<?= $escape((string) ($service['unit_name'] ?? 'шт.')) ?>" />
+                            </div>
+                          </div>
+                          <label class="admin-check"><input type="checkbox" name="calculator_enabled" <?= !empty($service['calculator_enabled']) ? 'checked' : '' ?> /> Показывать в калькуляторе</label>
+
                           <div class="admin-actions">
                             <button class="btn btn-nav" type="submit"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Сохранить</button>
                             <button class="btn btn-danger" type="submit" form="delete-service-<?= $escape((string) $serviceId) ?>" onclick="return confirm('Удалить услугу?')">Удалить</button>
@@ -978,6 +1253,99 @@ if ($loggedIn) {
                           <input type="hidden" name="action" value="delete_service" />
                           <input type="hidden" name="service_id" value="<?= $escape((string) $serviceId) ?>" />
                           <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
+                        </form>
+                      </div>
+                    <?php endforeach; ?>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+
+          <section class="section admin-panel admin-panel-alt">
+            <div class="container">
+              <div class="admin-collapsible" data-admin-section data-section-id="calculator-admin">
+                <div class="admin-section-title">
+                  <h2 id="calculator-admin">Калькулятор стоимости</h2>
+                  <button class="btn btn-collapse-toggle" type="button" data-admin-section-toggle aria-expanded="true">Свернуть</button>
+                </div>
+                <div class="admin-collapsible-body" data-admin-section-body>
+                  <div class="admin-card admin-card-add-service">
+                    <h3>Добавить параметр расчёта</h3>
+                    <form class="admin-form" method="post">
+                      <input type="hidden" name="action" value="add_calc_option" />
+                      <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
+                      <label for="calc-service-new">Услуга</label>
+                      <select id="calc-service-new" name="service_id" required>
+                        <option value="" disabled selected>Выберите услугу</option>
+                        <?php foreach ($services as $service): ?>
+                          <option value="<?= $escape((string) ($service['id'] ?? 0)) ?>"><?= $escape((string) ($service['title'] ?? '')) ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                      <div class="admin-inline-fields">
+                        <div>
+                          <label for="calc-type-new">Группа</label>
+                          <input id="calc-type-new" type="text" name="option_type" value="Материал" required />
+                        </div>
+                        <div>
+                          <label for="calc-title-new">Название</label>
+                          <input id="calc-title-new" type="text" name="option_title" placeholder="Например: матовая бумага" required />
+                        </div>
+                      </div>
+                      <div class="admin-inline-fields">
+                        <div>
+                          <label for="calc-price-new">Наценка, ₽</label>
+                          <input id="calc-price-new" type="number" step="0.01" name="price_delta" value="0" />
+                        </div>
+                        <div>
+                          <label for="calc-multiplier-new">Коэффициент</label>
+                          <input id="calc-multiplier-new" type="number" step="0.001" min="0.01" name="multiplier" value="1" />
+                        </div>
+                        <div>
+                          <label for="calc-sort-new">Сортировка</label>
+                          <input id="calc-sort-new" type="number" name="sort_order" value="100" />
+                        </div>
+                      </div>
+                      <label class="admin-check"><input type="checkbox" name="is_active" checked /> Активен</label>
+                      <button class="btn btn-nav" type="submit">Добавить параметр</button>
+                    </form>
+                  </div>
+
+                  <div class="admin-grid">
+                    <?php foreach ($calculationOptions as $option): ?>
+                      <?php $optionId = (int) ($option['id'] ?? 0); ?>
+                      <div class="admin-card admin-service">
+                        <h3><?= $escape((string) ($option['service_title'] ?? 'Услуга')) ?></h3>
+                        <form class="admin-form" method="post">
+                          <input type="hidden" name="action" value="update_calc_option" />
+                          <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
+                          <input type="hidden" name="option_id" value="<?= $escape((string) $optionId) ?>" />
+                          <label for="calc-service-<?= $escape((string) $optionId) ?>">Услуга</label>
+                          <select id="calc-service-<?= $escape((string) $optionId) ?>" name="service_id" required>
+                            <?php foreach ($services as $service): ?>
+                              <option value="<?= $escape((string) ($service['id'] ?? 0)) ?>" <?= (int) ($service['id'] ?? 0) === (int) ($option['service_id'] ?? 0) ? 'selected' : '' ?>><?= $escape((string) ($service['title'] ?? '')) ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                          <label for="calc-type-<?= $escape((string) $optionId) ?>">Группа</label>
+                          <input id="calc-type-<?= $escape((string) $optionId) ?>" type="text" name="option_type" value="<?= $escape((string) ($option['option_type'] ?? '')) ?>" required />
+                          <label for="calc-title-<?= $escape((string) $optionId) ?>">Название</label>
+                          <input id="calc-title-<?= $escape((string) $optionId) ?>" type="text" name="option_title" value="<?= $escape((string) ($option['title'] ?? '')) ?>" required />
+                          <div class="admin-inline-fields">
+                            <div><label for="calc-price-<?= $escape((string) $optionId) ?>">Наценка</label><input id="calc-price-<?= $escape((string) $optionId) ?>" type="number" step="0.01" name="price_delta" value="<?= $escape((string) ($option['price_delta'] ?? '0')) ?>" /></div>
+                            <div><label for="calc-mult-<?= $escape((string) $optionId) ?>">Коэффициент</label><input id="calc-mult-<?= $escape((string) $optionId) ?>" type="number" step="0.001" min="0.01" name="multiplier" value="<?= $escape((string) ($option['multiplier'] ?? '1')) ?>" /></div>
+                            <div><label for="calc-sort-<?= $escape((string) $optionId) ?>">Сортировка</label><input id="calc-sort-<?= $escape((string) $optionId) ?>" type="number" name="sort_order" value="<?= $escape((string) ($option['sort_order'] ?? '100')) ?>" /></div>
+                          </div>
+                          <label class="admin-check"><input type="checkbox" name="is_active" <?= !empty($option['is_active']) ? 'checked' : '' ?> /> Активен</label>
+                          <div class="admin-actions">
+                            <button class="btn btn-nav" type="submit">Сохранить</button>
+                            <button class="btn btn-danger" type="submit" form="delete-calc-<?= $escape((string) $optionId) ?>" onclick="return confirm('Удалить параметр калькулятора?')">Удалить</button>
+                          </div>
+                        </form>
+                        <form id="delete-calc-<?= $escape((string) $optionId) ?>" method="post" class="admin-form admin-form-inline">
+                          <input type="hidden" name="action" value="delete_calc_option" />
+                          <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
+                          <input type="hidden" name="option_id" value="<?= $escape((string) $optionId) ?>" />
                         </form>
                       </div>
                     <?php endforeach; ?>

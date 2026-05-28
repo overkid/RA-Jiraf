@@ -2310,3 +2310,302 @@ button.btn:active,
   }
 }
 
+
+/* CRM upgrade: calculator, client cabinet, order pipeline */
+.crm-section {
+  background: linear-gradient(180deg, rgba(255, 102, 0, 0.08), rgba(123, 0, 255, 0.06));
+}
+
+.crm-heading {
+  margin-bottom: var(--space-34);
+}
+
+.calculator-shell,
+.crm-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+  gap: var(--space-24);
+  align-items: start;
+}
+
+.crm-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: var(--space-24);
+}
+
+.calculator-card,
+.crm-card,
+.crm-metric,
+.admin-kanban-column {
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 24px;
+  background: var(--color-white);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.08);
+}
+
+.calculator-card,
+.crm-card {
+  padding: var(--space-28);
+}
+
+.crm-card--accent {
+  border-color: rgba(255, 102, 0, 0.28);
+  background: linear-gradient(135deg, var(--color-white), rgba(255, 102, 0, 0.08));
+}
+
+.calculator-form,
+.crm-form {
+  display: grid;
+  gap: var(--space-14);
+}
+
+.calculator-form label,
+.crm-form label,
+.admin-check {
+  font: var(--font-body-small);
+  color: var(--color-black);
+}
+
+.calculator-form input,
+.calculator-form select,
+.calculator-form textarea,
+.crm-form input,
+.crm-form select,
+.crm-form textarea {
+  width: 100%;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+  padding: var(--space-12) var(--space-14);
+  font: var(--font-body-small);
+  background: var(--color-white);
+}
+
+.calculator-form input:focus,
+.calculator-form select:focus,
+.calculator-form textarea:focus,
+.crm-form input:focus,
+.crm-form select:focus,
+.crm-form textarea:focus {
+  outline: 3px solid rgba(255, 102, 0, 0.18);
+  border-color: var(--color-orange);
+}
+
+.calculator-grid,
+.calculator-client-grid,
+.crm-inline-fields,
+.admin-inline-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-14);
+}
+
+.admin-inline-fields > div {
+  min-width: 0;
+}
+
+.calculator-option-group {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 18px;
+  padding: var(--space-14);
+  margin: 0 0 var(--space-12);
+}
+
+.calculator-option-group legend {
+  padding: 0 var(--space-8);
+  font: var(--font-button-inter);
+  color: var(--color-violet-dark);
+}
+
+.calculator-check,
+.admin-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  margin-top: var(--space-8);
+}
+
+.calculator-check input,
+.admin-check input {
+  width: auto;
+}
+
+.calculator-result {
+  position: sticky;
+  top: var(--space-24);
+  background: linear-gradient(135deg, var(--color-orange), var(--color-violet));
+  color: var(--color-white);
+}
+
+.calculator-result strong {
+  display: block;
+  margin: var(--space-8) 0 var(--space-14);
+  font: 800 clamp(36px, 6vw, 64px) / 1 var(--font-family-nunito);
+}
+
+.calculator-kicker,
+.calculator-muted,
+.calculator-message,
+.crm-list-item p,
+.admin-files p {
+  margin: 0;
+}
+
+.calculator-message a {
+  color: var(--color-violet-dark);
+  font-weight: 800;
+}
+
+.crm-dashboard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-18);
+  margin: var(--space-24) 0;
+}
+
+.crm-metric {
+  padding: var(--space-24);
+  text-align: center;
+}
+
+.crm-metric span {
+  display: block;
+  color: var(--color-orange);
+  font: 800 clamp(28px, 4vw, 44px) / 1 var(--font-family-nunito);
+}
+
+.crm-metric p {
+  margin: var(--space-8) 0 0;
+  color: var(--color-gray);
+}
+
+.crm-list,
+.crm-file-list,
+.admin-files {
+  display: grid;
+  gap: var(--space-14);
+}
+
+.crm-list-item,
+.admin-file-link,
+.crm-file {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 18px;
+  padding: var(--space-16);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.crm-item-head,
+.admin-request-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.crm-file,
+.admin-file-link {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-12);
+  color: var(--color-violet-dark);
+  text-decoration: none;
+  font: var(--font-body-small);
+}
+
+.admin-files {
+  margin: var(--space-16) 0;
+}
+
+.admin-files--compact {
+  margin: var(--space-10) 0;
+}
+
+.admin-kanban {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(260px, 1fr));
+  gap: var(--space-18);
+  overflow-x: auto;
+  padding-bottom: var(--space-12);
+}
+
+.admin-kanban-column {
+  min-width: 260px;
+  padding: var(--space-16);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.admin-kanban-column > h3 {
+  margin-bottom: var(--space-12);
+  color: var(--color-violet-dark);
+}
+
+.admin-order-card {
+  margin-bottom: var(--space-14);
+}
+
+.admin-status-badge--calculation,
+.admin-status-badge--approval,
+.admin-status-badge--prepayment {
+  background: rgba(123, 0, 255, 0.12);
+  color: var(--color-violet-dark);
+}
+
+.admin-status-badge--production {
+  background: rgba(255, 102, 0, 0.16);
+  color: var(--color-orange-dark);
+}
+
+.admin-status-badge--ready,
+.admin-status-badge--completed {
+  background: rgba(30, 160, 90, 0.14);
+  color: #147a42;
+}
+
+.admin-status-badge--cancelled {
+  background: rgba(220, 40, 40, 0.12);
+  color: #b42318;
+}
+
+@media (max-width: 900px) {
+  .calculator-shell,
+  .crm-grid,
+  .crm-grid-2,
+  .crm-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .calculator-result {
+    position: static;
+  }
+
+  .admin-kanban {
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .calculator-card,
+  .crm-card {
+    padding: var(--space-18);
+    border-radius: 18px;
+  }
+
+  .calculator-grid,
+  .calculator-client-grid,
+  .crm-inline-fields,
+  .admin-inline-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-item-head,
+  .admin-request-head,
+  .crm-file,
+  .admin-file-link {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-kanban {
+    grid-template-columns: 1fr;
+  }
+}

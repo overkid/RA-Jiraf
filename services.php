@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/api/content.php';
 require __DIR__ . '/api/seo.php';
+require __DIR__ . '/api/crm.php';
 
 $servicesData = [];
 $homeContent = default_home_content();
@@ -12,8 +13,18 @@ $siteImages = default_site_images();
 try {
     require_once __DIR__ . '/api/db.php';
     $connection = db();
-    $stmt = $connection->query('SELECT id, category, title, description FROM services ORDER BY category, id');
+    crm_ensure_schema($connection);
+    $stmt = $connection->query('SELECT id, category, title, description, base_price, unit_name, calculator_enabled FROM services ORDER BY category, id');
     $servicesData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $optionRows = $connection->query('SELECT id, service_id, option_type, title, price_delta, multiplier, is_active, sort_order FROM calculation_options WHERE is_active = 1 ORDER BY service_id, option_type, sort_order, id')->fetchAll(PDO::FETCH_ASSOC);
+    $optionsByService = [];
+    foreach ($optionRows as $optionRow) {
+        $optionsByService[(int) $optionRow['service_id']][] = $optionRow;
+    }
+    foreach ($servicesData as &$serviceRow) {
+        $serviceRow['options'] = $optionsByService[(int) $serviceRow['id']] ?? [];
+    }
+    unset($serviceRow);
     $homeContent = get_home_content($connection);
     $siteImages = get_site_images($connection);
 } catch (Throwable $exception) {
@@ -98,6 +109,12 @@ $servicesStructuredData = [
                   <?= htmlspecialchars($homeContent['nav_services_label'], ENT_QUOTES, 'UTF-8') ?>
                 </a>
               </li>
+              <li>
+                <a href="cabinet.php">
+                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#case"></use></svg>
+                  Кабинет
+                </a>
+              </li>
             </ul>
             <div class="nav-actions">
               <a class="nav-vk" href="https://vk.com/giraf33" target="_blank" rel="noopener noreferrer" aria-label="ВКонтакте">
@@ -163,6 +180,74 @@ $servicesStructuredData = [
               <article class="service-tile"><h3>Оформление входных групп</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
               <article class="service-tile"><h3>Брендирование фасадов и витрин</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
             </div>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="section crm-section calculator-section" id="calculator">
+        <div class="container">
+          <div class="section-heading crm-heading">
+            <h2>Онлайн-калькулятор заказа</h2>
+            <p class="section-subtitle">Рассчитайте ориентировочную стоимость, отправьте заявку менеджеру и потом отслеживайте её в личном кабинете.</p>
+          </div>
+
+          <div class="calculator-shell" data-calculator data-services="<?= htmlspecialchars(json_encode($servicesData, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
+            <form class="calculator-card calculator-form" data-calculator-form>
+              <label for="calc-service">Услуга</label>
+              <select id="calc-service" name="service_id" data-calc-service required>
+                <option value="">Выберите услугу</option>
+                <?php foreach ($servicesData as $service): ?>
+                  <?php if (!empty($service['calculator_enabled'])): ?>
+                    <option value="<?= htmlspecialchars((string) $service['id'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) $service['title'], ENT_QUOTES, 'UTF-8') ?></option>
+                  <?php endif; ?>
+                <?php endforeach; ?>
+              </select>
+
+              <div class="calculator-grid">
+                <div>
+                  <label for="calc-quantity">Тираж / количество</label>
+                  <input id="calc-quantity" type="number" min="1" step="1" value="100" data-calc-quantity required />
+                </div>
+                <div>
+                  <label for="calc-area">Площадь, м²</label>
+                  <input id="calc-area" type="number" min="0" step="0.1" value="0" data-calc-area />
+                </div>
+              </div>
+
+              <div class="calculator-options" data-calc-options></div>
+
+              <div class="calculator-client-grid">
+                <div>
+                  <label for="calc-name">Ваше имя</label>
+                  <input id="calc-name" type="text" data-calc-name placeholder="Имя" required />
+                </div>
+                <div>
+                  <label for="calc-phone">Телефон</label>
+                  <input id="calc-phone" type="tel" data-calc-phone placeholder="+79000000000" required />
+                </div>
+              </div>
+              <label for="calc-email">E-mail для документов</label>
+              <input id="calc-email" type="email" data-calc-email placeholder="client@example.ru" />
+
+              <label for="calc-comment">Комментарий / техническое задание</label>
+              <textarea id="calc-comment" rows="4" data-calc-comment required placeholder="Опишите сроки, формат, материал или приложите макет после отправки заявки в кабинете"></textarea>
+
+              <div class="manager-consent">
+                <input id="calc-consent" type="checkbox" required />
+                <label for="calc-consent" class="manager-consent-label">Я согласен на <a href="privacy.php" target="_blank" rel="noopener noreferrer">обработку персональных данных</a></label>
+              </div>
+
+              <button class="btn btn-nav" type="submit">Отправить расчёт менеджеру</button>
+              <p class="calculator-message" data-calc-message role="status" aria-live="polite"></p>
+            </form>
+
+            <aside class="calculator-card calculator-result">
+              <p class="calculator-kicker">Предварительная стоимость</p>
+              <strong data-calc-total>0 ₽</strong>
+              <p data-calc-breakdown>Выберите услугу и параметры — сумма появится автоматически.</p>
+              <a class="btn btn-contact" href="cabinet.php">Открыть кабинет клиента</a>
+            </aside>
           </div>
         </div>
       </section>
