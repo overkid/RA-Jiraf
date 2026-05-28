@@ -5,38 +5,60 @@ declare(strict_types=1);
 require __DIR__ . '/api/content.php';
 require __DIR__ . '/api/seo.php';
 
-$servicesData = [];
 $homeContent = default_home_content();
 $siteImages = default_site_images();
 
 try {
     require_once __DIR__ . '/api/db.php';
     $connection = db();
-    $stmt = $connection->query('SELECT id, category, title, description FROM services ORDER BY category, id');
-    $servicesData = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $homeContent = get_home_content($connection);
     $siteImages = get_site_images($connection);
 } catch (Throwable $exception) {
-    $servicesData = [];
     $homeContent = default_home_content();
     $siteImages = default_site_images();
 }
 
-$pageTitle = 'Услуги РА «Жираф» — типография, сувениры, печать и наружная реклама';
-$pageDescription = 'Каталог услуг рекламного агентства «Жираф»: полиграфия, сувенирная продукция, широкоформатная печать и наружная реклама.';
-$canonicalUrl = seo_url('/services.php');
+$reviews = [
+    [
+        'name' => 'Александр Иванов',
+        'text' => 'Отличный сервис! Ребята быстро разобрались с требованиями и выполнили заказ на высочайшем уровне. Очень доволен результатом!'
+    ],
+    [
+        'name' => 'Екатерина Петрова',
+        'text' => 'Профессиональный подход к работе, вежливый персонал и качественный результат. Обязательно вернусь к вам ещё!'
+    ],
+    [
+        'name' => 'Сергей Сидоров',
+        'text' => 'Спасибо за оперативность и внимание к деталям. Наши визитки выглядят просто великолепно. Рекомендую всем!'
+    ],
+    [
+        'name' => 'Мария Куликова',
+        'text' => 'Отличная типография! Печать качественная, цены разумные. Работали над брошюрами - результат превзошёл ожидания.'
+    ],
+    [
+        'name' => 'Дмитрий Морозов',
+        'text' => 'Благодарю команду за творческий подход. Наш баннер выглядит потрясающе! Это именно то, что нам было нужно.'
+    ],
+    [
+        'name' => 'Анна Волкова',
+        'text' => 'Сувениры с логотипом компании выглядят безупречно. Коллеги в восторге! Спасибо за профессионализм.'
+    ]
+];
+
+$pageTitle = 'Отзывы РА «Жираф» — отзывы клиентов о типографии и услугах';
+$pageDescription = 'Отзывы довольных клиентов о работе рекламного агентства «Жираф»: типография, сувенирная продукция, печать и наружная реклама.';
+$canonicalUrl = seo_url('/reviews.php');
 $ogImageUrl = seo_url('/' . ltrim((string) ($siteImages['services_card_1'] ?? 'media/img/Visitka.png'), '/'));
 
-$servicesStructuredData = [
+$reviewsStructuredData = [
     '@context' => 'https://schema.org',
-    '@type' => 'Service',
-    'name' => 'Рекламные услуги РА «Жираф»',
-    'serviceType' => 'Полиграфия, сувениры, широкоформатная печать, наружная реклама',
-    'areaServed' => 'Владимирская область',
-    'provider' => [
-        '@type' => 'AdvertisingAgency',
-        'name' => 'РА «Жираф»',
-        'url' => seo_base_url(),
+    '@type' => 'LocalBusiness',
+    'name' => 'РА «Жираф»',
+    'url' => seo_base_url(),
+    'aggregateRating' => [
+        '@type' => 'AggregateRating',
+        'ratingValue' => '5',
+        'ratingCount' => count($reviews),
     ],
 ];
 ?>
@@ -47,7 +69,7 @@ $servicesStructuredData = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <meta name="description" content="<?= htmlspecialchars($pageDescription, ENT_QUOTES, 'UTF-8') ?>" />
-    <meta name="keywords" content="каталог услуг, типография, полиграфия, сувенирная продукция, широкоформатная печать, наружная реклама, Владимир" />
+    <meta name="keywords" content="отзывы, рекламное агентство, типография, полиграфия, Владимир" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="theme-color" content="#ff6600" />
     <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8') ?>" />
@@ -63,7 +85,7 @@ $servicesStructuredData = [
     <meta name="twitter:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>" />
     <meta name="twitter:description" content="<?= htmlspecialchars($pageDescription, ENT_QUOTES, 'UTF-8') ?>" />
     <meta name="twitter:image" content="<?= htmlspecialchars($ogImageUrl, ENT_QUOTES, 'UTF-8') ?>" />
-    <script type="application/ld+json"><?= json_encode($servicesStructuredData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+    <script type="application/ld+json"><?= json_encode($reviewsStructuredData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
     <link rel="icon" href="media/favicon.ico" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -118,57 +140,31 @@ $servicesStructuredData = [
         </nav>
 
         <div class="catalog-hero">
-          <h1><?= htmlspecialchars($homeContent['catalog_title'], ENT_QUOTES, 'UTF-8') ?></h1>
-          <p class="section-subtitle"><?= nl2br(htmlspecialchars($homeContent['catalog_subtitle'], ENT_QUOTES, 'UTF-8')) ?></p>
+          <h1>Отзывы клиентов</h1>
+          <p class="section-subtitle">Что о нас говорят наши довольные клиенты</p>
         </div>
       </div>
     </header>
 
     <main>
-      <div data-vue-catalog data-initial-services="<?= htmlspecialchars(json_encode($servicesData, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>" hidden></div>
-      <section class="services-catalog section">
+      <section class="reviews-catalog section">
         <div class="container">
-          <div class="catalog-tabs" role="tablist" aria-label="Категории услуг">
-            <button class="catalog-tab is-active" type="button" data-category-tab="print">Типография и полиграфия</button>
-            <button class="catalog-tab" type="button" data-category-tab="souvenir">Сувенирная продукция</button>
-            <button class="catalog-tab" type="button" data-category-tab="wide">Широкоформатная печать</button>
-            <button class="catalog-tab" type="button" data-category-tab="outdoor">Наружная реклама</button>
-          </div>
-
-          <div class="catalog-group" data-category="print">
-            <div class="catalog-grid">
-              <article class="service-tile"><h3>Изготовление визиток</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Печать буклетов и листовок</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Печать фирменных бланков</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Изготовление календарей</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-            </div>
-          </div>
-
-          <div class="catalog-group" data-category="souvenir" hidden>
-            <div class="catalog-grid">
-              <article class="service-tile"><h3>Нанесение логотипа на кружки</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Печать на футболках</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Сувенирные ручки с логотипом</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Подарочные наборы для компаний</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-            </div>
-          </div>
-
-          <div class="catalog-group" data-category="wide" hidden>
-            <div class="catalog-grid">
-              <article class="service-tile"><h3>Изготовление рекламных баннеров</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Печать наклеек для заднего и лобового стекла</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Печать на холсте</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Печать виниловых наклеек и стикеров</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-            </div>
-          </div>
-
-          <div class="catalog-group" data-category="outdoor" hidden>
-            <div class="catalog-grid">
-              <article class="service-tile"><h3>Изготовление световых коробов</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Монтаж вывесок под ключ</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Оформление входных групп</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Брендирование фасадов и витрин</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-            </div>
+          <div class="review-grid">
+            <?php foreach ($reviews as $review): ?>
+              <article class="review-tile">
+                <div class="review-tile-header">
+                  <h3 class="review-tile-name"><?= htmlspecialchars($review['name'], ENT_QUOTES, 'UTF-8') ?></h3>
+                  <div class="review-tile-stars" aria-label="5 звезд">
+                    <img class="review-tile-star" src="media/icons/star.svg" alt="" />
+                    <img class="review-tile-star" src="media/icons/star.svg" alt="" />
+                    <img class="review-tile-star" src="media/icons/star.svg" alt="" />
+                    <img class="review-tile-star" src="media/icons/star.svg" alt="" />
+                    <img class="review-tile-star" src="media/icons/star.svg" alt="" />
+                  </div>
+                </div>
+                <p class="review-tile-text"><?= htmlspecialchars($review['text'], ENT_QUOTES, 'UTF-8') ?></p>
+              </article>
+            <?php endforeach; ?>
           </div>
         </div>
       </section>
@@ -199,23 +195,6 @@ $servicesStructuredData = [
         </div>
       </div>
     </footer>
-
-    <div class="modal-overlay modal-overlay-service" data-service-modal aria-hidden="true">
-      <section class="manager-modal service-modal" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
-        <button class="modal-close" type="button" data-close-service-modal aria-label="Закрыть описание услуги">
-          <span aria-hidden="true">✕</span>
-        </button>
-        <h2 id="service-modal-title"><?= htmlspecialchars($homeContent['service_modal_title'], ENT_QUOTES, 'UTF-8') ?></h2>
-        <p class="service-modal-category" data-service-modal-category></p>
-        <div class="service-modal-description" data-service-modal-description>
-          <p><?= htmlspecialchars($homeContent['service_modal_fallback_text'], ENT_QUOTES, 'UTF-8') ?></p>
-        </div>
-        <p class="service-modal-note"><?= htmlspecialchars($homeContent['service_modal_note'], ENT_QUOTES, 'UTF-8') ?></p>
-        <button class="btn manager-submit" type="button" data-service-modal-contact>
-          <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($homeContent['service_modal_contact_button'], ENT_QUOTES, 'UTF-8') ?>
-        </button>
-      </section>
-    </div>
 
     <div class="modal-overlay" data-manager-modal aria-hidden="true">
       <section class="manager-modal" role="dialog" aria-modal="true" aria-labelledby="manager-modal-title">
@@ -270,7 +249,6 @@ $servicesStructuredData = [
       </section>
     </div>
 
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js" defer></script>
     <script src="app.js" defer></script>
   </body>
 </html>
