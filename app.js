@@ -511,184 +511,170 @@
     const openModalButtons = document.querySelectorAll('[data-open-manager-modal]');
     const closeModalButton = document.querySelector('[data-close-manager-modal]');
     const managerForm = document.querySelector('.manager-form');
-    const phoneInput = document.querySelector('#manager-phone');
-    const phoneField = document.querySelector('[data-phone-field]');
-    const serviceSelect = document.querySelector('#manager-service');
+    const serviceSelect = managerForm ? managerForm.querySelector('[data-order-service]') : null;
+    const quantityInput = managerForm ? managerForm.querySelector('[data-order-quantity]') : null;
+    const areaInput = managerForm ? managerForm.querySelector('[data-order-area]') : null;
+    const optionsBox = managerForm ? managerForm.querySelector('[data-order-options]') : null;
+    const totalBox = managerForm ? managerForm.querySelector('[data-order-total]') : null;
+    const breakdownBox = managerForm ? managerForm.querySelector('[data-order-breakdown]') : null;
+    const commentInput = managerForm ? managerForm.querySelector('[data-order-comment]') : null;
     const formFields = managerForm ? managerForm.querySelector('.manager-form-fields') : null;
     const successMessage = managerForm ? managerForm.querySelector('[data-manager-success]') : null;
     const submitButton = managerForm ? managerForm.querySelector('.manager-submit') : null;
     const submitButtonDefaultHtml = submitButton ? submitButton.innerHTML : '';
+    const isAuthenticated = document.body?.dataset.clientAuth === '1';
+    let services = [];
     let pendingReset = false;
 
-    if (!modalOverlay || !closeModalButton || !managerForm || !phoneInput || !phoneField) return null;
+    if (!modalOverlay || !closeModalButton || !managerForm || !serviceSelect || !quantityInput || !areaInput || !optionsBox || !totalBox || !breakdownBox) return null;
+
+    const money = (value) => `${Math.max(0, Math.round(value)).toLocaleString('ru-RU')} ₽`;
+    const normalizeServices = (items) => (Array.isArray(items) ? items : [])
+      .filter((service) => service && safeText(service.title))
+      .map((service) => ({ ...service, id: String(service.id || service.title) }));
 
     const ensureServicePlaceholder = () => {
-      if (!serviceSelect) return;
-
-      const placeholderText =
-        safeText(serviceSelect.querySelector('option[value=""]')?.textContent)
-        || serviceSelect.getAttribute('data-placeholder')
-        || 'Выберите услугу';
-
       let placeholder = serviceSelect.querySelector('option[value=""]');
       if (!placeholder) {
         placeholder = document.createElement('option');
         placeholder.value = '';
-        placeholder.textContent = placeholderText;
         placeholder.disabled = true;
         serviceSelect.insertBefore(placeholder, serviceSelect.firstChild);
-      } else {
-        placeholder.textContent = placeholderText;
       }
+      placeholder.textContent = serviceSelect.getAttribute('data-placeholder') || 'Выберите услугу';
     };
 
-    const getServiceOptionByValue = (value) => {
-      if (!serviceSelect) return null;
-      const normalized = safeText(value);
-      if (!normalized) return serviceSelect.querySelector('option[value=""]');
-
-      return Array.from(serviceSelect.options).find((option) => option.value === normalized) || null;
-    };
-
-    const clearDynamicServiceOptions = () => {
-      if (!serviceSelect) return;
-      serviceSelect.querySelectorAll('option[data-service-option="dynamic"]').forEach((option) => option.remove());
-    };
-
-    const setServiceOptions = (titles) => {
-      if (!serviceSelect) return;
-
+    const setServiceOptions = (items) => {
       ensureServicePlaceholder();
+      services = normalizeServices(items).length
+        ? normalizeServices(items)
+        : (items || []).map((title, index) => ({ id: String(index + 1), title: safeText(title), base_price: 0, unit_name: 'шт.', options: [] })).filter((service) => service.title);
+
       const currentValue = serviceSelect.value;
-      const uniqueTitles = Array.from(new Set((titles || []).map((title) => safeText(title)).filter(Boolean)));
-      const otherOption = serviceSelect.querySelector(`option[value="${serviceOtherValue}"]`);
-
-      clearDynamicServiceOptions();
-
-      uniqueTitles.forEach((title) => {
-        if (title === serviceOtherValue) return;
-
+      serviceSelect.querySelectorAll('option[data-service-option="dynamic"]').forEach((option) => option.remove());
+      services.forEach((service) => {
         const option = document.createElement('option');
-        option.value = title;
-        option.textContent = title;
+        option.value = String(service.id);
+        option.textContent = service.title;
         option.setAttribute('data-service-option', 'dynamic');
-
-        if (otherOption) {
-          serviceSelect.insertBefore(option, otherOption);
-        } else {
-          serviceSelect.appendChild(option);
-        }
+        option.dataset.title = service.title;
+        serviceSelect.appendChild(option);
       });
 
-      const hasCurrentValue = Boolean(getServiceOptionByValue(currentValue));
-      if (hasCurrentValue) {
+      if (Array.from(serviceSelect.options).some((option) => option.value === currentValue)) {
         serviceSelect.value = currentValue;
       } else {
         serviceSelect.value = '';
       }
-      updateServicePlaceholderState();
+      renderOptions();
+      calculate();
     };
 
+    const getSelectedService = () => services.find((service) => String(service.id) === String(serviceSelect.value)) || null;
     const setSelectedService = (serviceTitle) => {
-      if (!serviceSelect) return;
-
-      ensureServicePlaceholder();
       const normalizedTitle = safeText(serviceTitle);
+      if (!normalizedTitle) return;
+      const service = services.find((item) => safeText(item.title) === normalizedTitle);
+      if (service) {
+        serviceSelect.value = String(service.id);
+        renderOptions();
+        calculate();
+      }
+    };
 
-      if (!normalizedTitle) {
-        serviceSelect.value = '';
-        updateServicePlaceholderState();
+    const groupedOptions = (service) => {
+      const groups = new Map();
+      (service?.options || []).forEach((option) => {
+        const type = safeText(option.option_type) || 'Параметры';
+        if (!groups.has(type)) groups.set(type, []);
+        groups.get(type).push(option);
+      });
+      return groups;
+    };
+
+    const renderOptions = () => {
+      const service = getSelectedService();
+      optionsBox.innerHTML = '';
+      if (!service) return;
+
+      const groups = groupedOptions(service);
+      if (!groups.size) {
+        optionsBox.innerHTML = '<p class="calculator-muted">Для услуги нет дополнительных параметров. Будет использована базовая цена.</p>';
         return;
       }
 
-      let option = getServiceOptionByValue(normalizedTitle);
-      if (!option) {
-        const otherOption = serviceSelect.querySelector(`option[value="${serviceOtherValue}"]`);
-        option = document.createElement('option');
-        option.value = normalizedTitle;
-        option.textContent = normalizedTitle;
-        option.setAttribute('data-service-option', 'dynamic');
+      groups.forEach((options, type) => {
+        const fieldset = document.createElement('fieldset');
+        fieldset.className = 'calculator-option-group';
+        const legend = document.createElement('legend');
+        legend.textContent = type;
+        fieldset.appendChild(legend);
 
-        if (otherOption) {
-          serviceSelect.insertBefore(option, otherOption);
-        } else {
-          serviceSelect.appendChild(option);
-        }
+        options.forEach((option, index) => {
+          const label = document.createElement('label');
+          label.className = 'calculator-check';
+          const input = document.createElement('input');
+          input.type = 'radio';
+          input.name = `order-option-${type}`;
+          input.value = String(option.id);
+          input.dataset.priceDelta = String(option.price_delta || 0);
+          input.dataset.multiplier = String(option.multiplier || 1);
+          if (index === 0) input.checked = true;
+          const span = document.createElement('span');
+          span.textContent = `${safeText(option.title)} · ${Number(option.multiplier || 1).toFixed(2)}× · +${money(Number(option.price_delta || 0))}`;
+          label.append(input, span);
+          fieldset.appendChild(label);
+        });
+        optionsBox.appendChild(fieldset);
+      });
+    };
+
+    const calculate = () => {
+      const service = getSelectedService();
+      if (!service) {
+        totalBox.textContent = '0 ₽';
+        breakdownBox.textContent = 'Выберите услугу и параметры заказа.';
+        return { service: null, total: 0, optionIds: [], quantity: 1, area: 0 };
       }
 
-      serviceSelect.value = normalizedTitle;
-      updateServicePlaceholderState();
-    };
+      const quantity = Math.max(1, Number(quantityInput.value || 1));
+      const area = Math.max(0, Number(areaInput.value || 0));
+      const areaFactor = area > 0 ? area : 1;
+      const basePrice = Math.max(0, Number(service.base_price || 0));
+      let total = basePrice * quantity * areaFactor;
+      const optionIds = [];
 
-    const updateServicePlaceholderState = () => {
-      if (!serviceSelect) return;
-      serviceSelect.classList.toggle('is-placeholder', safeText(serviceSelect.value) === '');
-    };
+      optionsBox.querySelectorAll('input[type="radio"]:checked').forEach((input) => {
+        total = (total * Number(input.dataset.multiplier || 1)) + Number(input.dataset.priceDelta || 0);
+        optionIds.push(Number(input.value));
+      });
 
-    const getServicePayload = () => {
-      if (!serviceSelect) {
-        return { serviceTitle: '', serviceIsOther: false };
-      }
-
-      const value = safeText(serviceSelect.value);
-      if (!value) {
-        return { serviceTitle: '', serviceIsOther: false };
-      }
-
-      if (value === serviceOtherValue) {
-        return { serviceTitle: '', serviceIsOther: true };
-      }
-
-      return { serviceTitle: value, serviceIsOther: false };
-    };
-
-    const setPhoneErrorState = (hasError) => {
-      phoneField.classList.toggle('is-error', hasError);
-      phoneInput.setAttribute('aria-invalid', String(hasError));
-    };
-
-    const validatePhone = () => {
-      const { localDigitsLength } = formatPhoneValue(phoneInput.value);
-      const isValid = localDigitsLength === phoneDigitsCount;
-      setPhoneErrorState(!isValid);
-      return isValid;
-    };
-
-    const normalizePhoneInput = (value) => {
-      const { formattedValue } = formatPhoneValue(value);
-      phoneInput.value = formattedValue;
+      totalBox.textContent = money(total);
+      breakdownBox.textContent = `База: ${money(basePrice)} × ${quantity} ${service.unit_name || 'шт.'}${area > 0 ? ` × ${area} м²` : ''}.`;
+      return { service, total, optionIds, quantity, area };
     };
 
     const resetSuccessState = () => {
       managerForm.classList.remove('is-success');
-
-      if (formFields) {
-        formFields.setAttribute('aria-hidden', 'false');
-      }
-
+      if (formFields) formFields.setAttribute('aria-hidden', 'false');
       if (successMessage) {
         successMessage.hidden = true;
         successMessage.setAttribute('aria-hidden', 'true');
       }
-
       if (submitButton) {
         submitButton.type = 'submit';
         submitButton.innerHTML = submitButtonDefaultHtml;
       }
     };
 
-    const showSuccessState = () => {
+    const showSuccessState = (orderId) => {
       managerForm.classList.add('is-success');
-
-      if (formFields) {
-        formFields.setAttribute('aria-hidden', 'true');
-      }
-
+      if (formFields) formFields.setAttribute('aria-hidden', 'true');
       if (successMessage) {
         successMessage.hidden = false;
         successMessage.setAttribute('aria-hidden', 'false');
+        successMessage.innerHTML = `Заказ №${orderId} оформлен. Он появился в <a href="cabinet.php">личном кабинете</a>.`;
       }
-
       if (submitButton) {
         submitButton.type = 'button';
         submitButton.textContent = 'Хорошо!';
@@ -697,23 +683,18 @@
 
     const resetFormValues = () => {
       managerForm.reset();
-      normalizePhoneInput('');
-      setPhoneErrorState(false);
-      if (serviceSelect) {
-        serviceSelect.value = '';
-      }
-      updateServicePlaceholderState();
+      serviceSelect.value = '';
+      renderOptions();
+      calculate();
     };
 
     const openModal = (options = {}) => {
-      resetSuccessState();
-      if (options.serviceTitle) {
-        setSelectedService(options.serviceTitle);
-      } else if (serviceSelect) {
-        serviceSelect.value = '';
-        updateServicePlaceholderState();
+      if (!isAuthenticated) {
+        window.location.href = 'login.php';
+        return;
       }
-
+      resetSuccessState();
+      if (options.serviceTitle) setSelectedService(options.serviceTitle);
       modalOverlay.classList.add('is-open');
       document.body.classList.add('modal-open');
       modalOverlay.setAttribute('aria-hidden', 'false');
@@ -723,7 +704,6 @@
       modalOverlay.classList.remove('is-open');
       document.body.classList.remove('modal-open');
       modalOverlay.setAttribute('aria-hidden', 'true');
-
       if (managerForm.classList.contains('is-success')) {
         window.setTimeout(() => {
           resetSuccessState();
@@ -738,106 +718,61 @@
     };
 
     ensureServicePlaceholder();
-    updateServicePlaceholderState();
-    normalizePhoneInput(phoneInput.value);
-
-    phoneInput.addEventListener('focus', () => normalizePhoneInput(phoneInput.value));
-    phoneInput.addEventListener('input', (event) => {
-      normalizePhoneInput(event.target.value);
-      setPhoneErrorState(false);
-    });
-    phoneInput.addEventListener('blur', validatePhone);
+    calculate();
 
     openModalButtons.forEach((button) => {
-      button.addEventListener('click', () => {
-        openModal({ serviceTitle: safeText(button.getAttribute('data-service-title')) });
-      });
+      button.addEventListener('click', () => openModal({ serviceTitle: safeText(button.getAttribute('data-service-title')) }));
     });
-
-    if (serviceSelect) {
-      serviceSelect.addEventListener('change', updateServicePlaceholderState);
-    }
-
     closeModalButton.addEventListener('click', closeModal);
-
+    modalOverlay.addEventListener('click', (event) => { if (event.target === modalOverlay) closeModal(); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && modalOverlay.classList.contains('is-open')) closeModal(); });
     if (submitButton) {
-      submitButton.addEventListener('click', () => {
-        if (managerForm.classList.contains('is-success')) {
-          closeModal();
-        }
-      });
+      submitButton.addEventListener('click', () => { if (managerForm.classList.contains('is-success')) closeModal(); });
     }
-
-    modalOverlay.addEventListener('click', (event) => {
-      if (event.target === modalOverlay) closeModal();
-    });
-
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && modalOverlay.classList.contains('is-open')) {
-        closeModal();
-      }
-    });
+    serviceSelect.addEventListener('change', () => { renderOptions(); calculate(); });
+    [quantityInput, areaInput].forEach((input) => input.addEventListener('input', calculate));
+    optionsBox.addEventListener('change', calculate);
 
     managerForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-
-      if (!validatePhone()) {
-        phoneInput.focus();
+      const result = calculate();
+      if (!result.service) {
+        serviceSelect.focus();
         return;
       }
 
-      const formData = new FormData(managerForm);
-      const { serviceTitle, serviceIsOther } = getServicePayload();
-      const { fullPhone } = formatPhoneValue(formData.get('phone'));
-      const payload = {
-        name: safeText(formData.get('name')),
-        phone: fullPhone,
-        comment: safeText(formData.get('comment')),
-        service_title: serviceTitle,
-        service_is_other: serviceIsOther
-      };
-
-      let requestSucceeded = false;
-
       if (submitButton) {
         submitButton.disabled = true;
-        submitButton.textContent = 'Отправляем...';
+        submitButton.textContent = 'Оформляем...';
       }
 
       try {
-        const response = await fetch('api/requests.php', {
+        const response = await fetch('api/orders.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({
+            service_id: result.service.id,
+            quantity: result.quantity,
+            area: result.area,
+            option_ids: result.optionIds,
+            comment: safeText(commentInput?.value),
+          }),
         });
-
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(data.message || 'Не удалось отправить заявку');
-        }
-
-        showSuccessState();
-        requestSucceeded = true;
+        if (!response.ok) throw new Error(data.message || 'Не удалось оформить заказ');
+        showSuccessState(data.order_id || '');
         pendingReset = true;
       } catch (error) {
-        window.alert(error.message || 'Ошибка отправки заявки');
+        window.alert(error.message || 'Ошибка оформления заказа');
       } finally {
         if (submitButton) {
           submitButton.disabled = false;
-          if (!requestSucceeded) {
-            submitButton.innerHTML = submitButtonDefaultHtml;
-            submitButton.type = 'submit';
-          }
+          if (!managerForm.classList.contains('is-success')) submitButton.innerHTML = submitButtonDefaultHtml;
         }
       }
     });
 
-    return {
-      openModal,
-      closeModal,
-      setServiceOptions,
-      setSelectedService
-    };
+    return { openModal, closeModal, setServiceOptions, setSelectedService };
   };
 
   const setupServiceDetailsModal = (managerModalApi, getServiceDescription) => {
@@ -1033,178 +968,12 @@
       .then((response) => (response.ok ? response.json() : null))
       .then((payload) => {
         if (!payload || !Array.isArray(payload.services) || !payload.services.length) return;
-        managerModalApi.setServiceOptions(getUniqueServiceTitles(payload.services));
+        managerModalApi.setServiceOptions(payload.services);
       })
       .catch(() => {});
   };
 
 
-  const setupOrderCalculator = () => {
-    const root = document.querySelector('[data-calculator]');
-    if (!root) return;
-
-    let services = [];
-    try {
-      services = JSON.parse(root.getAttribute('data-services') || '[]');
-    } catch (error) {
-      services = [];
-    }
-
-    const form = root.querySelector('[data-calculator-form]');
-    const serviceSelect = root.querySelector('[data-calc-service]');
-    const quantityInput = root.querySelector('[data-calc-quantity]');
-    const areaInput = root.querySelector('[data-calc-area]');
-    const optionsBox = root.querySelector('[data-calc-options]');
-    const totalBox = root.querySelector('[data-calc-total]');
-    const breakdownBox = root.querySelector('[data-calc-breakdown]');
-    const messageBox = root.querySelector('[data-calc-message]');
-    if (!form || !serviceSelect || !quantityInput || !areaInput || !optionsBox || !totalBox || !breakdownBox) return;
-
-    const money = (value) => `${Math.max(0, Math.round(value)).toLocaleString('ru-RU')} ₽`;
-    const getSelectedService = () => services.find((service) => String(service.id) === String(serviceSelect.value)) || null;
-    const groupedOptions = (service) => {
-      const groups = new Map();
-      (service?.options || []).forEach((option) => {
-        const type = safeText(option.option_type) || 'Дополнительно';
-        if (!groups.has(type)) groups.set(type, []);
-        groups.get(type).push(option);
-      });
-      return groups;
-    };
-
-    const renderOptions = () => {
-      const service = getSelectedService();
-      optionsBox.innerHTML = '';
-      const groups = groupedOptions(service);
-      if (!service || groups.size === 0) {
-        optionsBox.innerHTML = '<p class="calculator-muted">Для этой услуги пока нет дополнительных параметров. Базовую цену можно настроить в админке.</p>';
-        return;
-      }
-
-      groups.forEach((options, type) => {
-        const fieldset = document.createElement('fieldset');
-        fieldset.className = 'calculator-option-group';
-        const legend = document.createElement('legend');
-        legend.textContent = type;
-        fieldset.appendChild(legend);
-
-        options.forEach((option, index) => {
-          const label = document.createElement('label');
-          label.className = 'calculator-check';
-          const input = document.createElement('input');
-          input.type = 'radio';
-          input.name = `calc-option-${type}`;
-          input.value = String(option.id);
-          input.dataset.priceDelta = String(option.price_delta || 0);
-          input.dataset.multiplier = String(option.multiplier || 1);
-          input.dataset.title = safeText(option.title);
-          if (index === 0) input.checked = true;
-          const span = document.createElement('span');
-          span.textContent = `${safeText(option.title)} (${Number(option.multiplier || 1).toFixed(2)}×, +${money(Number(option.price_delta || 0))})`;
-          label.append(input, span);
-          fieldset.appendChild(label);
-        });
-        optionsBox.appendChild(fieldset);
-      });
-    };
-
-    const calculate = () => {
-      const service = getSelectedService();
-      if (!service) {
-        totalBox.textContent = '0 ₽';
-        breakdownBox.textContent = 'Выберите услугу и параметры — сумма появится автоматически.';
-        return { total: 0, selectedOptions: [], service: null };
-      }
-
-      const quantity = Math.max(1, Number(quantityInput.value || 1));
-      const area = Math.max(0, Number(areaInput.value || 0));
-      const basePrice = Math.max(0, Number(service.base_price || 0));
-      const areaFactor = area > 0 ? area : 1;
-      let total = basePrice * quantity * areaFactor;
-      const selectedOptions = [];
-
-      optionsBox.querySelectorAll('input[type="radio"]:checked').forEach((input) => {
-        const multiplier = Number(input.dataset.multiplier || 1);
-        const priceDelta = Number(input.dataset.priceDelta || 0);
-        total = (total * multiplier) + priceDelta;
-        selectedOptions.push({
-          id: input.value,
-          title: input.dataset.title || input.value,
-          multiplier,
-          price_delta: priceDelta,
-        });
-      });
-
-      totalBox.textContent = money(total);
-      breakdownBox.textContent = `База: ${money(basePrice)} × ${quantity} ${service.unit_name || 'шт.'}${area > 0 ? ` × ${area} м²` : ''}. Итог является предварительным и уточняется менеджером.`;
-      return { total, selectedOptions, service, quantity, area };
-    };
-
-    const update = () => {
-      calculate();
-      if (messageBox) messageBox.textContent = '';
-    };
-
-    serviceSelect.addEventListener('change', () => {
-      renderOptions();
-      update();
-    });
-    [quantityInput, areaInput].forEach((input) => input.addEventListener('input', update));
-    optionsBox.addEventListener('change', update);
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const result = calculate();
-      if (!result.service) return;
-
-      const name = safeText(root.querySelector('[data-calc-name]')?.value);
-      const phone = safeText(root.querySelector('[data-calc-phone]')?.value);
-      const email = safeText(root.querySelector('[data-calc-email]')?.value);
-      const comment = safeText(root.querySelector('[data-calc-comment]')?.value);
-      const submit = form.querySelector('button[type="submit"]');
-      if (submit) submit.disabled = true;
-      if (messageBox) messageBox.textContent = 'Отправляем расчёт...';
-
-      try {
-        const response = await fetch('api/requests.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name,
-            phone,
-            email,
-            comment,
-            service_title: result.service.title,
-            service_is_other: false,
-            estimated_total: result.total,
-            calculator: {
-              service_id: result.service.id,
-              service_title: result.service.title,
-              quantity: result.quantity,
-              area: result.area,
-              selected_options: result.selectedOptions,
-              total: result.total,
-            },
-          }),
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(payload.message || 'Не удалось отправить расчёт');
-        form.reset();
-        renderOptions();
-        calculate();
-        if (messageBox) {
-          messageBox.innerHTML = `Расчёт отправлен. Номер заявки: ${payload.request_id || 'создан'}. <a href="cabinet.php?phone=${encodeURIComponent(phone)}">Открыть кабинет</a>`;
-        }
-      } catch (error) {
-        if (messageBox) messageBox.textContent = error.message || 'Ошибка отправки расчёта';
-      } finally {
-        if (submit) submit.disabled = false;
-      }
-    });
-
-    renderOptions();
-    calculate();
-  };
 
   document.addEventListener('DOMContentLoaded', () => {
     setupMobileNav();
@@ -1214,7 +983,6 @@
     setupCardWideClickTargets();
     setupAdminToasts();
     setupAdminSectionToggles();
-    setupOrderCalculator();
 
     const initialCatalogServices = getInitialCatalogServicesFromDataAttribute();
     let serviceDescriptionLookup = buildServiceDescriptionLookup(initialCatalogServices);
@@ -1243,7 +1011,7 @@
     if (managerModalApi) {
       const baseServicesForSelect = initialCatalogServices.length ? initialCatalogServices : collectServicesFromCatalogDom();
       const serviceTitles = getUniqueServiceTitles(baseServicesForSelect);
-      managerModalApi.setServiceOptions(serviceTitles.length ? serviceTitles : fallbackServiceTitles);
+      managerModalApi.setServiceOptions(baseServicesForSelect.length ? baseServicesForSelect : fallbackServiceTitles);
 
       loadServicesForSelectFromApi(managerModalApi);
     }
@@ -1254,7 +1022,7 @@
       serviceDescriptionLookup = buildServiceDescriptionLookup(updatedServices);
 
       if (managerModalApi) {
-        managerModalApi.setServiceOptions(getUniqueServiceTitles(updatedServices));
+        managerModalApi.setServiceOptions(updatedServices);
       }
     });
   });

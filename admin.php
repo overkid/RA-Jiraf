@@ -770,14 +770,10 @@ if ($loggedIn) {
              INNER JOIN clients c ON c.id = o.client_id
              ORDER BY
                CASE o.status
-                 WHEN 'new' THEN 0
-                 WHEN 'calculation' THEN 1
-                 WHEN 'approval' THEN 2
-                 WHEN 'prepayment' THEN 3
-                 WHEN 'production' THEN 4
-                 WHEN 'ready' THEN 5
-                 WHEN 'completed' THEN 6
-                 ELSE 7
+                 WHEN 'review' THEN 0
+                 WHEN 'in_process' THEN 1
+                 WHEN 'ready' THEN 2
+                 ELSE 3
                END ASC,
                o.updated_at DESC"
         )->fetchAll(PDO::FETCH_ASSOC);
@@ -1128,6 +1124,22 @@ if ($loggedIn) {
                         <p><span>Клиент:</span> <?= $escape((string) ($order['client_name'] ?? '')) ?></p>
                         <p><span>Телефон:</span> <?= $escape((string) ($order['client_phone'] ?? '')) ?></p>
                         <p><span>Сумма:</span> <?= $escape(number_format((float) ($order['total_amount'] ?? 0), 0, ',', ' ')) ?> ₽</p>
+                        <?php
+                          $orderPayload = json_decode((string) ($order['calculator_payload'] ?? ''), true);
+                          $orderOptions = is_array($orderPayload) ? (array) ($orderPayload['selected_options'] ?? []) : [];
+                        ?>
+                        <?php if (is_array($orderPayload)): ?>
+                          <p><span>Количество:</span> <?= $escape((string) ($orderPayload['quantity'] ?? '1')) ?></p>
+                          <?php if (!empty($orderPayload['area'])): ?><p><span>Площадь:</span> <?= $escape((string) $orderPayload['area']) ?> м²</p><?php endif; ?>
+                          <?php if ($orderOptions): ?>
+                            <p><span>Параметры:</span>
+                              <?= $escape(implode(', ', array_map(static fn ($option): string => (string) ($option['title'] ?? ''), $orderOptions))) ?>
+                            </p>
+                          <?php endif; ?>
+                        <?php endif; ?>
+                        <?php if (!empty($order['manager_comment'])): ?>
+                          <p><span>Комментарий:</span> <?= nl2br($escape((string) $order['manager_comment'])) ?></p>
+                        <?php endif; ?>
                         <?php if ($orderFiles): ?>
                           <div class="admin-files admin-files--compact">
                             <?php foreach ($orderFiles as $file): ?>

@@ -551,12 +551,12 @@ h3 { font: var(--font-h3); }
 
 .portfolio-conveyor::before {
   left: 0;
-  background: linear-gradient(to right, var(--color-white) 0%, rgba(255, 255, 255, 0) 100%);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .portfolio-conveyor::after {
   right: 0;
-  background: linear-gradient(to left, var(--color-white) 0%, rgba(255, 255, 255, 0) 100%);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .portfolio-track {
@@ -900,10 +900,7 @@ p.manager-field-error {
 
 .manager-form select {
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--color-violet) 50%), linear-gradient(135deg, var(--color-violet) 50%, transparent 50%);
-  background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
+  background-image: none;
   padding-right: var(--space-40);
   cursor: pointer;
 }
@@ -2313,7 +2310,7 @@ button.btn:active,
 
 /* CRM upgrade: calculator, client cabinet, order pipeline */
 .crm-section {
-  background: linear-gradient(180deg, rgba(255, 102, 0, 0.08), rgba(123, 0, 255, 0.06));
+  background: rgba(255, 102, 0, 0.06);
 }
 
 .crm-heading {
@@ -2350,7 +2347,7 @@ button.btn:active,
 
 .crm-card--accent {
   border-color: rgba(255, 102, 0, 0.28);
-  background: linear-gradient(135deg, var(--color-white), rgba(255, 102, 0, 0.08));
+  background: var(--color-white);
 }
 
 .calculator-form,
@@ -2432,7 +2429,7 @@ button.btn:active,
 .calculator-result {
   position: sticky;
   top: var(--space-24);
-  background: linear-gradient(135deg, var(--color-orange), var(--color-violet));
+  background: var(--color-orange);
   color: var(--color-white);
 }
 
@@ -2608,4 +2605,61 @@ button.btn:active,
   .admin-kanban {
     grid-template-columns: 1fr;
   }
+}
+
+.auth-section {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--color-white);
+}
+
+.auth-card {
+  width: min(560px, 100%);
+  margin-inline: auto;
+}
+
+.auth-logo {
+  display: inline-flex;
+  margin-bottom: var(--space-24);
+}
+
+.auth-switch,
+.cabinet-meta {
+  margin: var(--space-14) 0 0;
+  color: var(--color-gray);
+  font: var(--font-body-small);
+}
+
+.auth-switch a,
+.client-auth-chip {
+  color: var(--color-violet-dark);
+  font-weight: 800;
+}
+
+.client-auth-chip {
+  text-decoration: none;
+  padding: var(--space-10) var(--space-12);
+  border: 2px solid rgba(123, 0, 255, 0.18);
+  border-radius: 999px;
+  background: var(--color-white);
+}
+
+.order-result {
+  position: static;
+  margin-top: var(--space-10);
+}
+
+.cabinet-orders {
+  margin-top: var(--space-24);
+}
+
+.admin-status-badge--review {
+  background: rgba(123, 0, 255, 0.12);
+  color: var(--color-violet-dark);
+}
+
+.admin-status-badge--in_process {
+  background: rgba(255, 102, 0, 0.16);
+  color: var(--color-orange-dark);
 }

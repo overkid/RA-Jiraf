@@ -3,14 +3,9 @@
 declare(strict_types=1);
 
 const ORDER_STATUS_LABELS = [
-    'new' => 'Новый',
-    'calculation' => 'Расчёт',
-    'approval' => 'Согласование',
-    'prepayment' => 'Ожидает оплату',
-    'production' => 'В производстве',
-    'ready' => 'Готов',
-    'completed' => 'Завершён',
-    'cancelled' => 'Отменён',
+    'review' => 'На рассмотрении',
+    'in_process' => 'В процессе',
+    'ready' => 'Готово',
 ];
 
 const FILE_ENTITY_LABELS = [
@@ -20,7 +15,7 @@ const FILE_ENTITY_LABELS = [
 
 function crm_normalize_order_status(string $status): string
 {
-    return array_key_exists($status, ORDER_STATUS_LABELS) ? $status : 'new';
+    return array_key_exists($status, ORDER_STATUS_LABELS) ? $status : 'review';
 }
 
 function crm_ensure_schema(PDO $pdo): void
@@ -32,9 +27,11 @@ function crm_ensure_schema(PDO $pdo): void
             phone VARCHAR(40) NOT NULL,
             email VARCHAR(160) NULL,
             company VARCHAR(180) NULL,
+            password_hash VARCHAR(255) NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            UNIQUE KEY uniq_clients_phone (phone)
+            UNIQUE KEY uniq_clients_phone (phone),
+            UNIQUE KEY uniq_clients_email (email)
         )'
     );
 
@@ -60,7 +57,7 @@ function crm_ensure_schema(PDO $pdo): void
             request_id INT UNSIGNED NULL,
             service_id INT UNSIGNED NULL,
             title VARCHAR(255) NOT NULL,
-            status VARCHAR(40) NOT NULL DEFAULT "new",
+            status VARCHAR(40) NOT NULL DEFAULT "review",
             total_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
             deadline DATE NULL,
             manager_comment TEXT NULL,
@@ -123,6 +120,8 @@ function crm_ensure_schema(PDO $pdo): void
         'ALTER TABLE client_requests ADD COLUMN email VARCHAR(160) NULL AFTER phone',
         'ALTER TABLE client_requests ADD COLUMN calculator_payload JSON NULL AFTER comment',
         'ALTER TABLE client_requests ADD COLUMN estimated_total DECIMAL(12,2) NULL AFTER calculator_payload',
+        'ALTER TABLE clients ADD COLUMN password_hash VARCHAR(255) NULL AFTER company',
+        'ALTER TABLE clients ADD UNIQUE KEY uniq_clients_email (email)',
     ] as $sql) {
         try {
             $pdo->exec($sql);
@@ -142,6 +141,12 @@ function crm_ensure_schema(PDO $pdo): void
         if ($optionCount === 0) {
             $pdo->exec("INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
                 SELECT id, 'Материал', 'Стандарт', 0, 1, 10 FROM services");
+            $pdo->exec("INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
+                SELECT id, 'Материал', 'Премиум бумага / плотный материал', 450, 1.15, 20 FROM services WHERE category IN ('Типография и полиграфия', 'Сувенирная продукция')");
+            $pdo->exec("INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
+                SELECT id, 'Материал', 'Усиленная баннерная ткань / плёнка', 900, 1.25, 20 FROM services WHERE category = 'Широкоформатная печать'");
+            $pdo->exec("INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
+                SELECT id, 'Материал', 'Композит / световой короб', 2500, 1.35, 20 FROM services WHERE category = 'Наружная реклама'");
             $pdo->exec("INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
                 SELECT id, 'Срочность', 'Обычный срок', 0, 1, 10 FROM services");
             $pdo->exec("INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
@@ -225,7 +230,7 @@ function crm_create_order_from_request(PDO $pdo, int $requestId, string $changed
     try {
         $stmt = $pdo->prepare(
             'INSERT INTO orders (client_id, request_id, service_id, title, status, total_amount, manager_comment, calculator_payload)
-             VALUES (:client_id, :request_id, :service_id, :title, "calculation", :total_amount, :comment, :payload)'
+             VALUES (:client_id, :request_id, :service_id, :title, "review", :total_amount, :comment, :payload)'
         );
         $stmt->execute([
             ':client_id' => $clientId,
@@ -246,7 +251,7 @@ function crm_create_order_from_request(PDO $pdo, int $requestId, string $changed
             ':amount' => $total,
         ]);
 
-        $stmt = $pdo->prepare('INSERT INTO order_status_history (order_id, old_status, new_status, changed_by, comment) VALUES (:order_id, NULL, "calculation", :changed_by, "Заказ создан из заявки")');
+        $stmt = $pdo->prepare('INSERT INTO order_status_history (order_id, old_status, new_status, changed_by, comment) VALUES (:order_id, NULL, "review", :changed_by, "Заказ создан из заявки")');
         $stmt->execute([':order_id' => $orderId, ':changed_by' => $changedBy]);
 
         $stmt = $pdo->prepare('UPDATE client_requests SET request_status = "in_progress" WHERE id = :id');

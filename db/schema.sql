@@ -43,9 +43,11 @@ CREATE TABLE IF NOT EXISTS clients (
   phone VARCHAR(40) NOT NULL,
   email VARCHAR(160) NULL,
   company VARCHAR(180) NULL,
+  password_hash VARCHAR(255) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY uniq_clients_phone (phone)
+  UNIQUE KEY uniq_clients_phone (phone),
+  UNIQUE KEY uniq_clients_email (email)
 );
 
 CREATE TABLE IF NOT EXISTS calculation_options (
@@ -67,7 +69,7 @@ CREATE TABLE IF NOT EXISTS orders (
   request_id INT UNSIGNED NULL,
   service_id INT UNSIGNED NULL,
   title VARCHAR(255) NOT NULL,
-  status VARCHAR(40) NOT NULL DEFAULT 'new',
+  status VARCHAR(40) NOT NULL DEFAULT 'review',
   total_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
   deadline DATE NULL,
   manager_comment TEXT NULL,
@@ -245,6 +247,15 @@ END WHERE base_price = 0;
 
 INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
 SELECT id, 'Материал', 'Стандарт', 0, 1, 10 FROM services;
+
+INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
+SELECT id, 'Материал', 'Премиум бумага / плотный материал', 450, 1.15, 20 FROM services WHERE category IN ('Типография и полиграфия', 'Сувенирная продукция');
+
+INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
+SELECT id, 'Материал', 'Усиленная баннерная ткань / плёнка', 900, 1.25, 20 FROM services WHERE category = 'Широкоформатная печать';
+
+INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
+SELECT id, 'Материал', 'Композит / световой короб', 2500, 1.35, 20 FROM services WHERE category = 'Наружная реклама';
 
 INSERT INTO calculation_options (service_id, option_type, title, price_delta, multiplier, sort_order)
 SELECT id, 'Срочность', 'Обычный срок', 0, 1, 10 FROM services;

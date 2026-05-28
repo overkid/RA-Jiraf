@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 require __DIR__ . '/api/content.php';
 require __DIR__ . '/api/seo.php';
-require __DIR__ . '/api/crm.php';
+require __DIR__ . '/api/auth.php';
 
 $servicesData = [];
 $homeContent = default_home_content();
 $siteImages = default_site_images();
+$clientUser = null;
 
 try {
     require_once __DIR__ . '/api/db.php';
     $connection = db();
     crm_ensure_schema($connection);
+    $clientUser = client_auth_user($connection);
     $stmt = $connection->query('SELECT id, category, title, description, base_price, unit_name, calculator_enabled FROM services ORDER BY category, id');
     $servicesData = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $optionRows = $connection->query('SELECT id, service_id, option_type, title, price_delta, multiplier, is_active, sort_order FROM calculation_options WHERE is_active = 1 ORDER BY service_id, option_type, sort_order, id')->fetchAll(PDO::FETCH_ASSOC);
@@ -31,7 +33,11 @@ try {
     $servicesData = [];
     $homeContent = default_home_content();
     $siteImages = default_site_images();
+$clientUser = null;
 }
+
+$isClientLoggedIn = is_array($clientUser);
+$orderButtonText = $isClientLoggedIn ? 'Оформить заказ' : 'Войдите чтобы заказать';
 
 $pageTitle = 'Услуги РА «Жираф» — типография, сувениры, печать и наружная реклама';
 $pageDescription = 'Каталог услуг рекламного агентства «Жираф»: полиграфия, сувенирная продукция, широкоформатная печать и наружная реклама.';
@@ -85,7 +91,7 @@ $servicesStructuredData = [
     <link rel="stylesheet" href="styles.css" />
     <script src="animations.js" defer></script>
   </head>
-  <body class="catalog-page">
+  <body class="catalog-page" data-client-auth="<?= $isClientLoggedIn ? '1' : '0' ?>">
     <header class="catalog-header section">
       <div class="container">
         <nav class="top-nav top-nav-catalog">
@@ -120,9 +126,13 @@ $servicesStructuredData = [
               <a class="nav-vk" href="https://vk.com/giraf33" target="_blank" rel="noopener noreferrer" aria-label="ВКонтакте">
                 <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#vk"></use></svg>
               </a>
+              <?php if ($isClientLoggedIn): ?>
+                <a class="client-auth-chip" href="cabinet.php"><?= htmlspecialchars((string) ($clientUser['name'] ?? 'Кабинет'), ENT_QUOTES, 'UTF-8') ?></a>
+                <a class="btn btn-nav" href="logout.php">Выйти</a>
+              <?php endif; ?>
               <button class="btn btn-nav" type="button" data-open-manager-modal>
                 <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>
-                <?= htmlspecialchars($homeContent['nav_contact_button'], ENT_QUOTES, 'UTF-8') ?>
+                <?= htmlspecialchars($orderButtonText, ENT_QUOTES, 'UTF-8') ?>
               </button>
             </div>
           </div>
@@ -185,79 +195,12 @@ $servicesStructuredData = [
       </section>
 
 
-      <section class="section crm-section calculator-section" id="calculator">
-        <div class="container">
-          <div class="section-heading crm-heading">
-            <h2>Онлайн-калькулятор заказа</h2>
-            <p class="section-subtitle">Рассчитайте ориентировочную стоимость, отправьте заявку менеджеру и потом отслеживайте её в личном кабинете.</p>
-          </div>
-
-          <div class="calculator-shell" data-calculator data-services="<?= htmlspecialchars(json_encode($servicesData, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
-            <form class="calculator-card calculator-form" data-calculator-form>
-              <label for="calc-service">Услуга</label>
-              <select id="calc-service" name="service_id" data-calc-service required>
-                <option value="">Выберите услугу</option>
-                <?php foreach ($servicesData as $service): ?>
-                  <?php if (!empty($service['calculator_enabled'])): ?>
-                    <option value="<?= htmlspecialchars((string) $service['id'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) $service['title'], ENT_QUOTES, 'UTF-8') ?></option>
-                  <?php endif; ?>
-                <?php endforeach; ?>
-              </select>
-
-              <div class="calculator-grid">
-                <div>
-                  <label for="calc-quantity">Тираж / количество</label>
-                  <input id="calc-quantity" type="number" min="1" step="1" value="100" data-calc-quantity required />
-                </div>
-                <div>
-                  <label for="calc-area">Площадь, м²</label>
-                  <input id="calc-area" type="number" min="0" step="0.1" value="0" data-calc-area />
-                </div>
-              </div>
-
-              <div class="calculator-options" data-calc-options></div>
-
-              <div class="calculator-client-grid">
-                <div>
-                  <label for="calc-name">Ваше имя</label>
-                  <input id="calc-name" type="text" data-calc-name placeholder="Имя" required />
-                </div>
-                <div>
-                  <label for="calc-phone">Телефон</label>
-                  <input id="calc-phone" type="tel" data-calc-phone placeholder="+79000000000" required />
-                </div>
-              </div>
-              <label for="calc-email">E-mail для документов</label>
-              <input id="calc-email" type="email" data-calc-email placeholder="client@example.ru" />
-
-              <label for="calc-comment">Комментарий / техническое задание</label>
-              <textarea id="calc-comment" rows="4" data-calc-comment required placeholder="Опишите сроки, формат, материал или приложите макет после отправки заявки в кабинете"></textarea>
-
-              <div class="manager-consent">
-                <input id="calc-consent" type="checkbox" required />
-                <label for="calc-consent" class="manager-consent-label">Я согласен на <a href="privacy.php" target="_blank" rel="noopener noreferrer">обработку персональных данных</a></label>
-              </div>
-
-              <button class="btn btn-nav" type="submit">Отправить расчёт менеджеру</button>
-              <p class="calculator-message" data-calc-message role="status" aria-live="polite"></p>
-            </form>
-
-            <aside class="calculator-card calculator-result">
-              <p class="calculator-kicker">Предварительная стоимость</p>
-              <strong data-calc-total>0 ₽</strong>
-              <p data-calc-breakdown>Выберите услугу и параметры — сумма появится автоматически.</p>
-              <a class="btn btn-contact" href="cabinet.php">Открыть кабинет клиента</a>
-            </aside>
-          </div>
-        </div>
-      </section>
-
       <section class="catalog-help section">
         <div class="container">
           <h2><?= htmlspecialchars($homeContent['catalog_help_title'], ENT_QUOTES, 'UTF-8') ?></h2>
           <p class="section-subtitle"><?= nl2br(htmlspecialchars($homeContent['catalog_help_subtitle'], ENT_QUOTES, 'UTF-8')) ?></p>
           <button type="button" class="btn btn-contact" data-open-manager-modal>
-            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($homeContent['contact_button_text'], ENT_QUOTES, 'UTF-8') ?>
+            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($orderButtonText, ENT_QUOTES, 'UTF-8') ?>
           </button>
         </div>
       </section>
@@ -291,7 +234,7 @@ $servicesStructuredData = [
         </div>
         <p class="service-modal-note"><?= htmlspecialchars($homeContent['service_modal_note'], ENT_QUOTES, 'UTF-8') ?></p>
         <button class="btn manager-submit" type="button" data-service-modal-contact>
-          <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($homeContent['service_modal_contact_button'], ENT_QUOTES, 'UTF-8') ?>
+          <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($orderButtonText, ENT_QUOTES, 'UTF-8') ?>
         </button>
       </section>
     </div>
@@ -301,38 +244,36 @@ $servicesStructuredData = [
         <button class="modal-close" type="button" data-close-manager-modal aria-label="Закрыть форму">
           <span aria-hidden="true">✕</span>
         </button>
-        <h2><?= htmlspecialchars($homeContent['manager_modal_title'], ENT_QUOTES, 'UTF-8') ?></h2>
-        <p><?= htmlspecialchars($homeContent['manager_modal_text'], ENT_QUOTES, 'UTF-8') ?></p>
+        <h2>Оформление заказа</h2>
+        <p>Выберите параметры заказа — стоимость рассчитается автоматически.</p>
         <form class="manager-form">
-          <div class="manager-form-fields">
-            <label for="manager-name"><?= htmlspecialchars($homeContent['manager_name_label'], ENT_QUOTES, 'UTF-8') ?></label>
-            <input id="manager-name" type="text" name="name" placeholder="<?= htmlspecialchars($homeContent['manager_name_placeholder'], ENT_QUOTES, 'UTF-8') ?>" autocomplete="name" required />
-
-            <label for="manager-phone"><?= htmlspecialchars($homeContent['manager_phone_label'], ENT_QUOTES, 'UTF-8') ?></label>
-            <div class="manager-field" data-phone-field>
-              <span class="manager-phone-prefix" aria-hidden="true">+7</span>
-              <input
-                id="manager-phone"
-                type="tel"
-                name="phone"
-                placeholder="900 000 00 00"
-                autocomplete="tel"
-                inputmode="tel"
-                required
-                aria-describedby="manager-phone-error"
-              />
-              <svg class="manager-field-error-icon" aria-hidden="true"><use href="media/icons/sprite.svg#error"></use></svg>
-            </div>
-            <p class="manager-field-error" id="manager-phone-error">Неверный формат номера</p>
-
+          <div class="manager-form-fields order-form-fields">
             <label for="manager-service"><?= htmlspecialchars($homeContent['manager_service_label'], ENT_QUOTES, 'UTF-8') ?></label>
-            <select id="manager-service" name="service">
+            <select id="manager-service" name="service_id" data-order-service required>
               <option value="" selected disabled><?= htmlspecialchars($homeContent['manager_service_placeholder'], ENT_QUOTES, 'UTF-8') ?></option>
-              <option value="other"><?= htmlspecialchars($homeContent['manager_service_other'], ENT_QUOTES, 'UTF-8') ?></option>
             </select>
 
-            <label for="manager-comment"><?= htmlspecialchars($homeContent['manager_comment_label'], ENT_QUOTES, 'UTF-8') ?></label>
-            <textarea id="manager-comment" name="comment" rows="3" required></textarea>
+            <div class="calculator-grid">
+              <div>
+                <label for="order-quantity">Количество</label>
+                <input id="order-quantity" type="number" min="1" step="1" value="1" name="quantity" data-order-quantity required />
+              </div>
+              <div>
+                <label for="order-area">Площадь, м²</label>
+                <input id="order-area" type="number" min="0" step="0.1" value="0" name="area" data-order-area />
+              </div>
+            </div>
+
+            <div class="calculator-options" data-order-options></div>
+
+            <label for="manager-comment">Комментарий к заказу</label>
+            <textarea id="manager-comment" name="comment" rows="3" data-order-comment placeholder="Опишите формат, сроки, пожелания к макету"></textarea>
+
+            <div class="calculator-result order-result">
+              <p class="calculator-kicker">Финальная стоимость</p>
+              <strong data-order-total>0 ₽</strong>
+              <p data-order-breakdown>Выберите услугу и параметры заказа.</p>
+            </div>
           </div>
           <div class="manager-consent">
             <input id="manager-consent" type="checkbox" name="privacy_consent" required />
@@ -343,7 +284,7 @@ $servicesStructuredData = [
           </div>
           <p class="manager-form-success" data-manager-success role="status" aria-live="polite" hidden><?= htmlspecialchars($homeContent['manager_success_text'], ENT_QUOTES, 'UTF-8') ?></p>
           <button class="btn manager-submit" type="submit">
-            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($homeContent['manager_submit_button'], ENT_QUOTES, 'UTF-8') ?>
+            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($orderButtonText, ENT_QUOTES, 'UTF-8') ?>
           </button>
         </form>
       </section>
