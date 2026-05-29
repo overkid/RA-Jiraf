@@ -50,6 +50,7 @@ $canonicalUrl = seo_url('/privacy.php');
               &#1059;&#1089;&#1083;&#1091;&#1075;&#1080;
             </a>
           </li>
+          
         </ul>
         <div class="nav-actions">
           <a class="nav-vk" href="https://vk.com/giraf33" target="_blank" rel="noopener noreferrer" aria-label="&#1042;&#1050;&#1086;&#1085;&#1090;&#1072;&#1082;&#1090;&#1077;">

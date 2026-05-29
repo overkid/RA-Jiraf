@@ -23,6 +23,7 @@ function default_home_content(): array
         'catalog_help_subtitle' => 'Свяжитесь с нами для уточнения',
         'nav_home_label' => 'Главная',
         'nav_services_label' => 'Услуги',
+        'nav_reviews_label' => 'Отзывы',
         'nav_contact_button' => 'Написать нам',
         'contact_button_text' => 'Связаться с нами',
         'manager_modal_title' => 'Заявка менеджеру',

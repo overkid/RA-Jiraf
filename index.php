@@ -99,6 +99,12 @@ $organizationStructuredData = [
                   <?= htmlspecialchars($homeContent['nav_services_label'], ENT_QUOTES, 'UTF-8') ?>
                 </a>
               </li>
+              <li>
+                <a href="reviews.php">
+                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#like"></use></svg>
+                  <?= htmlspecialchars($homeContent['nav_reviews_label'], ENT_QUOTES, 'UTF-8') ?>
+                </a>
+              </li>
             </ul>
             <div class="nav-actions">
               <a class="nav-vk" href="https://vk.com/giraf33" target="_blank" rel="noopener noreferrer" aria-label="ВКонтакте">

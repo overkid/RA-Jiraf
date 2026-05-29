@@ -792,9 +792,9 @@ if ($loggedIn) {
                 </a>
               </li>
               <li>
-                <a href="admin.php">
-                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#case"></use></svg>
-                  Админка
+                <a href="reviews.php">
+                  <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#like"></use></svg>
+                  Отзывы
                 </a>
               </li>
             </ul>
@@ -904,7 +904,7 @@ if ($loggedIn) {
                       <h3><?= $escape((string) ($request['name'] ?? 'Без имени')) ?></h3>
                       <div class="admin-request-badges">
                         <?php if ($isNewRequest): ?>
-                          <span class="admin-badge-new">Новое</span>
+                          <span class="admin-badge-new">⚪</span>
                         <?php endif; ?>
                         <span class="admin-status-badge admin-status-badge--<?= $escape($requestStatus) ?>">
                           <?= $escape((string) (REQUEST_STATUS_LABELS[$requestStatus] ?? REQUEST_STATUS_LABELS['new'])) ?>
