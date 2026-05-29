@@ -50,6 +50,8 @@ const ADMIN_FORM_ACTIONS = [
     'upload_site_image',
     'restore_site_image',
     'save_site_text',
+    'add_service_material',
+    'delete_service_material',
 ];
 const ADMIN_CSRF_TOKEN_KEY = 'admin_csrf_token';
 const ADMIN_LOGIN_ATTEMPTS_KEY = 'admin_login_attempts';
@@ -68,6 +70,8 @@ $services = [];
 $requests = [];
 $requestNotesByRequestId = [];
 $newRequestLookup = [];
+$servicePricing = [];
+$orderOptionsByRequestId = [];
 
 $siteTextDefaults = default_home_content();
 $siteImageDefaults = default_site_images();
@@ -231,6 +235,33 @@ $ensureAdminSchema = static function (PDO $pdo): void {
             note_text TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_request_notes_request_id_created_at (request_id, created_at)
+        )'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS order_options (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            request_id INT UNSIGNED NOT NULL,
+            width INT UNSIGNED NOT NULL,
+            height INT UNSIGNED NOT NULL,
+            material_type VARCHAR(100) NOT NULL,
+            quantity INT UNSIGNED NOT NULL,
+            calculated_price DECIMAL(10, 2) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (request_id) REFERENCES client_requests(id) ON DELETE CASCADE,
+            INDEX idx_request_id (request_id)
+        )'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS service_pricing (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            service_title VARCHAR(255) NOT NULL,
+            material_name VARCHAR(100) NOT NULL,
+            price_coefficient DECIMAL(4, 2) NOT NULL,
+            base_price INT UNSIGNED NOT NULL DEFAULT 500,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_service_material (service_title, material_name)
         )'
     );
 };
@@ -573,6 +604,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+                if ($action === 'add_service_material') {
+                    $serviceTitle = trim((string) ($_POST['service_title'] ?? ''));
+                    $materialName = trim((string) ($_POST['material_name'] ?? ''));
+                    $priceCoefficient = (float) ($_POST['price_coefficient'] ?? 1.0);
+                    $basePrice = (int) ($_POST['base_price'] ?? 500);
+
+                    if ($serviceTitle === '' || $materialName === '') {
+                        $errors[] = 'Укажите название услуги и материала.';
+                    } elseif ($priceCoefficient <= 0 || $basePrice <= 0) {
+                        $errors[] = 'Коэффициент и базовая цена должны быть больше нуля.';
+                    } else {
+                        try {
+                            $stmt = $pdo->prepare(
+                                'INSERT INTO service_pricing (service_title, material_name, price_coefficient, base_price)
+                                 VALUES (:service_title, :material_name, :price_coefficient, :base_price)
+                                 ON DUPLICATE KEY UPDATE price_coefficient = VALUES(price_coefficient), base_price = VALUES(base_price)'
+                            );
+                            $stmt->execute([
+                                ':service_title' => $serviceTitle,
+                                ':material_name' => $materialName,
+                                ':price_coefficient' => $priceCoefficient,
+                                ':base_price' => $basePrice,
+                            ]);
+                            $messages[] = 'Материал добавлен/обновлен.';
+                        } catch (Throwable $exception) {
+                            $errors[] = 'Не удалось сохранить материал: ' . $exception->getMessage();
+                        }
+                    }
+                }
+
+                if ($action === 'delete_service_material') {
+                    $materialId = (int) ($_POST['material_id'] ?? 0);
+                    if ($materialId <= 0) {
+                        $errors[] = 'Материал не найден.';
+                    } else {
+                        try {
+                            $stmt = $pdo->prepare('DELETE FROM service_pricing WHERE id = :id');
+                            $stmt->execute([':id' => $materialId]);
+                            $messages[] = 'Материал удален.';
+                        } catch (Throwable $exception) {
+                            $errors[] = 'Не удалось удалить материал: ' . $exception->getMessage();
+                        }
+                    }
+                }
+
                 if ($action === 'save_site_text') {
                     $incoming = $_POST['site_text'] ?? [];
                     $payload = [];
@@ -604,6 +680,14 @@ if ($loggedIn) {
             $services = $pdo->query('SELECT id, category, title, description FROM services ORDER BY category, id')->fetchAll(PDO::FETCH_ASSOC);
             $siteTextValues = get_home_content($pdo);
             $siteImageValues = get_site_images($pdo);
+
+            try {
+                $servicePricing = $pdo->query(
+                    'SELECT id, service_title, material_name, price_coefficient, base_price FROM service_pricing ORDER BY service_title, id'
+                )->fetchAll(PDO::FETCH_ASSOC);
+            } catch (Throwable $e) {
+                $servicePricing = [];
+            }
         }
 
         try {
@@ -631,6 +715,18 @@ if ($loggedIn) {
             $notes = $pdo->query('SELECT id, request_id, author_login, author_role, note_text, created_at FROM request_notes ORDER BY request_id ASC, created_at ASC, id ASC')->fetchAll(PDO::FETCH_ASSOC);
         } catch (Throwable $exception) {
             $notes = [];
+        }
+
+        try {
+            $orderOptions = $pdo->query('SELECT request_id, width, height, material_type, quantity, calculated_price FROM order_options ORDER BY request_id ASC')->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($orderOptions as $option) {
+                $requestId = (int) ($option['request_id'] ?? 0);
+                if ($requestId > 0) {
+                    $orderOptionsByRequestId[$requestId] = $option;
+                }
+            }
+        } catch (Throwable $exception) {
+            $orderOptionsByRequestId = [];
         }
 
         $requestNotesByRequestId = [];
@@ -825,6 +921,21 @@ if ($loggedIn) {
                     <?php endif; ?>
                     <p><span>Дата:</span> <?= $escape($formatDateTime((string) ($request['created_at'] ?? ''))) ?></p>
 
+                    <?php if (isset($orderOptionsByRequestId[$requestId])): ?>
+                      <?php $orderOption = $orderOptionsByRequestId[$requestId]; ?>
+                      <details class="admin-pricing-details">
+                        <summary style="cursor: pointer; padding: 10px; background: rgba(255, 102, 0, 0.08); border-radius: 6px; margin: 12px 0;">
+                          💰 <strong>Расчёт стоимости: ₽ <?= number_format((float) ($orderOption['calculated_price'] ?? 0), 2, '.', ' ') ?></strong>
+                        </summary>
+                        <div style="padding: 12px; border-left: 3px solid #ff6600; margin-top: 10px;">
+                          <p><span>Материал:</span> <?= $escape((string) ($orderOption['material_type'] ?? '')) ?></p>
+                          <p><span>Размер:</span> <?= $escape((string) ($orderOption['width'] ?? '')) ?> × <?= $escape((string) ($orderOption['height'] ?? '')) ?> см</p>
+                          <p><span>Кол-во:</span> <?= $escape((string) ($orderOption['quantity'] ?? '')) ?> шт</p>
+                          <p><span>Итоговая цена:</span> <strong>₽ <?= number_format((float) ($orderOption['calculated_price'] ?? 0), 2, '.', ' ') ?></strong></p>
+                        </div>
+                      </details>
+                    <?php endif; ?>
+
                     <form class="admin-form admin-request-status-form" method="post">
                       <input type="hidden" name="action" value="update_request_status" />
                       <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
@@ -982,6 +1093,83 @@ if ($loggedIn) {
                       </div>
                     <?php endforeach; ?>
                   </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section admin-panel admin-panel-alt">
+            <div class="container">
+              <div class="admin-collapsible" data-admin-section data-section-id="pricing">
+                <div class="admin-section-title">
+                  <h2 id="pricing-admin">Управление расчётами услуг</h2>
+                  <button class="btn btn-collapse-toggle" type="button" data-admin-section-toggle aria-expanded="true">Свернуть</button>
+                </div>
+                <div class="admin-collapsible-body" data-admin-section-body>
+                  <?php if (!$services): ?>
+                    <div class="admin-card"><p class="section-subtitle">Сначала добавьте услуги в каталоге выше.</p></div>
+                  <?php else: ?>
+                    <?php foreach ($services as $service): ?>
+                      <?php
+                        $serviceTitle = (string) ($service['title'] ?? '');
+                        $servicePricingForService = array_filter($servicePricing, fn($p) => $p['service_title'] === $serviceTitle);
+                      ?>
+                      <div class="admin-card">
+                        <h3><?= $escape($serviceTitle) ?></h3>
+
+                        <?php if (empty($servicePricingForService)): ?>
+                          <p class="section-subtitle">Материалы не добавлены. Добавьте первый материал ниже.</p>
+                        <?php else: ?>
+                          <div style="margin-bottom: 20px;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                              <thead>
+                                <tr style="border-bottom: 2px solid #ddd;">
+                                  <th style="text-align: left; padding: 8px;">Материал</th>
+                                  <th style="text-align: left; padding: 8px;">Коэффициент</th>
+                                  <th style="text-align: left; padding: 8px;">Базовая цена</th>
+                                  <th style="text-align: center; padding: 8px;">Удалить</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <?php foreach ($servicePricingForService as $pricing): ?>
+                                  <tr style="border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px;"><?= $escape((string) ($pricing['material_name'] ?? '')) ?></td>
+                                    <td style="padding: 8px;"><?= $escape((string) ($pricing['price_coefficient'] ?? '')) ?></td>
+                                    <td style="padding: 8px;">₽ <?= $escape((string) ($pricing['base_price'] ?? '')) ?></td>
+                                    <td style="text-align: center; padding: 8px;">
+                                      <form method="post" style="display: inline;">
+                                        <input type="hidden" name="action" value="delete_service_material" />
+                                        <input type="hidden" name="material_id" value="<?= $escape((string) ($pricing['id'] ?? '')) ?>" />
+                                        <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
+                                        <button class="btn btn-danger" type="submit" style="padding: 4px 8px; font-size: 12px;" onclick="return confirm('Удалить материал?')">Удалить</button>
+                                      </form>
+                                    </td>
+                                  </tr>
+                                <?php endforeach; ?>
+                              </tbody>
+                            </table>
+                          </div>
+                        <?php endif; ?>
+
+                        <form class="admin-form" method="post">
+                          <input type="hidden" name="action" value="add_service_material" />
+                          <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
+                          <input type="hidden" name="service_title" value="<?= $escape($serviceTitle) ?>" />
+
+                          <label for="material-name-<?= $escape($serviceTitle) ?>">Материал</label>
+                          <input id="material-name-<?= $escape($serviceTitle) ?>" type="text" name="material_name" placeholder="Например: бумага, пластик" required />
+
+                          <label for="material-coeff-<?= $escape($serviceTitle) ?>">Коэффициент цены</label>
+                          <input id="material-coeff-<?= $escape($serviceTitle) ?>" type="number" name="price_coefficient" step="0.01" min="0.01" value="1.00" required />
+
+                          <label for="material-price-<?= $escape($serviceTitle) ?>">Базовая цена (₽)</label>
+                          <input id="material-price-<?= $escape($serviceTitle) ?>" type="number" name="base_price" min="1" value="500" required />
+
+                          <button class="btn btn-nav" type="submit"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Добавить материал</button>
+                        </form>
+                      </div>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
                 </div>
               </div>
             </div>

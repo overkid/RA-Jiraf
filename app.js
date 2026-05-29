@@ -506,6 +506,102 @@
     });
   };
 
+  class ManagerCalculator {
+    constructor(containerElement) {
+      this.container = containerElement;
+      this.widthInput = containerElement.querySelector('#calculator-width');
+      this.heightInput = containerElement.querySelector('#calculator-height');
+      this.materialSelect = containerElement.querySelector('#calculator-material');
+      this.quantityInput = containerElement.querySelector('#calculator-quantity');
+      this.priceDisplay = containerElement.querySelector('.calculator-price');
+      this.materials = [];
+      this.basePrice = 500;
+      this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+      const inputs = [this.widthInput, this.heightInput, this.materialSelect, this.quantityInput];
+      inputs.forEach(input => {
+        input?.addEventListener('change', () => this.updatePrice());
+        input?.addEventListener('input', () => this.updatePrice());
+      });
+    }
+
+    setMaterials(materials, basePrice = 500) {
+      this.materials = materials || [];
+      this.basePrice = basePrice;
+
+      if (this.materialSelect) {
+        this.materialSelect.innerHTML = '';
+        (materials || []).forEach(material => {
+          const option = document.createElement('option');
+          option.value = material.name;
+          option.textContent = material.name;
+          this.materialSelect.appendChild(option);
+        });
+        if (materials && materials.length > 0) {
+          this.materialSelect.value = materials[0].name;
+        }
+      }
+      this.updatePrice();
+    }
+
+    updatePrice() {
+      const width = parseFloat(this.widthInput?.value || '10');
+      const height = parseFloat(this.heightInput?.value || '10');
+      const materialName = this.materialSelect?.value;
+      const quantity = parseFloat(this.quantityInput?.value || '1');
+
+      const validWidth = Math.max(10, Math.min(300, width || 10));
+      const validHeight = Math.max(10, Math.min(300, height || 10));
+      const validQuantity = Math.max(1, Math.min(1000, quantity || 1));
+
+      const material = this.materials.find(m => m.name === materialName);
+      if (!material) {
+        this.priceDisplay.textContent = '₽ 0.00';
+        return 0;
+      }
+
+      const area = (validWidth * validHeight) / 1000;
+      const price = (this.basePrice * material.coefficient) * area * validQuantity;
+      const roundedPrice = Math.round(price * 100) / 100;
+
+      this.priceDisplay.textContent = `₽ ${roundedPrice.toFixed(2)}`;
+      return roundedPrice;
+    }
+
+    getTotalPrice() {
+      return parseFloat(this.priceDisplay.textContent.replace(/[^\d.]/g, '')) || 0;
+    }
+
+    serialize() {
+      return {
+        width: parseInt(this.widthInput?.value || '10'),
+        height: parseInt(this.heightInput?.value || '10'),
+        material_type: this.materialSelect?.value || '',
+        quantity: parseInt(this.quantityInput?.value || '1'),
+        calculated_price: this.getTotalPrice()
+      };
+    }
+
+    show() {
+      this.container.removeAttribute('hidden');
+      this.container.classList.add('is-active');
+    }
+
+    hide() {
+      this.container.setAttribute('hidden', '');
+      this.container.classList.remove('is-active');
+    }
+
+    reset() {
+      this.widthInput.value = '10';
+      this.heightInput.value = '10';
+      this.quantityInput.value = '1';
+      this.updatePrice();
+    }
+  }
+
   const setupManagerModal = () => {
     const modalOverlay = document.querySelector('[data-manager-modal]');
     const openModalButtons = document.querySelectorAll('[data-open-manager-modal]');
@@ -521,6 +617,9 @@
     let pendingReset = false;
 
     if (!modalOverlay || !closeModalButton || !managerForm || !phoneInput || !phoneField) return null;
+
+    const calculatorContainer = managerForm.querySelector('[data-calculator]');
+    const calculator = calculatorContainer ? new ManagerCalculator(calculatorContainer) : null;
 
     const ensureServicePlaceholder = () => {
       if (!serviceSelect) return;
@@ -703,6 +802,10 @@
         serviceSelect.value = '';
       }
       updateServicePlaceholderState();
+      if (calculator) {
+        calculator.reset();
+        calculator.hide();
+      }
     };
 
     const openModal = (options = {}) => {
@@ -755,7 +858,31 @@
     });
 
     if (serviceSelect) {
-      serviceSelect.addEventListener('change', updateServicePlaceholderState);
+      serviceSelect.addEventListener('change', async () => {
+        updateServicePlaceholderState();
+
+        if (calculator) {
+          const selectedService = safeText(serviceSelect.value);
+
+          if (!selectedService || selectedService === serviceOtherValue) {
+            calculator.hide();
+          } else {
+            try {
+              const response = await fetch('api/services.php?action=get_pricing&service=' + encodeURIComponent(selectedService));
+              const data = await response.json();
+
+              if (data.materials && data.materials.length > 0) {
+                calculator.setMaterials(data.materials, data.base_price || 500);
+                calculator.show();
+              } else {
+                calculator.hide();
+              }
+            } catch (error) {
+              calculator.hide();
+            }
+          }
+        }
+      });
     }
 
     closeModalButton.addEventListener('click', closeModal);
@@ -796,6 +923,10 @@
         service_title: serviceTitle,
         service_is_other: serviceIsOther
       };
+
+      if (calculator && !calculatorContainer.hidden) {
+        payload.order_options = calculator.serialize();
+      }
 
       let requestSucceeded = false;
 

@@ -97,6 +97,36 @@ try {
         ]);
     }
 
+    $requestId = (int) db()->lastInsertId();
+
+    if (!empty($input['order_options']) && is_array($input['order_options'])) {
+        $orderOptions = $input['order_options'];
+        $width = (int) filter_var($orderOptions['width'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 10, 'max_range' => 300]]);
+        $height = (int) filter_var($orderOptions['height'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 10, 'max_range' => 300]]);
+        $quantity = (int) filter_var($orderOptions['quantity'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 1000]]);
+        $materialType = trim((string) ($orderOptions['material_type'] ?? ''));
+        $calculatedPrice = (float) filter_var($orderOptions['calculated_price'] ?? 0, FILTER_VALIDATE_FLOAT);
+
+        if ($width >= 10 && $height >= 10 && $quantity >= 1 && $materialType !== '' && $calculatedPrice > 0) {
+            try {
+                $optionsStmt = db()->prepare(
+                    'INSERT INTO order_options (request_id, width, height, material_type, quantity, calculated_price)
+                     VALUES (:request_id, :width, :height, :material_type, :quantity, :calculated_price)'
+                );
+                $optionsStmt->execute([
+                    ':request_id' => $requestId,
+                    ':width' => $width,
+                    ':height' => $height,
+                    ':material_type' => $materialType,
+                    ':quantity' => $quantity,
+                    ':calculated_price' => $calculatedPrice,
+                ]);
+            } catch (Throwable $optionsException) {
+                // If order_options table doesn't exist, silently continue
+            }
+        }
+    }
+
     echo json_encode(['message' => 'ok'], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
