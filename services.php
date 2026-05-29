@@ -137,37 +137,37 @@ $servicesStructuredData = [
 
           <div class="catalog-group" data-category="print">
             <div class="catalog-grid">
-              <article class="service-tile"><h3>Изготовление визиток</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Печать буклетов и листовок</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Печать фирменных бланков</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Изготовление календарей</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
+              <article class="service-tile"><h3>Изготовление визиток</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Изготовление визиток">Заказать</button></article>
+              <article class="service-tile"><h3>Печать буклетов и листовок</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Печать буклетов и листовок">Заказать</button></article>
+              <article class="service-tile"><h3>Печать фирменных бланков</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Печать фирменных бланков">Заказать</button></article>
+              <article class="service-tile"><h3>Изготовление календарей</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Изготовление календарей">Заказать</button></article>
             </div>
           </div>
 
           <div class="catalog-group" data-category="souvenir" hidden>
             <div class="catalog-grid">
-              <article class="service-tile"><h3>Нанесение логотипа на кружки</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Печать на футболках</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Сувенирные ручки с логотипом</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Подарочные наборы для компаний</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
+              <article class="service-tile"><h3>Нанесение логотипа на кружки</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Нанесение логотипа на кружки">Заказать</button></article>
+              <article class="service-tile"><h3>Печать на футболках</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Печать на футболках">Заказать</button></article>
+              <article class="service-tile"><h3>Сувенирные ручки с логотипом</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Сувенирные ручки с логотипом">Заказать</button></article>
+              <article class="service-tile"><h3>Подарочные наборы для компаний</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Подарочные наборы для компаний">Заказать</button></article>
             </div>
           </div>
 
           <div class="catalog-group" data-category="wide" hidden>
             <div class="catalog-grid">
-              <article class="service-tile"><h3>Изготовление рекламных баннеров</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Печать наклеек для заднего и лобового стекла</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Печать на холсте</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Печать виниловых наклеек и стикеров</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
+              <article class="service-tile"><h3>Изготовление рекламных баннеров</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Изготовление рекламных баннеров">Заказать</button></article>
+              <article class="service-tile"><h3>Печать наклеек для заднего и лобового стекла</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Печать наклеек для заднего и лобового стекла">Заказать</button></article>
+              <article class="service-tile"><h3>Печать на холсте</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Печать на холсте">Заказать</button></article>
+              <article class="service-tile"><h3>Печать виниловых наклеек и стикеров</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Печать виниловых наклеек и стикеров">Заказать</button></article>
             </div>
           </div>
 
           <div class="catalog-group" data-category="outdoor" hidden>
             <div class="catalog-grid">
-              <article class="service-tile"><h3>Изготовление световых коробов</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Монтаж вывесок под ключ</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Оформление входных групп</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
-              <article class="service-tile"><h3>Брендирование фасадов и витрин</h3><button class="btn btn-disabled" disabled>Подробнее</button></article>
+              <article class="service-tile"><h3>Изготовление световых коробов</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Изготовление световых коробов">Заказать</button></article>
+              <article class="service-tile"><h3>Монтаж вывесок под ключ</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Монтаж вывесок под ключ">Заказать</button></article>
+              <article class="service-tile"><h3>Оформление входных групп</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Оформление входных групп">Заказать</button></article>
+              <article class="service-tile"><h3>Брендирование фасадов и витрин</h3><button class="btn" type="button" data-open-manager-modal data-service-title="Брендирование фасадов и витрин">Заказать</button></article>
             </div>
           </div>
         </div>
@@ -251,6 +251,32 @@ $servicesStructuredData = [
               <option value="" selected disabled><?= htmlspecialchars($homeContent['manager_service_placeholder'], ENT_QUOTES, 'UTF-8') ?></option>
               <option value="other"><?= htmlspecialchars($homeContent['manager_service_other'], ENT_QUOTES, 'UTF-8') ?></option>
             </select>
+
+            <div class="manager-calculator" data-calculator hidden>
+              <label>Расчёт стоимости</label>
+              <div class="calculator-inputs">
+                <div class="manager-field">
+                  <label for="calculator-width" class="label-small">Ширина (см)</label>
+                  <input id="calculator-width" type="number" name="width" min="10" max="300" value="10" required />
+                </div>
+                <div class="manager-field">
+                  <label for="calculator-height" class="label-small">Высота (см)</label>
+                  <input id="calculator-height" type="number" name="height" min="10" max="300" value="10" required />
+                </div>
+                <div class="manager-field">
+                  <label for="calculator-material" class="label-small">Материал</label>
+                  <select id="calculator-material" name="material" required></select>
+                </div>
+                <div class="manager-field">
+                  <label for="calculator-quantity" class="label-small">Кол-во</label>
+                  <input id="calculator-quantity" type="number" name="quantity" min="1" max="1000" value="1" required />
+                </div>
+              </div>
+              <div class="calculator-result">
+                <span class="calculator-label">Примерная стоимость:</span>
+                <span class="calculator-price">₽ 0.00</span>
+              </div>
+            </div>
 
             <label for="manager-comment"><?= htmlspecialchars($homeContent['manager_comment_label'], ENT_QUOTES, 'UTF-8') ?></label>
             <textarea id="manager-comment" name="comment" rows="3" required></textarea>
