@@ -810,16 +810,45 @@
 
     const openModal = (options = {}) => {
       resetSuccessState();
+      if (calculator) {
+        calculator.reset();
+        calculator.hide();
+      }
+
       if (options.serviceTitle) {
         setSelectedService(options.serviceTitle);
       } else if (serviceSelect) {
         serviceSelect.value = '';
         updateServicePlaceholderState();
+        if (calculator) {
+          calculator.hide();
+        }
       }
 
       modalOverlay.classList.add('is-open');
       document.body.classList.add('modal-open');
       modalOverlay.setAttribute('aria-hidden', 'false');
+
+      // Проверить калькулятор после открытия модала
+      if (options.serviceTitle && calculator && serviceSelect) {
+        setTimeout(() => {
+          const selectedService = safeText(serviceSelect.value);
+          if (selectedService && selectedService !== serviceOtherValue) {
+            (async () => {
+              try {
+                const response = await fetch('api/services.php?action=get_pricing&service=' + encodeURIComponent(selectedService));
+                const data = await response.json();
+                if (data.materials && data.materials.length > 0) {
+                  calculator.setMaterials(data.materials, data.base_price || 500);
+                  calculator.show();
+                }
+              } catch (error) {
+                // Ignore errors
+              }
+            })();
+          }
+        }, 0);
+      }
     };
 
     const closeModal = () => {

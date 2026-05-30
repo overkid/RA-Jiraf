@@ -711,6 +711,9 @@ h3 { font: var(--font-h3); }
   transform: translateY(28px) scale(0.96);
   opacity: 0;
   transition: transform 0.35s ease, opacity 0.35s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .modal-overlay.is-open {
@@ -1183,8 +1186,18 @@ p.manager-form-success {
     width: auto;
   }
 
+  .modal-overlay {
+    place-items: flex-start;
+    padding-top: var(--space-24);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .manager-modal {
     padding: var(--space-24) var(--space-16) var(--space-18);
+    max-height: 85vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .modal-close {
