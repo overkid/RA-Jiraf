@@ -683,6 +683,20 @@ h3 { font: var(--font-h3); }
   text-align: right;
 }
 
+.footer-map {
+    margin-top: var(--space-24);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 2px solid white;
+    grid-column: 1 / -1;
+}
+
+.footer-map iframe {
+    display: block;
+    width: 100%;
+    border: 0;
+}
+
 .modal-open {
   overflow: hidden;
 }

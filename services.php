@@ -197,6 +197,14 @@ $servicesStructuredData = [
           <p><?= htmlspecialchars($homeContent['footer_address_line_1'], ENT_QUOTES, 'UTF-8') ?></p>
           <p><?= htmlspecialchars($homeContent['footer_address_line_2'], ENT_QUOTES, 'UTF-8') ?></p>
         </div>
+        <div class="footer-map">
+          <iframe
+              src="https://yandex.ru/map-widget/v1/?um=constructor%3Ac62adae518cfdbeb0f97f16a1ceb395dff6e72ab40b8c5af261106d45bf89b65&amp;source=constructor"
+              width="100%"
+              height="400"
+              frameborder="0">
+          </iframe>
+        </div>
       </div>
     </footer>
 
