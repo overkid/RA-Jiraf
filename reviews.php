@@ -131,7 +131,7 @@ $reviewsStructuredData = [
                 <article class="review-card">
                   <div class="review-rating">
                     <?php for ($i = 0; $i < 5; $i++): ?>
-                      <svg class="review-star <?= $i < (int)($review['rating'] ?? 0) ? 'is-filled' : '' ?>" aria-hidden="true"><use href="media/icons/star.svg"></use></svg>
+                      <span class="review-star <?= $i < (int)($review['rating'] ?? 0) ? 'is-filled' : '' ?>">★</span>
                     <?php endfor; ?>
                   </div>
                   <p class="review-text"><?= htmlspecialchars($review['review_text'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
