@@ -100,9 +100,9 @@ $reviewsStructuredData = [
               <a class="nav-vk" href="https://vk.com/giraf33" target="_blank" rel="noopener noreferrer" aria-label="ВКонтакте">
                 <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#vk"></use></svg>
               </a>
-              <button class="btn btn-nav" type="button" data-open-reviews-modal>
+              <button class="btn btn-nav" type="button" data-open-manager-modal>
                 <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>
-                <?= htmlspecialchars($homeContent['reviews_cta_button'], ENT_QUOTES, 'UTF-8') ?>
+                <?= htmlspecialchars($homeContent['nav_contact_button'], ENT_QUOTES, 'UTF-8') ?>
               </button>
             </div>
           </div>
@@ -172,6 +172,59 @@ $reviewsStructuredData = [
         </div>
       </div>
     </footer>
+
+    <div class="modal-overlay" data-manager-modal aria-hidden="true">
+      <section class="manager-modal" role="dialog" aria-modal="true" aria-labelledby="manager-modal-title">
+        <button class="modal-close" type="button" data-close-manager-modal aria-label="Закрыть форму">
+          <span aria-hidden="true">✕</span>
+        </button>
+        <h2><?= htmlspecialchars($homeContent['manager_modal_title'], ENT_QUOTES, 'UTF-8') ?></h2>
+        <p><?= htmlspecialchars($homeContent['manager_modal_text'], ENT_QUOTES, 'UTF-8') ?></p>
+        <form class="manager-form">
+          <div class="manager-form-fields">
+            <label for="manager-name"><?= htmlspecialchars($homeContent['manager_name_label'], ENT_QUOTES, 'UTF-8') ?></label>
+            <input id="manager-name" type="text" name="name" placeholder="<?= htmlspecialchars($homeContent['manager_name_placeholder'], ENT_QUOTES, 'UTF-8') ?>" autocomplete="name" required />
+
+            <label for="manager-phone"><?= htmlspecialchars($homeContent['manager_phone_label'], ENT_QUOTES, 'UTF-8') ?></label>
+            <div class="manager-field" data-phone-field>
+              <span class="manager-phone-prefix" aria-hidden="true">+7</span>
+              <input
+                id="manager-phone"
+                type="tel"
+                name="phone"
+                placeholder="900 000 00 00"
+                autocomplete="tel"
+                inputmode="tel"
+                required
+                aria-describedby="manager-phone-error"
+              />
+              <svg class="manager-field-error-icon" aria-hidden="true"><use href="media/icons/sprite.svg#error"></use></svg>
+            </div>
+            <p class="manager-field-error" id="manager-phone-error">Неверный формат номера</p>
+
+            <label for="manager-service"><?= htmlspecialchars($homeContent['manager_service_label'], ENT_QUOTES, 'UTF-8') ?></label>
+            <select id="manager-service" name="service">
+              <option value="" selected disabled><?= htmlspecialchars($homeContent['manager_service_placeholder'], ENT_QUOTES, 'UTF-8') ?></option>
+              <option value="other"><?= htmlspecialchars($homeContent['manager_service_other'], ENT_QUOTES, 'UTF-8') ?></option>
+            </select>
+
+            <label for="manager-comment"><?= htmlspecialchars($homeContent['manager_comment_label'], ENT_QUOTES, 'UTF-8') ?></label>
+            <textarea id="manager-comment" name="comment" rows="3" required></textarea>
+          </div>
+          <div class="manager-consent">
+            <input id="manager-consent" type="checkbox" name="privacy_consent" required />
+            <label for="manager-consent" class="manager-consent-label">
+              Я согласен на
+              <a href="privacy.php" target="_blank" rel="noopener noreferrer">обработку персональных данных</a>
+            </label>
+          </div>
+          <p class="manager-form-success" data-manager-success role="status" aria-live="polite" hidden><?= htmlspecialchars($homeContent['manager_success_text'], ENT_QUOTES, 'UTF-8') ?></p>
+          <button class="btn manager-submit" type="submit">
+            <svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg><?= htmlspecialchars($homeContent['manager_submit_button'], ENT_QUOTES, 'UTF-8') ?>
+          </button>
+        </form>
+      </section>
+    </div>
 
     <div class="modal-overlay" data-reviews-modal aria-hidden="true">
       <section class="manager-modal" role="dialog" aria-modal="true" aria-labelledby="reviews-modal-title">

@@ -1213,7 +1213,7 @@
     const charCounter = form.querySelector('[data-char-count]');
     const submitButton = form.querySelector('[type="submit"]');
     const successMessage = modalOverlay.querySelector('[data-reviews-success]');
-    const starsContainer = form.querySelector('[data-review-stars]');
+    const starsContainer = form.querySelector('.review-stars');
     const formFields = form.querySelector('.manager-form-fields');
 
     let selectedRating = 0;
@@ -1266,7 +1266,7 @@
       if (successMessage) successMessage.hidden = true;
       if (submitButton) {
         submitButton.disabled = false;
-        submitButton.textContent = submitButton.innerHTML.replace(/Хорошо!/, 'Отправить отзыв');
+        submitButton.type = 'submit';
         submitButton.innerHTML = '<svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Отправить отзыв';
       }
     };
@@ -1348,7 +1348,22 @@
       closeButton.addEventListener('click', closeModal);
     }
 
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        closeModal();
+      }
+    });
+
     form.addEventListener('submit', handleSubmit);
+
+    if (submitButton) {
+      submitButton.addEventListener('click', (e) => {
+        if (form.classList.contains('is-success')) {
+          e.preventDefault();
+          closeModal();
+        }
+      });
+    }
 
     if (textInput) {
       textInput.addEventListener('input', updateCharCounter);
