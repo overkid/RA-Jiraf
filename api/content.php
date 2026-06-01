@@ -47,6 +47,11 @@ function default_home_content(): array
         'footer_address_title' => 'Офис находится по адресу:',
         'footer_address_line_1' => 'г. Владимир, ул. Ставровская, д. 4',
         'footer_address_line_2' => 'ост. 1001 мелочь, парковка рядом с домом',
+        'reviews_title' => 'Отзывы наших клиентов',
+        'reviews_subtitle' => 'Благодарность и отзывы реальных клиентов рекламного агентства «Жираф»',
+        'reviews_cta_button' => 'Написать отзыв',
+        'reviews_submit_success' => 'Спасибо! Ваш отзыв будет опубликован после проверки модератором.',
+        'reviews_empty_message' => 'Отзывы еще не добавлены. Будьте первыми!',
     ];
 }
 

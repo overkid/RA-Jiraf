@@ -52,6 +52,8 @@ const ADMIN_FORM_ACTIONS = [
     'save_site_text',
     'add_service_material',
     'delete_service_material',
+    'update_review_status',
+    'delete_review',
 ];
 const ADMIN_CSRF_TOKEN_KEY = 'admin_csrf_token';
 const ADMIN_LOGIN_ATTEMPTS_KEY = 'admin_login_attempts';
@@ -262,6 +264,22 @@ $ensureAdminSchema = static function (PDO $pdo): void {
             base_price INT UNSIGNED NOT NULL DEFAULT 500,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY unique_service_material (service_title, material_name)
+        )'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS client_reviews (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            rating INT UNSIGNED NOT NULL CHECK (rating >= 1 AND rating <= 5),
+            review_text TEXT NOT NULL,
+            review_status VARCHAR(20) NOT NULL DEFAULT "pending",
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            approved_at TIMESTAMP NULL,
+            approved_by VARCHAR(64) NULL,
+            INDEX idx_status_created (review_status, created_at),
+            INDEX idx_created (created_at)
         )'
     );
 };
@@ -649,6 +667,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+                if ($action === 'update_review_status') {
+                    $reviewId = (int) ($_POST['review_id'] ?? 0);
+                    $newStatus = trim((string) ($_POST['review_status'] ?? ''));
+
+                    if ($reviewId <= 0 || !in_array($newStatus, ['pending', 'approved', 'rejected'], true)) {
+                        $errors[] = 'Неверные параметры.';
+                    } else {
+                        try {
+                            if ($newStatus === 'approved') {
+                                $stmt = $pdo->prepare('UPDATE client_reviews SET review_status = :status, approved_at = NOW(), approved_by = :approvedBy WHERE id = :id');
+                                $stmt->execute([':status' => $newStatus, ':approvedBy' => $currentLogin, ':id' => $reviewId]);
+                            } else {
+                                $stmt = $pdo->prepare('UPDATE client_reviews SET review_status = :status WHERE id = :id');
+                                $stmt->execute([':status' => $newStatus, ':id' => $reviewId]);
+                            }
+                            $statusText = $newStatus === 'approved' ? 'одобрен' : ($newStatus === 'rejected' ? 'отклонен' : 'ожидает модерации');
+                            $messages[] = "Отзыв $statusText.";
+                        } catch (Throwable $exception) {
+                            $errors[] = 'Не удалось обновить отзыв: ' . $exception->getMessage();
+                        }
+                    }
+                }
+
+                if ($action === 'delete_review') {
+                    $reviewId = (int) ($_POST['review_id'] ?? 0);
+                    if ($reviewId <= 0) {
+                        $errors[] = 'Отзыв не найден.';
+                    } else {
+                        try {
+                            $stmt = $pdo->prepare('DELETE FROM client_reviews WHERE id = :id');
+                            $stmt->execute([':id' => $reviewId]);
+                            $messages[] = 'Отзыв удален.';
+                        } catch (Throwable $exception) {
+                            $errors[] = 'Не удалось удалить отзыв: ' . $exception->getMessage();
+                        }
+                    }
+                }
+
                 if ($action === 'save_site_text') {
                     $incoming = $_POST['site_text'] ?? [];
                     $payload = [];
@@ -727,6 +783,13 @@ if ($loggedIn) {
             }
         } catch (Throwable $exception) {
             $orderOptionsByRequestId = [];
+        }
+
+        $reviews = [];
+        try {
+            $reviews = $pdo->query('SELECT id, name, email, rating, review_text, review_status, created_at, approved_at, approved_by FROM client_reviews ORDER BY review_status DESC, created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Throwable $exception) {
+            $reviews = [];
         }
 
         $requestNotesByRequestId = [];
@@ -1233,6 +1296,90 @@ if ($loggedIn) {
 
                       <button class="btn btn-nav" type="submit"><svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Сохранить тексты</button>
                     </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section admin-panel admin-panel-alt">
+            <div class="container">
+              <div class="admin-collapsible" data-admin-section data-section-id="reviews">
+                <div class="admin-section-title">
+                  <h2>Управление отзывами</h2>
+                  <button class="btn btn-collapse-toggle" type="button" data-admin-section-toggle aria-expanded="true">Свернуть</button>
+                </div>
+                <div class="admin-collapsible-body" data-admin-section-body>
+                  <!-- Pending Reviews -->
+                  <div class="admin-card">
+                    <h3>Ожидают модерации</h3>
+                    <?php
+                      $pendingReviews = array_filter($reviews, static fn ($r) => ($r['review_status'] ?? '') === 'pending');
+                      if (empty($pendingReviews)): ?>
+                        <p class="admin-note">Нет новых отзывов для модерации</p>
+                      <?php else: ?>
+                        <div class="admin-list">
+                          <?php foreach ($pendingReviews as $review): ?>
+                            <div class="admin-item">
+                              <div class="admin-item-header">
+                                <h4><?= $escape((string) ($review['name'] ?? '')) ?></h4>
+                                <span class="admin-status-badge admin-status-badge--pending">Ожидает</span>
+                              </div>
+                              <p class="admin-note">★ <?= (int) ($review['rating'] ?? 0) ?>/5</p>
+                              <p class="admin-note"><?= $escape(substr((string) ($review['review_text'] ?? ''), 0, 100)) ?><?= strlen((string) ($review['review_text'] ?? '')) > 100 ? '...' : '' ?></p>
+                              <p class="admin-note"><?= date('d.m.Y H:i', strtotime((string) ($review['created_at'] ?? 'now'))) ?></p>
+                              <div class="admin-actions">
+                                <form method="post" style="display: inline;">
+                                  <input type="hidden" name="action" value="update_review_status" />
+                                  <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
+                                  <input type="hidden" name="review_id" value="<?= (int) ($review['id'] ?? 0) ?>" />
+                                  <input type="hidden" name="review_status" value="approved" />
+                                  <button class="btn btn-small" type="submit" style="background-color: var(--color-orange); color: white;">✓ Одобрить</button>
+                                </form>
+                                <form method="post" style="display: inline;">
+                                  <input type="hidden" name="action" value="update_review_status" />
+                                  <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
+                                  <input type="hidden" name="review_id" value="<?= (int) ($review['id'] ?? 0) ?>" />
+                                  <input type="hidden" name="review_status" value="rejected" />
+                                  <button class="btn btn-small" type="submit">✕ Отклонить</button>
+                                </form>
+                              </div>
+                            </div>
+                          <?php endforeach; ?>
+                        </div>
+                      <?php endif; ?>
+                  </div>
+
+                  <!-- Approved Reviews -->
+                  <div class="admin-card">
+                    <h3>Опубликованные отзывы</h3>
+                    <?php
+                      $approvedReviews = array_filter($reviews, static fn ($r) => ($r['review_status'] ?? '') === 'approved');
+                      if (empty($approvedReviews)): ?>
+                        <p class="admin-note">Нет опубликованных отзывов</p>
+                      <?php else: ?>
+                        <div class="admin-list">
+                          <?php foreach ($approvedReviews as $review): ?>
+                            <div class="admin-item">
+                              <div class="admin-item-header">
+                                <h4><?= $escape((string) ($review['name'] ?? '')) ?></h4>
+                                <span class="admin-status-badge admin-status-badge--new">Опубликовано</span>
+                              </div>
+                              <p class="admin-note">★ <?= (int) ($review['rating'] ?? 0) ?>/5</p>
+                              <p class="admin-note"><?= $escape(substr((string) ($review['review_text'] ?? ''), 0, 100)) ?><?= strlen((string) ($review['review_text'] ?? '')) > 100 ? '...' : '' ?></p>
+                              <p class="admin-note"><?= date('d.m.Y H:i', strtotime((string) ($review['created_at'] ?? 'now'))) ?></p>
+                              <div class="admin-actions">
+                                <form method="post" style="display: inline;">
+                                  <input type="hidden" name="action" value="delete_review" />
+                                  <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>" />
+                                  <input type="hidden" name="review_id" value="<?= (int) ($review['id'] ?? 0) ?>" />
+                                  <button class="btn btn-small" type="submit" onclick="return confirm('Вы уверены?')">✕ Удалить</button>
+                                </form>
+                              </div>
+                            </div>
+                          <?php endforeach; ?>
+                        </div>
+                      <?php endif; ?>
                   </div>
                 </div>
               </div>

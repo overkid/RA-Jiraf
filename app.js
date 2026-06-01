@@ -1198,6 +1198,181 @@
       .catch(() => {});
   };
 
+  const setupReviewsModal = () => {
+    const modalOverlay = document.querySelector('[data-reviews-modal]');
+    const form = document.querySelector('[data-reviews-form]');
+    const openButtons = document.querySelectorAll('[data-open-reviews-modal]');
+    const closeButton = document.querySelector('[data-close-reviews-modal]');
+
+    if (!modalOverlay || !form) return;
+
+    const nameInput = form.querySelector('[name="name"]');
+    const emailInput = form.querySelector('[name="email"]');
+    const ratingInputs = form.querySelectorAll('[name="rating"]');
+    const textInput = form.querySelector('[name="review_text"]');
+    const charCounter = form.querySelector('[data-char-count]');
+    const submitButton = form.querySelector('[type="submit"]');
+    const successMessage = modalOverlay.querySelector('[data-reviews-success]');
+    const starsContainer = form.querySelector('[data-review-stars]');
+    const formFields = form.querySelector('.manager-form-fields');
+
+    let selectedRating = 0;
+
+    const updateCharCounter = () => {
+      const max = 1000;
+      const current = textInput.value.length;
+      if (charCounter) {
+        charCounter.textContent = current;
+      }
+      if (current >= max) {
+        textInput.value = textInput.value.substring(0, max);
+      }
+    };
+
+    const selectRating = (rating) => {
+      selectedRating = rating;
+      ratingInputs[rating - 1].checked = true;
+      updateStarVisuals(rating);
+    };
+
+    const hoverRating = (rating) => {
+      updateStarVisuals(rating, 'hover');
+    };
+
+    const clearHover = () => {
+      updateStarVisuals(selectedRating);
+    };
+
+    const updateStarVisuals = (rating, state = 'selected') => {
+      ratingInputs.forEach((input, index) => {
+        const label = input.nextElementSibling;
+        if (label) {
+          if (index < rating) {
+            label.style.color = 'var(--color-orange)';
+          } else {
+            label.style.color = 'rgba(255, 102, 0, 0.3)';
+          }
+        }
+      });
+    };
+
+    const resetForm = () => {
+      form.classList.remove('is-success');
+      form.reset();
+      selectedRating = 0;
+      updateCharCounter();
+      clearHover();
+      if (formFields) formFields.setAttribute('aria-hidden', 'false');
+      if (successMessage) successMessage.hidden = true;
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = submitButton.innerHTML.replace(/Хорошо!/, 'Отправить отзыв');
+        submitButton.innerHTML = '<svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Отправить отзыв';
+      }
+    };
+
+    const showSuccessState = () => {
+      form.classList.add('is-success');
+      if (formFields) formFields.setAttribute('aria-hidden', 'true');
+      if (successMessage) successMessage.hidden = false;
+      if (submitButton) {
+        submitButton.type = 'button';
+        submitButton.textContent = 'Хорошо!';
+      }
+    };
+
+    const handleSubmit = async (event) => {
+      event.preventDefault();
+
+      if (!nameInput.value.trim()) {
+        alert('Пожалуйста, введите имя');
+        return;
+      }
+
+      if (!selectedRating || selectedRating < 1 || selectedRating > 5) {
+        alert('Пожалуйста, выберите оценку');
+        return;
+      }
+
+      const payload = {
+        name: safeText(nameInput.value),
+        email: safeText(emailInput.value || ''),
+        rating: selectedRating,
+        review_text: safeText(textInput.value || '')
+      };
+
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Отправляем...';
+      }
+
+      try {
+        const response = await fetch('api/reviews.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Не удалось отправить отзыв');
+        }
+
+        showSuccessState();
+      } catch (error) {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Отправить отзыв';
+        }
+        window.alert(error.message);
+      }
+    };
+
+    const openModal = () => {
+      resetForm();
+      modalOverlay.classList.add('is-open');
+      document.body.classList.add('modal-open');
+    };
+
+    const closeModal = () => {
+      modalOverlay.classList.remove('is-open');
+      document.body.classList.remove('modal-open');
+    };
+
+    openButtons.forEach((button) => {
+      button.addEventListener('click', openModal);
+    });
+
+    if (closeButton) {
+      closeButton.addEventListener('click', closeModal);
+    }
+
+    form.addEventListener('submit', handleSubmit);
+
+    if (textInput) {
+      textInput.addEventListener('input', updateCharCounter);
+    }
+
+    ratingInputs.forEach((input, index) => {
+      const label = input.nextElementSibling;
+      if (label) {
+        label.addEventListener('click', () => selectRating(index + 1));
+        label.addEventListener('mouseenter', () => hoverRating(index + 1));
+      }
+    });
+
+    if (starsContainer) {
+      starsContainer.addEventListener('mouseleave', clearHover);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modalOverlay.classList.contains('is-open')) {
+        closeModal();
+      }
+    });
+  };
+
   document.addEventListener('DOMContentLoaded', () => {
     setupMobileNav();
     setupNavContrast();
@@ -1206,6 +1381,7 @@
     setupCardWideClickTargets();
     setupAdminToasts();
     setupAdminSectionToggles();
+    setupReviewsModal();
 
     const initialCatalogServices = getInitialCatalogServicesFromDataAttribute();
     let serviceDescriptionLookup = buildServiceDescriptionLookup(initialCatalogServices);
