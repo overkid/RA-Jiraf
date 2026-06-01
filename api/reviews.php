@@ -18,6 +18,8 @@ $email = trim((string) ($input['email'] ?? ''));
 $rating = (int) ($input['rating'] ?? 0);
 $reviewText = trim((string) ($input['review_text'] ?? ''));
 
+error_log("DEBUG: Received data - name: $name, rating: $rating, reviewText: $reviewText");
+
 $errors = [];
 
 if (strlen($name) < 2 || strlen($name) > 100) {
@@ -53,6 +55,15 @@ try {
     if (!$success) {
         throw new Exception('Failed to insert review');
     }
+
+    $lastId = $pdo->lastInsertId();
+    error_log("DEBUG: Review saved - ID: $lastId, rating value: $rating");
+
+    // Verify what was saved
+    $verify = $pdo->prepare('SELECT rating FROM client_reviews WHERE id = :id');
+    $verify->execute([':id' => $lastId]);
+    $saved = $verify->fetch(PDO::FETCH_ASSOC);
+    error_log("DEBUG: Verified in DB - saved rating: " . ($saved['rating'] ?? 'NULL'));
 
     http_response_code(201);
     echo json_encode(['message' => 'ok']);
