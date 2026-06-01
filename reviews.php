@@ -263,9 +263,6 @@ $reviewsStructuredData = [
             <label for="reviews-name">Ваше имя</label>
             <input id="reviews-name" type="text" name="name" placeholder="Иван Петров" required maxlength="100" />
 
-            <label for="reviews-email">Email (опционально)</label>
-            <input id="reviews-email" type="email" name="email" placeholder="your@email.com" maxlength="255" />
-
             <label>Оценка агентства</label>
             <div class="review-stars" data-review-stars>
               <input type="radio" id="star1" name="rating" value="1" required />
@@ -280,8 +277,8 @@ $reviewsStructuredData = [
               <label for="star5" title="5 звёзд">★</label>
             </div>
 
-            <label for="reviews-text">Ваш отзыв (опционально)</label>
-            <textarea id="reviews-text" name="review_text" rows="5" placeholder="Поделитесь вашим опытом..." maxlength="200"></textarea>
+            <label for="reviews-text">Ваш отзыв</label>
+            <textarea id="reviews-text" name="review_text" rows="5" placeholder="Поделитесь вашим опытом..." maxlength="200" required></textarea>
             <div class="char-counter"><span data-char-count>0</span>/200</div>
           </div>
           <div class="manager-consent">

@@ -1207,7 +1207,6 @@
     if (!modalOverlay || !form) return;
 
     const nameInput = form.querySelector('[name="name"]');
-    const emailInput = form.querySelector('[name="email"]');
     const ratingInputs = form.querySelectorAll('[name="rating"]');
     const textInput = form.querySelector('[name="review_text"]');
     const charCounter = form.querySelector('[data-char-count]');
@@ -1289,16 +1288,21 @@
         return;
       }
 
-      if (!selectedRating || selectedRating < 1 || selectedRating > 5) {
+      const checkedRating = Array.from(ratingInputs).find(input => input.checked);
+      if (!checkedRating) {
         alert('Пожалуйста, выберите оценку');
+        return;
+      }
+
+      if (!textInput.value.trim()) {
+        alert('Пожалуйста, напишите отзыв');
         return;
       }
 
       const payload = {
         name: safeText(nameInput.value),
-        email: safeText(emailInput.value || ''),
-        rating: selectedRating,
-        review_text: safeText(textInput.value || '')
+        rating: parseInt(checkedRating.value, 10),
+        review_text: safeText(textInput.value)
       };
 
       if (submitButton) {
@@ -1359,7 +1363,6 @@
     if (submitButton) {
       submitButton.addEventListener('click', (e) => {
         if (form.classList.contains('is-success')) {
-          e.preventDefault();
           closeModal();
         }
       });
