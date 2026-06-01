@@ -271,7 +271,7 @@ $ensureAdminSchema = static function (PDO $pdo): void {
         'CREATE TABLE IF NOT EXISTS client_reviews (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
-            email VARCHAR(255) NOT NULL,
+            email VARCHAR(255),
             rating INT UNSIGNED NOT NULL CHECK (rating >= 1 AND rating <= 5),
             review_text TEXT NOT NULL,
             review_status VARCHAR(20) NOT NULL DEFAULT "pending",

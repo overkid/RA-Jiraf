@@ -1230,7 +1230,12 @@
 
     const selectRating = (rating) => {
       selectedRating = rating;
-      ratingInputs[rating - 1].checked = true;
+      const inputToCheck = ratingInputs[rating - 1];
+      if (inputToCheck) {
+        inputToCheck.checked = true;
+        inputToCheck.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log(`Selected rating: ${rating}, input.checked: ${inputToCheck.checked}, input.value: ${inputToCheck.value}`);
+      }
       updateStarVisuals(rating);
     };
 
@@ -1299,11 +1304,16 @@
         return;
       }
 
+      const ratingValue = parseInt(checkedRating.value, 10);
+      console.log(`Final rating before submit: ${ratingValue}, checked input value: ${checkedRating.value}`);
+
       const payload = {
         name: safeText(nameInput.value),
-        rating: parseInt(checkedRating.value, 10),
+        rating: ratingValue,
         review_text: safeText(textInput.value)
       };
+
+      console.log('Review payload:', payload);
 
       if (submitButton) {
         submitButton.disabled = true;
@@ -1375,7 +1385,10 @@
     ratingInputs.forEach((input, index) => {
       const label = input.nextElementSibling;
       if (label) {
-        label.addEventListener('click', () => selectRating(index + 1));
+        label.addEventListener('click', () => {
+          input.click();
+          selectRating(index + 1);
+        });
         label.addEventListener('mouseenter', () => hoverRating(index + 1));
       }
     });
