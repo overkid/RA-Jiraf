@@ -1219,7 +1219,7 @@
     let selectedRating = 0;
 
     const updateCharCounter = () => {
-      const max = 1000;
+      const max = 200;
       const current = textInput.value.length;
       if (charCounter) {
         charCounter.textContent = current;

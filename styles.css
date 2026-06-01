@@ -2488,6 +2488,8 @@ button.btn:active,
   flex-direction: column;
   gap: var(--space-12);
   transition: transform 0.28s ease, box-shadow 0.28s ease;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .review-card:hover {

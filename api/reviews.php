@@ -28,8 +28,8 @@ if ($rating < 1 || $rating > 5) {
     $errors[] = 'Оценка должна быть от 1 до 5';
 }
 
-if (!empty($reviewText) && (strlen($reviewText) < 5 || strlen($reviewText) > 1000)) {
-    $errors[] = 'Текст отзыва должен быть от 5 до 1000 символов';
+if (!empty($reviewText) && (strlen($reviewText) < 5 || strlen($reviewText) > 200)) {
+    $errors[] = 'Текст отзыва должен быть от 5 до 200 символов';
 }
 
 if (!empty($errors)) {

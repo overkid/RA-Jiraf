@@ -208,6 +208,32 @@ $reviewsStructuredData = [
               <option value="other"><?= htmlspecialchars($homeContent['manager_service_other'], ENT_QUOTES, 'UTF-8') ?></option>
             </select>
 
+            <div class="manager-calculator" data-calculator hidden>
+              <label>Расчёт стоимости</label>
+              <div class="calculator-inputs">
+                <div class="manager-field">
+                  <label for="calculator-width" class="label-small">Ширина (см)</label>
+                  <input id="calculator-width" type="number" name="width" min="10" max="300" value="10" required />
+                </div>
+                <div class="manager-field">
+                  <label for="calculator-height" class="label-small">Высота (см)</label>
+                  <input id="calculator-height" type="number" name="height" min="10" max="300" value="10" required />
+                </div>
+                <div class="manager-field">
+                  <label for="calculator-material" class="label-small">Материал</label>
+                  <select id="calculator-material" name="material" required></select>
+                </div>
+                <div class="manager-field">
+                  <label for="calculator-quantity" class="label-small">Кол-во</label>
+                  <input id="calculator-quantity" type="number" name="quantity" min="1" max="1000" value="1" required />
+                </div>
+              </div>
+              <div class="calculator-result">
+                <span class="calculator-label">Примерная стоимость:</span>
+                <span class="calculator-price">₽ 0.00</span>
+              </div>
+            </div>
+
             <label for="manager-comment"><?= htmlspecialchars($homeContent['manager_comment_label'], ENT_QUOTES, 'UTF-8') ?></label>
             <textarea id="manager-comment" name="comment" rows="3" required></textarea>
           </div>
@@ -255,8 +281,8 @@ $reviewsStructuredData = [
             </div>
 
             <label for="reviews-text">Ваш отзыв (опционально)</label>
-            <textarea id="reviews-text" name="review_text" rows="5" placeholder="Поделитесь вашим опытом..." maxlength="1000"></textarea>
-            <div class="char-counter"><span data-char-count>0</span>/1000</div>
+            <textarea id="reviews-text" name="review_text" rows="5" placeholder="Поделитесь вашим опытом..." maxlength="200"></textarea>
+            <div class="char-counter"><span data-char-count>0</span>/200</div>
           </div>
           <div class="manager-consent">
             <input id="reviews-consent" type="checkbox" name="privacy_consent" required />
