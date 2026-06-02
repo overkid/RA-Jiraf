@@ -116,6 +116,7 @@ $siteTextLabels = [
     'service_modal_fallback_text' => 'Модалка услуги: текст по умолчанию',
     'service_modal_note' => 'Модалка услуги: пояснение',
     'service_modal_contact_button' => 'Модалка услуги: кнопка связи',
+    'reviews_modal_text' => 'Модалка отзывов: подзаголовок',
     'footer_email' => 'Футер: e-mail',
     'footer_phone_1' => 'Футер: телефон 1',
     'footer_phone_2' => 'Футер: телефон 2',

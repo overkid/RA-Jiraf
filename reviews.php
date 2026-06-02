@@ -258,6 +258,7 @@ $reviewsStructuredData = [
           <span aria-hidden="true">✕</span>
         </button>
         <h2 id="reviews-modal-title"><?= htmlspecialchars($homeContent['reviews_cta_button'], ENT_QUOTES, 'UTF-8') ?></h2>
+        <p><?= htmlspecialchars($homeContent['reviews_modal_text'], ENT_QUOTES, 'UTF-8') ?></p>
         <form class="manager-form" data-reviews-form>
           <div class="manager-form-fields">
             <label for="reviews-name">Ваше имя</label>

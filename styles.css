@@ -2514,7 +2514,6 @@ button.btn:active,
   line-height: 1.6;
   color: var(--color-gray);
   display: -webkit-box;
-  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   font: var(--font-body-small);

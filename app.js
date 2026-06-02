@@ -1280,6 +1280,7 @@
       if (formFields) formFields.setAttribute('aria-hidden', 'true');
       if (successMessage) successMessage.hidden = false;
       if (submitButton) {
+        submitButton.disabled = false;
         submitButton.type = 'button';
         submitButton.textContent = 'Хорошо!';
       }
