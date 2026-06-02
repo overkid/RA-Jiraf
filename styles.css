@@ -1450,10 +1450,26 @@ p.manager-form-success {
   color: var(--color-gray);
 }
 
+.catalog-footer .footer-meta > :nth-child(3) {
+  justify-self: end;
+}
+
+.catalog-footer .footer-meta > :nth-child(3) p {
+  text-align: right;
+}
+
 @media (max-width: 1024px) {
   .catalog-tabs,
   .catalog-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .catalog-footer .footer-meta > :nth-child(3) {
+    justify-self: center;
+  }
+
+  .catalog-footer .footer-meta > :nth-child(3) p {
+    text-align: center;
   }
 }
 
