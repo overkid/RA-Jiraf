@@ -136,7 +136,7 @@ $reviewsStructuredData = [
                   </div>
                   <p class="review-text"><?= htmlspecialchars($review['review_text'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
                   <div class="review-meta">
-                    <span class="review-author"><?= htmlspecialchars($review['name'] ?? '', ENT_QUOTES, 'UTF-8') ?></span>
+                    <h3 class="review-author"><?= htmlspecialchars($review['name'] ?? '', ENT_QUOTES, 'UTF-8') ?></h3>
                     <span class="review-date"><?= date('d.m.Y', strtotime($review['created_at'] ?? 'now')) ?></span>
                   </div>
                 </article>
