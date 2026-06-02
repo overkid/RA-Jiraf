@@ -1270,6 +1270,7 @@
       if (successMessage) successMessage.hidden = true;
       if (submitButton) {
         submitButton.disabled = false;
+        submitButton.removeAttribute('disabled');
         submitButton.type = 'submit';
         submitButton.innerHTML = '<svg class="icon" aria-hidden="true"><use href="media/icons/sprite.svg#message"></use></svg>Отправить отзыв';
       }
@@ -1281,6 +1282,7 @@
       if (successMessage) successMessage.hidden = false;
       if (submitButton) {
         submitButton.disabled = false;
+        submitButton.removeAttribute('disabled');
         submitButton.type = 'button';
         submitButton.textContent = 'Хорошо!';
       }
@@ -1338,6 +1340,7 @@
       } catch (error) {
         if (submitButton) {
           submitButton.disabled = false;
+          submitButton.removeAttribute('disabled');
           submitButton.textContent = 'Отправить отзыв';
         }
         window.alert(error.message);

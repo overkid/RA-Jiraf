@@ -298,6 +298,6 @@ $reviewsStructuredData = [
     </div>
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js" defer></script>
-    <script src="app.js" defer></script>
+    <script src="app.js?v=<?= filemtime(__DIR__ . '/app.js') ?>" defer></script>
   </body>
 </html>

@@ -1390,6 +1390,6 @@ if ($loggedIn) {
       </main>
     <?php endif; ?>
 
-    <script src="app.js" defer></script>
+    <script src="app.js?v=<?= filemtime(__DIR__ . '/app.js') ?>" defer></script>
   </body>
 </html>
