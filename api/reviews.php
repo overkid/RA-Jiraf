@@ -34,6 +34,24 @@ if (strlen($reviewText) < 5 || strlen($reviewText) > 200) {
     $errors[] = 'Текст отзыва должен быть от 5 до 200 символов';
 }
 
+$stringLength = static function (string $value): int {
+    return function_exists('mb_strlen') ? mb_strlen($value, 'UTF-8') : strlen($value);
+};
+
+$errors = [];
+
+if ($stringLength($name) < 2 || $stringLength($name) > 16) {
+    $errors[] = 'Имя должно быть от 2 до 16 символов';
+}
+
+if ($rating < 1 || $rating > 5) {
+    $errors[] = 'Оценка должна быть от 1 до 5';
+}
+
+if ($stringLength($reviewText) < 5 || $stringLength($reviewText) > 80) {
+    $errors[] = 'Текст отзыва должен быть от 5 до 80 символов';
+}
+
 if (!empty($errors)) {
     http_response_code(422);
     exit(json_encode(['message' => implode(', ', $errors)]));
@@ -41,6 +59,12 @@ if (!empty($errors)) {
 
 try {
     $pdo = db();
+
+    if ($reviewText !== '') {
+        $firstChar = function_exists('mb_substr') ? mb_substr($reviewText, 0, 1, 'UTF-8') : substr($reviewText, 0, 1);
+        $remainingText = function_exists('mb_substr') ? mb_substr($reviewText, 1, null, 'UTF-8') : substr($reviewText, 1);
+        $reviewText = (function_exists('mb_strtoupper') ? mb_strtoupper($firstChar, 'UTF-8') : strtoupper($firstChar)) . $remainingText;
+    }
 
     $stmt = $pdo->prepare('INSERT INTO client_reviews (name, email, rating, review_text, review_status) VALUES (:name, :email, :rating, :review_text, :status)');
 
