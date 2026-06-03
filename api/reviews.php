@@ -14,7 +14,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $input = json_decode((string) file_get_contents('php://input'), true) ?? [];
 
 $name = trim((string) ($input['name'] ?? ''));
-$email = trim((string) ($input['email'] ?? ''));
 $rating = (int) ($input['rating'] ?? 0);
 $reviewText = trim((string) ($input['review_text'] ?? ''));
 
@@ -66,11 +65,10 @@ try {
         $reviewText = (function_exists('mb_strtoupper') ? mb_strtoupper($firstChar, 'UTF-8') : strtoupper($firstChar)) . $remainingText;
     }
 
-    $stmt = $pdo->prepare('INSERT INTO client_reviews (name, email, rating, review_text, review_status) VALUES (:name, :email, :rating, :review_text, :status)');
+    $stmt = $pdo->prepare('INSERT INTO client_reviews (name, rating, review_text, review_status) VALUES (:name, :rating, :review_text, :status)');
 
     $success = $stmt->execute([
         ':name' => $name,
-        ':email' => $email,
         ':rating' => $rating,
         ':review_text' => $reviewText,
         ':status' => 'pending'

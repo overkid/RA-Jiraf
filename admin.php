@@ -272,13 +272,10 @@ $ensureAdminSchema = static function (PDO $pdo): void {
         'CREATE TABLE IF NOT EXISTS client_reviews (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
-            email VARCHAR(255),
             rating INT UNSIGNED NOT NULL CHECK (rating >= 1 AND rating <= 5),
             review_text TEXT NOT NULL,
             review_status VARCHAR(20) NOT NULL DEFAULT "pending",
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            approved_at TIMESTAMP NULL,
-            approved_by VARCHAR(64) NULL,
             INDEX idx_status_created (review_status, created_at),
             INDEX idx_created (created_at)
         )'
@@ -676,13 +673,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $errors[] = 'Неверные параметры.';
                     } else {
                         try {
-                            if ($newStatus === 'approved') {
-                                $stmt = $pdo->prepare('UPDATE client_reviews SET review_status = :status, approved_at = NOW(), approved_by = :approvedBy WHERE id = :id');
-                                $stmt->execute([':status' => $newStatus, ':approvedBy' => $currentLogin, ':id' => $reviewId]);
-                            } else {
-                                $stmt = $pdo->prepare('UPDATE client_reviews SET review_status = :status WHERE id = :id');
-                                $stmt->execute([':status' => $newStatus, ':id' => $reviewId]);
-                            }
+                            $stmt = $pdo->prepare('UPDATE client_reviews SET review_status = :status WHERE id = :id');
+                            $stmt->execute([':status' => $newStatus, ':id' => $reviewId]);
                             $statusText = $newStatus === 'approved' ? 'одобрен' : ($newStatus === 'rejected' ? 'отклонен' : 'ожидает модерации');
                             $messages[] = "Отзыв $statusText.";
                         } catch (Throwable $exception) {
@@ -788,7 +780,7 @@ if ($loggedIn) {
 
         $reviews = [];
         try {
-            $reviews = $pdo->query('SELECT id, name, email, rating, review_text, review_status, created_at, approved_at, approved_by FROM client_reviews ORDER BY review_status DESC, created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
+            $reviews = $pdo->query('SELECT id, name, rating, review_text, review_status, created_at FROM client_reviews ORDER BY review_status DESC, created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
         } catch (Throwable $exception) {
             $reviews = [];
         }
