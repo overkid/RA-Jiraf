@@ -729,8 +729,6 @@ h3 { font: var(--font-h3); }
   overflow-y: auto;
   overflow-x: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
 }
 
 .modal-overlay.is-open {
@@ -796,27 +794,23 @@ h3 { font: var(--font-h3); }
 }
 
 .modal-close {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 24px;
-  height: 24px;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  color: var(--color-gray);
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 2px solid var(--color-violet);
+  background: var(--color-white);
+  color: var(--color-violet);
   font: var(--font-button-inter);
-  z-index: 600;
+  z-index: 999;
   line-height: 1;
   display: grid;
   place-items: center;
   padding: 0;
   cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.modal-close:hover {
-  color: var(--color-black);
+  z-index: 600;
 }
 
 .manager-modal h2 {
@@ -1210,7 +1204,7 @@ p.manager-form-success {
   }
 
   .modal-overlay {
-    place-items: center;
+    place-items: flex-start;
     padding-top: var(--space-24);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -1219,14 +1213,14 @@ p.manager-form-success {
 
   .manager-modal {
     padding: var(--space-24) var(--space-16) var(--space-32);
-    max-height: auto;
+    max-height: 85vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 
   .modal-close {
-    top: 16px;
-    right: 16px;
+    top: -12px;
+    right: -12px;
   }
 
   .manager-modal-subtitle {
@@ -1290,20 +1284,6 @@ p.manager-form-success {
 
   .footer-meta {
     gap: var(--space-20);
-  }
-}
-
-@media (max-width: 770px) {
-  .manager-modal {
-    width: min(100%, calc(100% - 24px));
-    max-height: none;
-    height: auto;
-  }
-
-  .modal-overlay {
-    align-items: flex-start;
-    justify-items: center;
-    padding: var(--space-16);
   }
 }
 
