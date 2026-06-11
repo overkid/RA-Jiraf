@@ -1296,8 +1296,7 @@ p.manager-form-success {
 @media (max-width: 770px) {
   .manager-modal {
     width: min(100%, calc(100% - 24px));
-    max-height: none;
-    height: auto;
+    max-height: calc(100vh - 48px);
   }
 }
 
